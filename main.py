@@ -2,7 +2,9 @@ import json
 
 from models.cpu import CPU
 from models.task import Task, TaskGen
+from models.remote import EdgeServer
 from offloading.offloader import Offloader
+from dvfs.dvfs import DVFS
 
 def load_cpu_configs():
     with open("configs/cpu_specs.json", "r") as f:
@@ -38,6 +40,8 @@ if __name__ == '__main__':
     # 0. Initialize RL network and other parameters
     tg = TaskGen()
     offloader = Offloader()
+    dvfs_alg = DVFS()
+    edge_server = EdgeServer()
     while True:
         # 1. Assign tasks to LITTLE, big, or Remote
         state = ()
@@ -45,14 +49,11 @@ if __name__ == '__main__':
 
         # 2. Generate tasks for one hyper period:
         tasks = tg.generate(task_set)
-        # print(len(tasks["little"]))
-        # print(tasks["little"])
-        # print(len(tasks["big"]))
-        # print(tasks["big"])
-        # print(len(tasks["remote"]))
-        # print(tasks["remote"])
 
-        # 3. Run DVFS
+        # 3. Execute tasks and run DVFS
+        dvfs_alg.execute(tasks["little"], cpu_little)
+        dvfs_alg.execute(tasks["big"], cpu_big)
+        edge_server.execute(tasks["remote"])
 
         # 4. Calculate rewards
 
