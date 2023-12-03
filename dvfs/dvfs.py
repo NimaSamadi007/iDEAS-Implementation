@@ -3,7 +3,7 @@ DQN is implemented based on
 https://github.com/Curt-Park/rainbow-is-all-you-need
 """
 
-from typing import Dict
+from typing import Dict, List
 
 import torch
 import torch.nn as nn
@@ -11,7 +11,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 
-class Network(nn.module):
+class Network(nn.Module):
     def __init__(self, in_dim: int, out_dim: int):
         super(Network, self).__init__()
 
@@ -79,6 +79,8 @@ class DVFS:
                  gamma: float = 0.99):
 
         # Parameters
+        self.state_dim = state_dim
+        self.act_dim = act_dim
         self.repl_buf = ReplayBuffer(state_dim, mem_size, batch_size)
         self.batch_size = batch_size
         self.eps = max_eps
@@ -101,13 +103,26 @@ class DVFS:
         self.target_net.eval()
 
         # Optimizer
-        self.optimizer = optim.Adam(self.net.paramaters())
+        self.optimizer = optim.Adam(self.net.parameters())
 
     def train(self):
         pass
 
-    def execute(self, tasks, cpu_core):
-        pass
+    def execute(self, states: np.ndarray):
+        actions = []
+        for state in states:
+            actions.append(self._sel_act(state))
+        return actions
+
+    def _sel_act(self, state: np.ndarray):
+        if self.eps > np.random.random():
+            sel_act = np.random.randint(self.act_dim)
+        else:
+            sel_act = self.net(
+                torch.FloatTensor(state).to(self.device)
+            ).argmax()
+            sel_act = sel_act.detach().cpu().numpy()
+        return sel_act
 
     def _update_target_net(self):
         # Update target network parameters

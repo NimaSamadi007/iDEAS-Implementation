@@ -9,7 +9,7 @@ class CPU:
 
         self.util = 0
         self.dynamic_slack = 0
-        self.freq = specs[-1] # Maximum frequency by default
+        self.freq = self.freqs[-1] # Maximum frequency by default
 
     def __repr__(self):
         return f"'{self.model} {self.cpu_type}' CPU with {self.ncore} cores"

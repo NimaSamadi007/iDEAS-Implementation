@@ -1,5 +1,6 @@
 import math
 import copy
+import numpy as np
 
 class Task:
     def __init__(self, specs):
@@ -10,8 +11,11 @@ class Task:
         self.aet = 0
         self.exec_device = None
 
+    def gen_aet(self):
+        self.aet = np.random.uniform(self.wcet/2, self.wcet)
+
     def __repr__(self):
-        return f"Task {self.t_id}: ({self.p}, {self.b}, {self.wcet})"
+        return f"{self.t_id}: ({self.p}, {self.b}, {self.wcet}, {self.aet})"
 
 class TaskGen:
     def __init__(self):
@@ -24,11 +28,13 @@ class TaskGen:
     def generate(self, task_set):
         self.task_set = task_set
         self._set_hyper_period()
-        tasks = {"little": [], "big": [], "remote": []}
+        tasks = {}
         for ts in task_set:
-            try:
-                num_tasks = self.hyper_period // ts.p
-                tasks[ts.exec_device].extend([copy.deepcopy(ts) for _ in range(num_tasks)])
-            except KeyError:
-                raise KeyError(f"Unable to find {ts.exec_device}, try again!")
+            num_tasks = self.hyper_period // ts.p
+            tasks_i = []
+            for _ in range(num_tasks):
+                tasks_i.append(copy.deepcopy(ts))
+                tasks_i[-1].gen_aet()
+            tasks[ts.t_id] = tasks_i
+
         return tasks

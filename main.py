@@ -1,10 +1,16 @@
 import json
+import numpy as np
 
 from models.cpu import CPU
+from models.wireless_interface import WirelessInterface
 from models.task import Task, TaskGen
 from models.remote import EdgeServer
-from offloading.offloader import Offloader
 from dvfs.dvfs import DVFS
+
+def load_wireless_interface_configs():
+    with open("configs/wireless_interface_specs.json", "r") as f:
+        specs = json.load(f)
+    return WirelessInterface(specs["powers"])
 
 def load_cpu_configs():
     with open("configs/cpu_specs.json", "r") as f:
@@ -26,6 +32,20 @@ def load_task_set():
         task_set.append(Task(task_set_conf[i]))
     return task_set
 
+def observe_system_state(tasks, hp):
+    # System utilization (SU)
+    su, ds_denom, aet_total = 0, 0, 0
+    for tid in tasks:
+        for t_i in tasks[tid]:
+            aet_total += t_i.aet
+        su += tasks[tid][0].wcet/tasks[tid][0].p
+        ds_denom += hp*tasks[tid][0].wcet/tasks[tid][0].p
+    ds = 1-aet_total/ds_denom
+    #TODO: Use b_i in states
+    state = np.array([su, ds, 0])
+    return np.repeat(state.reshape(1, -1), len(tasks), axis=0)
+
+######################## Main function #######################
 if __name__ == '__main__':
     ## Load tasks and CPU models
     cpu_big, cpu_little = load_cpu_configs()
@@ -36,27 +56,32 @@ if __name__ == '__main__':
     for t in task_set:
         print(t)
 
+    w_inter = load_wireless_interface_configs()
+
     ## Offloading and DVFS main cylce
-    # 0. Initialize RL network and other parameters
+    # Initialize RL network and other parameters
     tg = TaskGen()
-    offloader = Offloader()
-    dvfs_alg = DVFS()
+    dvfs_alg = DVFS(state_dim=3, #(SU, DS, R)
+                    act_dim=len(w_inter)+
+                            len(cpu_big.freqs)+
+                            len(cpu_little.freqs))
     edge_server = EdgeServer()
     while True:
-        # 1. Assign tasks to LITTLE, big, or Remote
-        state = ()
-        offloader.assign(state, task_set)
-
-        # 2. Generate tasks for one hyper period:
+        # Generate tasks for one hyper period:
         tasks = tg.generate(task_set)
 
-        # 3. Execute tasks and run DVFS
-        dvfs_alg.execute(tasks["little"], cpu_little)
-        dvfs_alg.execute(tasks["big"], cpu_big)
-        edge_server.execute(tasks["remote"])
+        # Current state value:
+        states = observe_system_state(tasks, tg.hyper_period)
+        print(f"States shape: {states.shape}")
 
-        # 4. Calculate rewards
+        # Run DVFS and offloader to assign tasks
+        actions = dvfs_alg.execute(states)
+        print(f"Actions:\n{actions}")
 
-        # 5. Update RL networks
+        # Execute tasks
+
+        # Calculate rewards
+
+        # Update RL networks
 
         break
