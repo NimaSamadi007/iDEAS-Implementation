@@ -68,7 +68,7 @@ class ReplayBuffer:
 class DVFS:
     def __init__(self,
                  state_dim: int,
-                 act_dim: int,
+                 act_space: Dict[str, List],
                  mem_size: int = 1000,
                  batch_size: int = 32,
                  update_target_net: int = 100,
@@ -80,7 +80,16 @@ class DVFS:
 
         # Parameters
         self.state_dim = state_dim
-        self.act_dim = act_dim
+
+        self.act_space = act_space
+        self.act_type_boundry = []
+        self.target_hard_name = list(self.act_space.keys())
+        self.act_length = [len(arr) for _, arr in act_space.items()]
+        for i in range(len(self.act_length)):
+            self.act_type_boundry.append(sum(self.act_length[:i+1]))
+        self.act_type_boundry.insert(0, 0)
+        self.act_dim = self.act_type_boundry[-1]
+
         self.repl_buf = ReplayBuffer(state_dim, mem_size, batch_size)
         self.batch_size = batch_size
         self.eps = max_eps
@@ -96,8 +105,8 @@ class DVFS:
         print(f"Using {self.device} device for training")
 
         # Network initialization
-        self.net = Network(state_dim, act_dim).to(self.device)
-        self.target_net = Network(state_dim, act_dim).to(self.device)
+        self.net = Network(state_dim, self.act_dim).to(self.device)
+        self.target_net = Network(state_dim, self.act_dim).to(self.device)
         # Set target net from current net
         self.target_net.load_state_dict(self.net.state_dict())
         self.target_net.eval()
@@ -111,7 +120,7 @@ class DVFS:
     def execute(self, states: np.ndarray):
         actions = []
         for state in states:
-            actions.append(self._sel_act(state))
+            actions.append(self._conv_act_id_to_type(self._sel_act(state)))
         return actions
 
     def _sel_act(self, state: np.ndarray):
@@ -127,3 +136,19 @@ class DVFS:
     def _update_target_net(self):
         # Update target network parameters
         self.target_net.load_state_dict(self.net.state_dict())
+
+    # Convert action id resulting from network
+    # to actual action type which is composed of
+    # (execution target, frequency or power level)
+    def _conv_act_id_to_type(self, act_id):
+        target_id = 0
+        rel_id = 0
+        for i in range(len(self.act_type_boundry)-1):
+            if act_id >= self.act_type_boundry[i] and \
+               act_id < self.act_type_boundry[i+1]:
+                target_id = i # target id [0..2]
+                rel_id = act_id - self.act_type_boundry[i]
+                break
+        target_name = self.target_hard_name[target_id]
+        return (target_name,
+                self.act_space[target_name][rel_id])

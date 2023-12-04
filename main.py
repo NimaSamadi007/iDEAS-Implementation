@@ -16,7 +16,7 @@ def load_cpu_configs():
     with open("configs/cpu_specs.json", "r") as f:
         cpu_specs = json.load(f)
     assert len(cpu_specs) == 2, "CPU config must contain exactly 2 CPU types"
-    if cpu_specs[0]['model'] == "big":
+    if cpu_specs[0]['type'] == "big":
         cpu_big = CPU(cpu_specs[0])
         cpu_little = CPU(cpu_specs[1])
     else:
@@ -47,6 +47,9 @@ def observe_system_state(tasks, hp):
 
 ######################## Main function #######################
 if __name__ == '__main__':
+    # Set numpy random seed
+    np.random.seed(42)
+
     ## Load tasks and CPU models
     cpu_big, cpu_little = load_cpu_configs()
     print(cpu_big)
@@ -61,10 +64,14 @@ if __name__ == '__main__':
     ## Offloading and DVFS main cylce
     # Initialize RL network and other parameters
     tg = TaskGen()
+    action_space = {"w_inter": [],
+                    "big_freqs": [],
+                    "little_freqs": []}
+    action_space["w_inter"] = w_inter.powers
+    action_space["big_freqs"] = cpu_big.freqs
+    action_space["little_freqs"] = cpu_little.freqs
     dvfs_alg = DVFS(state_dim=3, #(SU, DS, R)
-                    act_dim=len(w_inter)+
-                            len(cpu_big.freqs)+
-                            len(cpu_little.freqs))
+                    act_space=action_space)
     edge_server = EdgeServer()
     while True:
         # Generate tasks for one hyper period:
