@@ -32,23 +32,23 @@ def load_task_set():
         task_set.append(Task(task_set_conf[i]))
     return task_set
 
-def observe_system_state(tasks, hp):
-    # System utilization (SU)
-    su, ds_denom, aet_total = 0, 0, 0
-    for tid in tasks:
-        for t_i in tasks[tid]:
-            aet_total += t_i.aet
-        su += tasks[tid][0].wcet/tasks[tid][0].p
-        ds_denom += hp*tasks[tid][0].wcet/tasks[tid][0].p
-    ds = 1-aet_total/ds_denom
-    #TODO: Use b_i in states
-    state = np.array([su, ds, 0])
-    return np.repeat(state.reshape(1, -1), len(tasks), axis=0)
+def observe_system_state(tasks):
+    # State: (SU, WCET, B)
+    # TODO: Add channel randomness to state
+    states = np.zeros((len(tasks), 3), dtype=np.float32)
+    su = 0.
+    for i, task in enumerate(tasks.values()):
+        su += task[0].wcet/task[0].p
+        states[i, 1] = task[0].p
+        states[i, 2] = task[0].b
+    states[:, 0] = su
+    return states
 
 ######################## Main function #######################
 if __name__ == '__main__':
     # Set numpy random seed
-    np.random.seed(42)
+    RND_SEED = 81
+    np.random.seed(RND_SEED)
 
     ## Load tasks and CPU models
     cpu_big, cpu_little = load_cpu_configs()
@@ -64,21 +64,22 @@ if __name__ == '__main__':
     ## Offloading and DVFS main cylce
     # Initialize RL network and other parameters
     tg = TaskGen()
-    action_space = {"w_inter": [],
-                    "big_freqs": [],
-                    "little_freqs": []}
-    action_space["w_inter"] = w_inter.powers
-    action_space["big_freqs"] = cpu_big.freqs
-    action_space["little_freqs"] = cpu_little.freqs
-    dvfs_alg = DVFS(state_dim=3, #(SU, DS, R)
-                    act_space=action_space)
-    edge_server = EdgeServer()
+    action_space = {"offload": [],
+                    "big": [],
+                    "little": []}
+    action_space["offload"] = w_inter.powers
+    action_space["big"] = cpu_big.freqs
+    action_space["little"] = cpu_little.freqs
+    dvfs_alg = DVFS(state_dim=3,
+                    act_space=action_space,
+                    seed=RND_SEED)
+    print("-------------")
     while True:
         # Generate tasks for one hyper period:
         tasks = tg.generate(task_set)
 
         # Current state value:
-        states = observe_system_state(tasks, tg.hyper_period)
+        states = observe_system_state(tasks)
         print(f"States shape: {states.shape}")
 
         # Run DVFS and offloader to assign tasks
@@ -86,6 +87,15 @@ if __name__ == '__main__':
         print(f"Actions:\n{actions}")
 
         # Execute tasks
+        for t_id, act in actions['little']:
+            cpu_little.execute(tasks[t_id], act)
+        print(10*"=")
+        for t_id, act in actions['big']:
+            cpu_big.execute(tasks[t_id], act)
+        print(10*"=")
+        for t_id, act in actions['offload']:
+            w_inter.offload(tasks[t_id], act)
+        print(10*"=")
 
         # Calculate rewards
 

@@ -118,9 +118,10 @@ class DVFS:
         pass
 
     def execute(self, states: np.ndarray):
-        actions = []
-        for state in states:
-            actions.append(self._conv_act_id_to_type(self._sel_act(state)))
+        actions = {key:[] for key in self.target_hard_name}
+        for i, state in enumerate(states):
+            action = self._conv_act_id_to_type(self._sel_act(state))
+            actions[action[0]].append([i, action[1]])
         return actions
 
     def _sel_act(self, state: np.ndarray):

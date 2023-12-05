@@ -15,7 +15,7 @@ class Task:
         self.aet = np.random.uniform(self.wcet/2, self.wcet)
 
     def __repr__(self):
-        return f"{self.t_id}: ({self.p}, {self.b}, {self.wcet}, {self.aet})"
+        return f"{self.t_id}: ({self.p}, {self.b}, {self.wcet}, {self.aet:.3f})"
 
 class TaskGen:
     def __init__(self):
@@ -34,7 +34,7 @@ class TaskGen:
             tasks_i = []
             for _ in range(num_tasks):
                 tasks_i.append(copy.deepcopy(ts))
-                tasks_i[-1].gen_aet()
+                # tasks_i[-1].gen_aet()
             tasks[ts.t_id] = tasks_i
 
         return tasks
