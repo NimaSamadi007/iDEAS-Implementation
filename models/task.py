@@ -9,7 +9,8 @@ class Task:
         self.wcet = specs['w'] # worst-case execution time
         self.t_id = specs['task'] # task ID representing a unique task
         self.aet = 0
-        self.exec_device = None
+        self.cons_energy = 0. # consumed energy when executing the task
+        self.deadline_missed = False
 
     def gen_aet(self):
         self.aet = np.random.uniform(self.wcet/2, self.wcet)

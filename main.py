@@ -10,7 +10,7 @@ from dvfs.dvfs import DVFS
 def load_wireless_interface_configs():
     with open("configs/wireless_interface_specs.json", "r") as f:
         specs = json.load(f)
-    return WirelessInterface(specs["powers"])
+    return WirelessInterface(specs)
 
 def load_cpu_configs():
     with open("configs/cpu_specs.json", "r") as f:
