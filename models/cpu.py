@@ -19,8 +19,18 @@ class CPU:
     # Assign tasks to execute
     def execute(self, jobs: List[Task], in_freq: int):
         print(f"Executing CPU {self.cpu_type} task {jobs[0]}")
+        if not in_freq in self.freqs:
+            raise ValueError(f"{in_freq} is not supported!")
+
         print("-------------")
         # AET can only be set at the time of execution
         for job in jobs:
             job.gen_aet()
             print(f"Executing job {job}")
+            # Check if deadline will be missed
+            true_exec_time = (self.freq/in_freq)*job.aet
+            if true_exec_time > job.p:
+                job.deadline_missed = True
+                continue
+            # Calculate energy consumption (chip energy conusmption at given frequency)
+            job.cons_energy = self.powers[self.freqs.index(in_freq)] * true_exec_time

@@ -13,15 +13,26 @@ class WirelessInterface:
         self.bandwidth = specs["bandwidth"]
 
         self.power = self.powers[0] # Current power level
-        self.cg = 0. # channel gain ~ Rayleigh
-        self.cn = 0. # channel noise ~ gaussian
+        self.update_channel_gain() # channel gain ~ Rayleigh
+        self.update_channel_noise() # channel noise ~ gaussian
         self.e_server = EdgeServer() # Edge server instance
 
     def offload(self, jobs: List[Task], in_power: float):
         print(f"Offloading task {jobs[0]}")
+        if not in_power in self.powers:
+            raise ValueError(f"Unsupported wireless interface power: {in_power}")
         print("-------------")
         for job in jobs:
+            # consumed energy when offloading
+            self.power = in_power
+            job.cons_energy = (self.power*job.b)/self.get_channel_rate()
+            #TODO: It's assuemd that remote can execute all tasks without missing deadlines
+            job.deadline_missed = False
             self.e_server.execute(job)
+            # update channel status
+        #TODO: When channel status must be updated?
+        self.update_channel_gain()
+        self.update_channel_noise()
 
     #TODO: How frequent channel gain must be updated?
     def update_channel_gain(self):
@@ -33,7 +44,7 @@ class WirelessInterface:
                                    scale=self.cn_std)
         return self.cn
 
-    def get_channel_rate(self) -> float:
+    def get_channel_rate(self):
         return self.bandwidth * np.log2(1+self.power*self.cg/self.cn)
 
     # No. of possible power values
