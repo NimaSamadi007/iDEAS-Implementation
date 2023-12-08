@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from models.task import Task
 
 class CPU:
@@ -17,20 +17,32 @@ class CPU:
         return f"'{self.model} {self.cpu_type}' CPU with {self.ncore} cores"
 
     # Assign tasks to execute
-    def execute(self, jobs: List[Task], in_freq: int):
-        print(f"Executing CPU {self.cpu_type} task {jobs[0]}")
-        if not in_freq in self.freqs:
-            raise ValueError(f"{in_freq} is not supported!")
+    def execute(self, tasks: Dict[int, Task], acts: List[List]):
+        # print(f"Executing CPU {self.cpu_type} task {jobs[0]}")
 
-        print("-------------")
+        # Check schedulability criteria
+        total_util = 0
+        for t_id, in_freq in acts:
+            job = tasks[t_id][0]
+            wcet_scaled = job.wcet * (self.freq/in_freq)
+            total_util += wcet_scaled / job.p
+        print(f"{self.cpu_type} task util: {total_util}")
+        if total_util > 1: # Not schedulable
+            #TODO: What's the best thing to do in case of unschedulable tasks
+            for t_id, in_freq in acts:
+                for job in tasks[t_id]:
+                    job.deadline_missed = True
+            return
+
         # AET can only be set at the time of execution
-        for job in jobs:
-            job.gen_aet()
-            print(f"Executing job {job}")
-            # Check if deadline will be missed
-            true_exec_time = (self.freq/in_freq)*job.aet
-            if true_exec_time > job.p:
-                job.deadline_missed = True
-                continue
-            # Calculate energy consumption (chip energy conusmption at given frequency)
-            job.cons_energy = self.powers[self.freqs.index(in_freq)] * true_exec_time
+        for t_id, in_freq in acts:
+            for job in tasks[t_id]:
+                job.gen_aet()
+                # Check if deadline will be missed
+                true_exec_time = (self.freq/in_freq)*job.aet
+                if true_exec_time > job.p:
+                    job.deadline_missed = True
+                    continue
+                # Calculate energy consumption (chip energy conusmption at given frequency)
+                job.cons_energy = self.powers[self.freqs.index(in_freq)] * true_exec_time
+                job.cons_energy /= 1000. # Consumed energy must be in mJ

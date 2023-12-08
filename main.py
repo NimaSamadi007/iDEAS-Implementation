@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from typing import Dict
 
 from models.cpu import CPU
 from models.wireless_interface import WirelessInterface
@@ -7,6 +8,13 @@ from models.task import Task, TaskGen
 from models.remote import EdgeServer
 from dvfs.dvfs import DVFS
 
+###################################################
+# Contants:
+DEADLINE_MISSED_PENALTY = 1e3
+
+
+###################################################
+# Utility functions
 def load_wireless_interface_configs():
     with open("configs/wireless_interface_specs.json", "r") as f:
         specs = json.load(f)
@@ -44,7 +52,26 @@ def observe_system_state(tasks):
     states[:, 0] = su
     return states
 
-######################## Main function #######################
+def cal_penalties(tasks: Dict[int, Task]) -> np.ndarray:
+    penalties = []
+    for task in tasks.values():
+        penalty = 0
+        is_deadline_missed = False
+        for job in task:
+            if job.deadline_missed:
+                is_deadline_missed = True
+                break
+            else:
+                penalty += job.cons_energy
+        if not is_deadline_missed:
+            penalties.append(penalty)
+        else:
+            penalties.append(DEADLINE_MISSED_PENALTY)
+
+    return np.asarray(penalties, dtype=float)
+
+###################################################
+# Main function
 if __name__ == '__main__':
     # Set numpy random seed
     RND_SEED = 81
@@ -87,17 +114,16 @@ if __name__ == '__main__':
         print(f"Actions:\n{actions}")
 
         # Execute tasks
-        for t_id, act in actions['little']:
-            cpu_little.execute(tasks[t_id], act)
-        print(10*"=")
-        for t_id, act in actions['big']:
-            cpu_big.execute(tasks[t_id], act)
-        print(10*"=")
-        for t_id, act in actions['offload']:
-            w_inter.offload(tasks[t_id], act)
-        print(10*"=")
+        print("Executing LITTLE core tasks...")
+        cpu_little.execute(tasks, actions['little'])
+        print("Executing big core tasks...")
+        cpu_big.execute(tasks, actions['big'])
+        print("Offloading tasks to edge server...")
+        w_inter.offload(tasks, actions['offload'])
 
-        # Calculate rewards
+        # Calculate penalties
+        penalties = cal_penalties(tasks)
+        print(penalties)
 
         # Update RL networks
 

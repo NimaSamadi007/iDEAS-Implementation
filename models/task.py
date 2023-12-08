@@ -4,19 +4,19 @@ import numpy as np
 
 class Task:
     def __init__(self, specs):
-        self.p = specs['p'] # period frequency
-        self.b = specs['b'] # task input data (bits)
-        self.wcet = specs['w'] # worst-case execution time
+        self.p = specs['p'] # period time, (ms)
+        self.b = specs['b'] # task input data (KB)
+        self.wcet = specs['w'] # worst-case execution time, (ms)
         self.t_id = specs['task'] # task ID representing a unique task
-        self.aet = 0
-        self.cons_energy = 0. # consumed energy when executing the task
+        self.aet = 0 #(ms)
+        self.cons_energy = 0. # consumed energy when executing the task in (mJ)
         self.deadline_missed = False
 
     def gen_aet(self):
         self.aet = np.random.uniform(self.wcet/2, self.wcet)
 
     def __repr__(self):
-        return f"{self.t_id}: ({self.p}, {self.b}, {self.wcet}, {self.aet:.3f})"
+        return f"{self.t_id}: ({self.p}, {self.b}, {self.wcet}, {self.aet:.3f}, {self.cons_energy:.3f})"
 
 class TaskGen:
     def __init__(self):
