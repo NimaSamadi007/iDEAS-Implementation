@@ -70,7 +70,7 @@ class DVFS:
                  state_dim: int,
                  act_space: Dict[str, List],
                  mem_size: int = 1000,
-                 batch_size: int = 32,
+                 batch_size: int = 16,
                  update_target_net: int = 100,
                  eps_decay: float = 1.0/2000,
                  seed: int = 42,
@@ -99,6 +99,7 @@ class DVFS:
         self.min_eps = min_eps
         self.update_target_net = update_target_net
         self.gamma = gamma
+        self.update_cnt = 0
 
         # Training device
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -114,15 +115,69 @@ class DVFS:
         # Optimizer
         self.optimizer = optim.Adam(self.net.parameters())
 
-    def train(self):
-        pass
+    def train(self, states: np.ndarray,
+                    actions: np.ndarray,
+                    rewards: np.ndarray,
+                    next_states: np.ndarray,
+                    are_final: List[bool]):
+        # Store state, action, and rewards to buffer
+        for state, action, reward, next_state, is_final in zip(states, actions, rewards, next_states, are_final):
+            self.repl_buf.store(state,
+                                action,
+                                reward,
+                                next_state,
+                                is_final)
 
-    def execute(self, states: np.ndarray):
+        if len(self.repl_buf) >= self.batch_size:
+            loss = self.update_model()
+            print(f"Loss value: {loss}")
+            self.update_cnt += 1
+
+            # decrease epsilon
+            self.eps = max(
+                self.min_eps, self.eps-self.eps_decay*(self.max_eps-self.min_eps)
+            )
+            if self.update_cnt % self.update_target_net == 0:
+                self.update_cnt = 0
+                self._update_target_net()
+
+
+    def execute(self, states: np.ndarray) -> np.ndarray:
+        actions = []
+        for state in states:
+            actions.append(self._sel_act(state))
+        return np.asarray(actions)
+
+    def update_model(self):
+        samples = self.repl_buf.sample()
+        loss = self._compute_net_loss(samples)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return loss.item()
+
+    def conv_raw_acts(self, raw_actions: np.ndarray):
         actions = {key:[] for key in self.target_hard_name}
-        for i, state in enumerate(states):
-            action = self._conv_act_id_to_type(self._sel_act(state))
+        for i, action in enumerate(raw_actions):
+            action = self._conv_act_id_to_type(action)
             actions[action[0]].append([i, action[1]])
         return actions
+
+    def _compute_net_loss(self, samples: Dict[str, np.ndarray]) -> torch.Tensor:
+        state = torch.FloatTensor(samples["state"]).to(self.device)
+        next_state = torch.FloatTensor(samples["n_state"]).to(self.device)
+        action = torch.FloatTensor(samples["action"].reshape(-1, 1)).to(self.device)
+        reward = torch.FloatTensor(samples["reward"].reshape(-1, 1)).to(self.device)
+        final = torch.FloatTensor(samples["final"].reshape(-1, 1)).to(self.device)
+
+        curr_q_val = self.net(state).gather(1, action.type(torch.int64))
+        next_q_val = self.target_net(next_state).max(dim=1, keepdim=True)[0].detach()
+        mask = 1-final
+        target_val = (reward + self.gamma*next_q_val*mask).to(self.device)
+
+        loss = F.smooth_l1_loss(curr_q_val, target_val)
+        return loss
 
     def _sel_act(self, state: np.ndarray):
         if self.eps > np.random.random():

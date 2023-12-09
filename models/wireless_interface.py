@@ -10,12 +10,12 @@ class WirelessInterface:
         self.powers = specs["powers"]
         self.cg_sigma = specs["cg_sigma"]
         self.cn_mean = specs["cn_mean"]
-        self.cn_std = specs["cn_std"]
+        self.cn_var = specs["cn_var"]
         self.bandwidth = specs["bandwidth"]
 
         self.power = self.powers[0] # Current power level
-        self.update_channel_gain() # channel gain ~ Rayleigh
-        self.update_channel_noise() # channel noise ~ gaussian
+        self._update_channel_gain() # channel gain ~ Rayleigh
+        self._update_channel_noise() # channel noise ~ gaussian
         self.e_server = EdgeServer() # Edge server instance
 
     def offload(self, tasks: Dict[int, Task], acts: List[List]):
@@ -25,32 +25,41 @@ class WirelessInterface:
                     raise ValueError(f"Unsupported wireless interface power: {in_power}")
                 # consumed energy when offloading
                 self.power = in_power
-                job.cons_energy = (dbm_to_mw(self.power)*job.b)/self.get_channel_rate()
-                #TODO: It's assuemd that remote can execute all tasks without missing deadlines
-                job.deadline_missed = False
+                job.cons_energy = (dbm_to_w(self.power)*job.b)/(self.get_channel_rate()*1e6)
+                if job.cons_energy < 0:
+                    # Transmission power is not set properly
+                    job.deadline_missed = True
+                else:
+                    job.deadline_missed = False
                 self.e_server.execute(job)
-                # update channel status
+                #TODO: It's assuemd that remote can execute all tasks without missing deadlines
+                # Time required to offload the task to edge server
+                job.aet += job.b/(self.get_channel_rate()*1e6)
+
         #TODO: When channel status must be updated?
-        self.update_channel_gain()
-        self.update_channel_noise()
+        self.update_channel_state()
+
+    def update_channel_state(self):
+        self._update_channel_gain()
+        self._update_channel_noise()
+        return (self.cg, self.cn)
 
     #TODO: How frequent channel gain must be updated?
-    def update_channel_gain(self):
+    def _update_channel_gain(self):
         self.cg = np.random.rayleigh(scale=self.cg_sigma)
-        return self.cg
 
-    def update_channel_noise(self):
+    def _update_channel_noise(self):
         self.cn = np.random.normal(loc=self.cn_mean,
-                                   scale=self.cn_std)
-        return self.cn
+                                   scale=np.sqrt(self.cn_var))
 
     def get_channel_rate(self):
-        return self.bandwidth * np.log2(1+self.power*self.cg/self.cn)
+        # FIXME: If bandwidth is negative, probably power is not enough
+        return self.bandwidth * np.log2(1+dbm_to_w(self.power)*self.cg/self.cn)
 
     # No. of possible power values
     def __len__(self):
         return len(self.powers)
 
 
-def dbm_to_mw(pow_dbm: float) -> float:
-    return 10**(pow_dbm/10)
+def dbm_to_w(pow_dbm: float) -> float:
+    return (10**(pow_dbm/10))/1000

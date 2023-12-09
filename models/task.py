@@ -5,11 +5,11 @@ import numpy as np
 class Task:
     def __init__(self, specs):
         self.p = specs['p'] # period time, (ms)
-        self.b = specs['b'] # task input data (KB)
+        self.b = specs['b']*1024 # task input data (KB -> B)
         self.wcet = specs['w'] # worst-case execution time, (ms)
         self.t_id = specs['task'] # task ID representing a unique task
-        self.aet = 0 #(ms)
-        self.cons_energy = 0. # consumed energy when executing the task in (mJ)
+        self.aet = 0 #(s)
+        self.cons_energy = 0. # consumed energy when executing the task in (J)
         self.deadline_missed = False
 
     def gen_aet(self):
@@ -35,7 +35,6 @@ class TaskGen:
             tasks_i = []
             for _ in range(num_tasks):
                 tasks_i.append(copy.deepcopy(ts))
-                # tasks_i[-1].gen_aet()
             tasks[ts.t_id] = tasks_i
 
         return tasks

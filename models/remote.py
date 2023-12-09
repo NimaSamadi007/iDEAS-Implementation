@@ -6,5 +6,4 @@ class EdgeServer:
 
     def execute(self, job: Task):
         job.gen_aet()
-        print(f"Executing job {job} at EServer")
 

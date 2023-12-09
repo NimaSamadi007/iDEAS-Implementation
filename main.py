@@ -11,7 +11,8 @@ from dvfs.dvfs import DVFS
 ###################################################
 # Contants:
 DEADLINE_MISSED_PENALTY = 1e3
-
+NUM_ITR = 10
+STATE_DIM = 4
 
 ###################################################
 # Utility functions
@@ -40,16 +41,16 @@ def load_task_set():
         task_set.append(Task(task_set_conf[i]))
     return task_set
 
-def observe_system_state(tasks):
-    # State: (SU, WCET, B)
-    # TODO: Add channel randomness to state
-    states = np.zeros((len(tasks), 3), dtype=np.float32)
+def observe_system_state(tasks, channel_gain):
+    # State: (SU, WCET, B, h)
+    states = np.zeros((len(tasks), STATE_DIM), dtype=np.float32)
     su = 0.
     for i, task in enumerate(tasks.values()):
         su += task[0].wcet/task[0].p
         states[i, 1] = task[0].p
         states[i, 2] = task[0].b
     states[:, 0] = su
+    states[:, 3] = channel_gain
     return states
 
 def cal_penalties(tasks: Dict[int, Task]) -> np.ndarray:
@@ -97,20 +98,21 @@ if __name__ == '__main__':
     action_space["offload"] = w_inter.powers
     action_space["big"] = cpu_big.freqs
     action_space["little"] = cpu_little.freqs
-    dvfs_alg = DVFS(state_dim=3,
+    dvfs_alg = DVFS(state_dim=STATE_DIM,
                     act_space=action_space,
                     seed=RND_SEED)
     print("-------------")
-    while True:
-        # Generate tasks for one hyper period:
-        tasks = tg.generate(task_set)
-
-        # Current state value:
-        states = observe_system_state(tasks)
-        print(f"States shape: {states.shape}")
+    cg, _ = w_inter.update_channel_state()
+    next_tasks = tg.generate(task_set)
+    next_states = observe_system_state(next_tasks, cg)
+    for itr in range(NUM_ITR):
+        # Assign current tasks from previous tasks
+        tasks = next_tasks
+        states = next_states
 
         # Run DVFS and offloader to assign tasks
-        actions = dvfs_alg.execute(states)
+        raw_actions = dvfs_alg.execute(states)
+        actions = dvfs_alg.conv_raw_acts(raw_actions)
         print(f"Actions:\n{actions}")
 
         # Execute tasks
@@ -123,8 +125,17 @@ if __name__ == '__main__':
 
         # Calculate penalties
         penalties = cal_penalties(tasks)
-        print(penalties)
+
+        # Observe next state
+        cg, _ = w_inter.update_channel_state()
+        next_tasks = tg.generate(task_set)
+        next_states = observe_system_state(next_tasks, cg)
 
         # Update RL networks
+        if itr == NUM_ITR-1:
+            are_final = len(tasks)*[True]
+        else:
+            are_final = len(tasks)*[False]
+        dvfs_alg.train(states, raw_actions, -penalties, next_states, are_final)
 
-        break
+        print(10*"*")

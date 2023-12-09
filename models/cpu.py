@@ -1,10 +1,12 @@
+import numpy as np
+
 from typing import List, Dict
 from models.task import Task
 
 class CPU:
     def __init__(self, specs):
-        self.freqs = specs['freqs']
-        self.powers = specs['powers']
+        self.freqs = np.asarray(specs['freqs']) # Mhz
+        self.powers = np.asarray(specs['powers'])*1e-3 # mW -> W
         self.model = specs['model']
         self.ncore = specs['num_cores']
         self.cpu_type = specs['type']
@@ -44,5 +46,5 @@ class CPU:
                     job.deadline_missed = True
                     continue
                 # Calculate energy consumption (chip energy conusmption at given frequency)
-                job.cons_energy = self.powers[self.freqs.index(in_freq)] * true_exec_time
-                job.cons_energy /= 1000. # Consumed energy must be in mJ
+                cons_power = self.powers[self.freqs == in_freq][0] # There should be only one element
+                job.cons_energy = cons_power * (true_exec_time/1000)
