@@ -73,7 +73,6 @@ class DVFS:
                  batch_size: int = 16,
                  update_target_net: int = 100,
                  eps_decay: float = 1.0/2000,
-                 seed: int = 42,
                  max_eps: float = 1.0,
                  min_eps: float = 0.1,
                  gamma: float = 0.99):
@@ -99,6 +98,7 @@ class DVFS:
         self.update_target_net = update_target_net
         self.gamma = gamma
         self.update_cnt = 0
+        self.losses = []
 
         # Training device
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -129,7 +129,7 @@ class DVFS:
 
         if len(self.repl_buf) >= self.batch_size:
             loss = self.update_model()
-            print(f"Loss value: {loss:.3f}")
+            self.losses.append(loss)
             self.update_cnt += 1
 
             # decrease epsilon
@@ -139,6 +139,8 @@ class DVFS:
             if self.update_cnt % self.update_target_net == 0:
                 self.update_cnt = 0
                 self._update_target_net()
+            return loss
+        return None
 
 
     def execute(self, states: np.ndarray) -> np.ndarray:

@@ -2,6 +2,7 @@ import json
 import numpy as np
 import torch
 from typing import Dict
+import matplotlib.pyplot as plt
 
 from models.cpu import CPU
 from models.wireless_interface import WirelessInterface
@@ -133,4 +134,13 @@ if __name__ == '__main__':
             are_final = len(tasks)*[True]
         else:
             are_final = len(tasks)*[False]
-        dvfs_alg.train(states, raw_actions, -penalties, next_states, are_final)
+        rewards = np.exp(-penalties)
+        loss = dvfs_alg.train(states, raw_actions, rewards, next_states, are_final)
+        if (itr+1) % 100 == 0:
+            print(f"At {itr}, loss={loss:.3f}")
+
+    print(f"Current eps val: {dvfs_alg.eps}")
+    plt.title("Loss function values")
+    plt.plot(dvfs_alg.losses)
+    plt.grid(True)
+    plt.show()
