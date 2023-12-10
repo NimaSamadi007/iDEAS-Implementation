@@ -15,7 +15,7 @@ from dvfs.dvfs import DVFS
 DEADLINE_MISSED_PENALTY = 1e3
 NUM_ITR = 10000
 STATE_DIM = 4
-
+REWARD_COEFF = 5
 ###################################################
 # Utility functions
 def load_wireless_interface_configs():
@@ -134,7 +134,7 @@ if __name__ == '__main__':
             are_final = len(tasks)*[True]
         else:
             are_final = len(tasks)*[False]
-        rewards = np.exp(-penalties)
+        rewards = REWARD_COEFF*np.exp(-REWARD_COEFF*penalties)
         loss = dvfs_alg.train(states, raw_actions, rewards, next_states, are_final)
         if (itr+1) % 500 == 0:
             print(f"At {itr}, loss={loss:.3f}")
