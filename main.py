@@ -1,5 +1,6 @@
 import json
 import numpy as np
+import torch
 from typing import Dict
 
 from models.cpu import CPU
@@ -11,7 +12,7 @@ from dvfs.dvfs import DVFS
 ###################################################
 # Contants:
 DEADLINE_MISSED_PENALTY = 1e3
-NUM_ITR = 10
+NUM_ITR = 10000
 STATE_DIM = 4
 
 ###################################################
@@ -71,22 +72,23 @@ def cal_penalties(tasks: Dict[int, Task]) -> np.ndarray:
 
     return np.asarray(penalties, dtype=float)
 
+def set_random_seed(seed):
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.backends.cudnn.enabled:
+        torch.cuda.manual_seed(seed)
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
+
 ###################################################
 # Main function
 if __name__ == '__main__':
-    # Set numpy random seed
-    RND_SEED = 81
-    np.random.seed(RND_SEED)
+    # Set random seed
+    set_random_seed(42)
 
     ## Load tasks and CPU models
     cpu_big, cpu_little = load_cpu_configs()
-    print(cpu_big)
-    print(cpu_little)
-
     task_set = load_task_set()
-    for t in task_set:
-        print(t)
-
     w_inter = load_wireless_interface_configs()
 
     ## Offloading and DVFS main cylce
@@ -99,10 +101,9 @@ if __name__ == '__main__':
     action_space["big"] = cpu_big.freqs
     action_space["little"] = cpu_little.freqs
     dvfs_alg = DVFS(state_dim=STATE_DIM,
-                    act_space=action_space,
-                    seed=RND_SEED)
-    print("-------------")
-    cg, _ = w_inter.update_channel_state()
+                    act_space=action_space)
+
+    cg = w_inter.update_channel_state()
     next_tasks = tg.generate(task_set)
     next_states = observe_system_state(next_tasks, cg)
     for itr in range(NUM_ITR):
@@ -113,21 +114,17 @@ if __name__ == '__main__':
         # Run DVFS and offloader to assign tasks
         raw_actions = dvfs_alg.execute(states)
         actions = dvfs_alg.conv_raw_acts(raw_actions)
-        print(f"Actions:\n{actions}")
 
         # Execute tasks
-        print("Executing LITTLE core tasks...")
         cpu_little.execute(tasks, actions['little'])
-        print("Executing big core tasks...")
         cpu_big.execute(tasks, actions['big'])
-        print("Offloading tasks to edge server...")
         w_inter.offload(tasks, actions['offload'])
 
         # Calculate penalties
         penalties = cal_penalties(tasks)
 
         # Observe next state
-        cg, _ = w_inter.update_channel_state()
+        cg = w_inter.update_channel_state()
         next_tasks = tg.generate(task_set)
         next_states = observe_system_state(next_tasks, cg)
 
@@ -137,5 +134,3 @@ if __name__ == '__main__':
         else:
             are_final = len(tasks)*[False]
         dvfs_alg.train(states, raw_actions, -penalties, next_states, are_final)
-
-        print(10*"*")

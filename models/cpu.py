@@ -28,7 +28,6 @@ class CPU:
             job = tasks[t_id][0]
             wcet_scaled = job.wcet * (self.freq/in_freq)
             total_util += wcet_scaled / job.p
-        print(f"{self.cpu_type} task util: {total_util}")
         if total_util > 1: # Not schedulable
             #TODO: What's the best thing to do in case of unschedulable tasks
             for t_id, in_freq in acts:

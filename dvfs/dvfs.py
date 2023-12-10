@@ -94,7 +94,6 @@ class DVFS:
         self.batch_size = batch_size
         self.eps = max_eps
         self.eps_decay = eps_decay
-        self.seed = seed
         self.max_eps = max_eps
         self.min_eps = min_eps
         self.update_target_net = update_target_net
@@ -119,7 +118,7 @@ class DVFS:
                     actions: np.ndarray,
                     rewards: np.ndarray,
                     next_states: np.ndarray,
-                    are_final: List[bool]):
+                    are_final: List[bool]) -> float:
         # Store state, action, and rewards to buffer
         for state, action, reward, next_state, is_final in zip(states, actions, rewards, next_states, are_final):
             self.repl_buf.store(state,
@@ -130,7 +129,7 @@ class DVFS:
 
         if len(self.repl_buf) >= self.batch_size:
             loss = self.update_model()
-            print(f"Loss value: {loss}")
+            print(f"Loss value: {loss:.3f}")
             self.update_cnt += 1
 
             # decrease epsilon
