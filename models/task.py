@@ -5,7 +5,7 @@ import numpy as np
 class Task:
     def __init__(self, specs):
         self.p = specs['p'] # period time, (ms)
-        self.b = specs['b']*1024 # task input data (KB -> B)
+        self.b = specs['b'] # task input data (KB)
         self.wcet = specs['w'] # worst-case execution time, (ms)
         self.t_id = specs['task'] # task ID representing a unique task
         self.aet = 0 #(s)

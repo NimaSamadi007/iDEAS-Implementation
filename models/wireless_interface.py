@@ -23,15 +23,15 @@ class WirelessInterface:
                     raise ValueError(f"Unsupported wireless interface power: {in_power}")
                 # consumed energy when offloading
                 self.power = in_power
-                rate = self.get_channel_rate()*1e6
+                rate = self.get_channel_rate()*1e6 # unit: bps
                 if rate <= 0:
                     raise ValueError("Negative channel rate!")
                 self.e_server.execute(job)
-                job.aet += job.b/rate
+                job.aet += ((job.b*1024*8)/rate)*1e3 # aet unit: ms
                 if job.aet > job.p:
                     job.deadline_missed = True
                 else:
-                    job.cons_energy = (dbm_to_w(self.power)*job.b)/(self.get_channel_rate()*1e6)
+                    job.cons_energy = (dbm_to_w(self.power)*job.b*1024*8)/(self.get_channel_rate()*1e6)
 
         #TODO: When channel status must be updated?
 

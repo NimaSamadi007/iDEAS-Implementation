@@ -75,7 +75,7 @@ class DVFS:
                  eps_decay: float = 1.0/2000,
                  max_eps: float = 1.0,
                  min_eps: float = 0.1,
-                 gamma: float = 0.99):
+                 gamma: float = 0.9):
 
         # Parameters
         self.state_dim = state_dim

@@ -49,7 +49,7 @@ def observe_system_state(tasks, channel_gain):
     su = 0.
     for i, task in enumerate(tasks.values()):
         su += task[0].wcet/task[0].p
-        states[i, 1] = task[0].p
+        states[i, 1] = task[0].wcet
         states[i, 2] = task[0].b
     states[:, 0] = su
     states[:, 3] = channel_gain
@@ -136,8 +136,12 @@ if __name__ == '__main__':
             are_final = len(tasks)*[False]
         rewards = np.exp(-penalties)
         loss = dvfs_alg.train(states, raw_actions, rewards, next_states, are_final)
-        if (itr+1) % 100 == 0:
+        if (itr+1) % 500 == 0:
             print(f"At {itr}, loss={loss:.3f}")
+            print(f"Actions: {actions}")
+            print(f"Rewards: {rewards}")
+            print(f"Penalties: {penalties}")
+            print(10*"-")
 
     print(f"Current eps val: {dvfs_alg.eps}")
     plt.title("Loss function values")
