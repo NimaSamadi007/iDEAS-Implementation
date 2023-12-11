@@ -8,7 +8,7 @@ class Task:
         self.b = specs['b'] # task input data (KB)
         self.wcet = specs['w'] # worst-case execution time, (ms)
         self.t_id = specs['task'] # task ID representing a unique task
-        self.aet = 0 #(s)
+        self.aet = 0 #(ms)
         self.cons_energy = 0. # consumed energy when executing the task in (J)
         self.deadline_missed = False
 

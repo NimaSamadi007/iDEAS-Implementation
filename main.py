@@ -13,9 +13,10 @@ from dvfs.dvfs import DVFS
 ###################################################
 # Contants:
 DEADLINE_MISSED_PENALTY = 1e3
-NUM_ITR = 10000
+NUM_ITR = int(1.5e5)
 STATE_DIM = 4
-REWARD_COEFF = 5
+REWARD_COEFF = 1
+LATENCY_ENERGY_COEFF = 0.1
 ###################################################
 # Utility functions
 def load_wireless_interface_configs():
@@ -65,9 +66,9 @@ def cal_penalties(tasks: Dict[int, Task]) -> np.ndarray:
                 is_deadline_missed = True
                 break
             else:
-                penalty += job.cons_energy
+                penalty += (job.cons_energy+LATENCY_ENERGY_COEFF*job.aet)
         if not is_deadline_missed:
-            penalties.append(penalty)
+            penalties.append(penalty/len(task))
         else:
             penalties.append(DEADLINE_MISSED_PENALTY)
 
@@ -81,6 +82,8 @@ def set_random_seed(seed):
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
 
+def moving_avg(arr, n):
+    return np.convolve(arr, np.ones(n, dtype=arr.dtype), 'same') / n
 ###################################################
 # Main function
 if __name__ == '__main__':
@@ -102,11 +105,14 @@ if __name__ == '__main__':
     action_space["big"] = cpu_big.freqs
     action_space["little"] = cpu_little.freqs
     dvfs_alg = DVFS(state_dim=STATE_DIM,
-                    act_space=action_space)
+                    act_space=action_space,
+                    batch_size=32,
+                    gamma=0.95)
 
     cg = w_inter.update_channel_state()
     next_tasks = tg.generate(task_set)
     next_states = observe_system_state(next_tasks, cg)
+    all_rewards = []
     for itr in range(NUM_ITR):
         # Assign current tasks from previous tasks
         tasks = next_tasks
@@ -135,6 +141,7 @@ if __name__ == '__main__':
         else:
             are_final = len(tasks)*[False]
         rewards = REWARD_COEFF*np.exp(-REWARD_COEFF*penalties)
+        all_rewards.append(rewards.tolist())
         loss = dvfs_alg.train(states, raw_actions, rewards, next_states, are_final)
         if (itr+1) % 500 == 0:
             print(f"At {itr}, loss={loss:.3f}")
@@ -144,7 +151,25 @@ if __name__ == '__main__':
             print(10*"-")
 
     print(f"Current eps val: {dvfs_alg.eps}")
+    fig = plt.figure(figsize=(16, 12))
     plt.title("Loss function values")
     plt.plot(dvfs_alg.losses)
     plt.grid(True)
-    plt.show()
+    fig.savefig("figs/loss_function.png")
+
+    all_rewards = np.array(all_rewards)
+    fig = plt.figure(figsize=(16, 12))
+    plt.title("Reward value")
+    plt.plot(moving_avg(all_rewards[:, 0], 100))
+    plt.plot(moving_avg(all_rewards[:, 1], 100))
+    plt.plot(moving_avg(all_rewards[:, 2], 100))
+    plt.plot(moving_avg(all_rewards[:, 3], 100))
+    plt.grid(True)
+    fig.savefig("figs/all_reward.png")
+
+    avg_reward = np.sum(all_rewards, axis=1)/all_rewards.shape[1]
+    fig = plt.figure(figsize=(16, 12))
+    plt.title("Average reward")
+    plt.plot(moving_avg(avg_reward, 100))
+    plt.grid(True)
+    fig.savefig("figs/avg_reward.png")

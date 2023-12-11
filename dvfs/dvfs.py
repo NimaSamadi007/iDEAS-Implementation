@@ -77,7 +77,8 @@ class DVFS:
                  eps_decay: float = 1.0/2000,
                  max_eps: float = 1.0,
                  min_eps: float = 0.1,
-                 gamma: float = 0.9):
+                 gamma: float = 0.9,
+                 weight_decay: float = 1e-5):
 
         # Parameters
         self.state_dim = state_dim
@@ -114,7 +115,7 @@ class DVFS:
         self.target_net.eval()
 
         # Optimizer
-        self.optimizer = optim.Adam(self.net.parameters())
+        self.optimizer = optim.Adam(self.net.parameters(), weight_decay=weight_decay)
 
     def train(self, states: np.ndarray,
                     actions: np.ndarray,
@@ -179,7 +180,7 @@ class DVFS:
         mask = 1-final
         target_val = (reward + self.gamma*next_q_val*mask).to(self.device)
 
-        loss = F.smooth_l1_loss(curr_q_val, target_val)
+        loss = F.mse_loss(curr_q_val, target_val)
         return loss
 
     def _sel_act(self, state: np.ndarray):
