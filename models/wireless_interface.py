@@ -7,7 +7,7 @@ from models.task import Task
 class WirelessInterface:
     def __init__(self, specs: Dict[str, List or int]):
         # Power levels are represented in dbm and must be converted accordingly
-        self.powers = specs["powers"]
+        self.powers = specs["powers"] # must be sorted incrementally
         self.cg_sigma = specs["cg_sigma"]
         self.cn_power = specs["cn_power"]
         self.bandwidth = specs["bandwidth"]
@@ -31,7 +31,7 @@ class WirelessInterface:
                 if job.aet > job.p:
                     job.deadline_missed = True
                 else:
-                    job.cons_energy = (dbm_to_w(self.power)*job.b*1024*8)/(self.get_channel_rate()*1e6)
+                    job.cons_energy = (dbm_to_w(self.power)*job.b*1024*8) / rate
 
         #TODO: When channel status must be updated?
 
@@ -42,6 +42,12 @@ class WirelessInterface:
 
     def get_channel_rate(self):
         return self.bandwidth * np.log2(1+dbm_to_w(self.power)*self.cg/self.cn_power)
+
+    def get_min_energy(self, task: Task) -> float:
+        min_power = self.powers[0]
+        rate = self.get_channel_rate()*1e6 # unit: bps
+        min_energy = (dbm_to_w(min_power)*task.b*1024*8) / rate
+        return min_energy
 
     # No. of possible power values
     def __len__(self):

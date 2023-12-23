@@ -16,11 +16,9 @@ class Network(nn.Module):
         super(Network, self).__init__()
 
         self.net = nn.Sequential(
-            nn.Linear(in_dim, 256),
+            nn.Linear(in_dim, 128),
             nn.ReLU(),
-            nn.Linear(256, 256),
-            nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(128, 128),
             nn.ReLU(),
             nn.Linear(128, out_dim)
         )
@@ -100,11 +98,12 @@ class DVFS:
         self.min_eps = min_eps
         self.update_target_net = update_target_net
         self.gamma = gamma
-        self.update_cnt = 0
+        self.update_cnt = 1
         self.losses = []
 
         # Training device
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = "cpu"
         print(f"Using {self.device} device for training")
 
         # Network initialization
@@ -140,7 +139,7 @@ class DVFS:
                 self.min_eps, self.eps-self.eps_decay*(self.max_eps-self.min_eps)
             )
             if self.update_cnt % self.update_target_net == 0:
-                self.update_cnt = 0
+                self.update_cnt = 1
                 self._update_target_net()
             return loss
         return None
@@ -180,12 +179,16 @@ class DVFS:
         mask = 1-final
         target_val = (reward + self.gamma*next_q_val*mask).to(self.device)
 
-        loss = F.mse_loss(curr_q_val, target_val)
+        loss = F.smooth_l1_loss(curr_q_val, target_val)
         return loss
 
     def _sel_act(self, state: np.ndarray):
         if self.eps > np.random.random():
-            sel_act = np.random.randint(self.act_dim)
+            # First select between 3 possible targets
+            target_id = np.random.randint(len(self.act_space))
+            # Then select action from the selected target
+            sel_act = np.random.randint(self.act_type_boundry[target_id],
+                                        self.act_type_boundry[target_id+1])
         else:
             sel_act = self.net(
                 torch.FloatTensor(state).to(self.device)
