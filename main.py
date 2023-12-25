@@ -104,104 +104,109 @@ if __name__ == '__main__':
     set_random_seed(42)
 
     ## Load tasks and CPU models
-    cpu_big, cpu_little = load_cpu_configs()
     task_set = load_task_set()
+    cpu_big, cpu_little = load_cpu_configs()
     w_inter = load_wireless_interface_configs()
 
     ## Offloading and DVFS main cylce
     # Initialize RL network and other parameters
-    tg = TaskGen()
-    action_space = {"offload": [],
-                    "big": [],
-                    "little": []}
-    action_space["offload"] = w_inter.powers
-    action_space["big"] = cpu_big.freqs
-    action_space["little"] = cpu_little.freqs
-    # (SU, WCET, B, h)
-    min_state_vals = np.array([0, 2, 150, 0], dtype=float)
-    max_state_vals = np.array([1, 10, 500, 2*w_inter.cg_sigma], dtype=float)
-    dvfs_alg = DVFS(state_dim=STATE_DIM,
-                    act_space=action_space,
-                    batch_size=32,
-                    gamma=0.90,
-                    update_target_net= 1000,
-                    eps_decay = 1/2000,
-                    min_eps=0)
+    tg = TaskGen(task_set)
+    tasks = tg.step(100)
+    for key, val in tasks.items():
+        print(f"Task {key}: {val}")
 
-    cg = w_inter.update_channel_state()
-    next_tasks = tg.generate(task_set)
-    next_states = observe_system_state(next_tasks, cg, min_state_vals, max_state_vals)
-    all_rewards = []
-    all_penalties = []
-    all_min_penalties = []
-    for itr in range(NUM_ITR):
-        # Assign current tasks from previous tasks
-        tasks = next_tasks
-        states = next_states
 
-        # Run DVFS and offloader to assign tasks
-        raw_actions = dvfs_alg.execute(states)
-        actions = dvfs_alg.conv_raw_acts(raw_actions)
+    # action_space = {"offload": [],
+    #                 "big": [],
+    #                 "little": []}
+    # action_space["offload"] = w_inter.powers
+    # action_space["big"] = cpu_big.freqs
+    # action_space["little"] = cpu_little.freqs
+    # # (SU, WCET, B, h)
+    # min_state_vals = np.array([0, 2, 150, 0], dtype=float)
+    # max_state_vals = np.array([1, 10, 500, 2*w_inter.cg_sigma], dtype=float)
+    # dvfs_alg = DVFS(state_dim=STATE_DIM,
+    #                 act_space=action_space,
+    #                 batch_size=32,
+    #                 gamma=0.90,
+    #                 update_target_net= 1000,
+    #                 eps_decay = 1/2000,
+    #                 min_eps=0)
 
-        # Execute tasks
-        cpu_little.execute(tasks, actions['little'])
-        cpu_big.execute(tasks, actions['big'])
-        w_inter.offload(tasks, actions['offload'])
+    # cg = w_inter.update_channel_state()
+    # next_tasks = tg.generate(task_set)
+    # next_states = observe_system_state(next_tasks, cg, min_state_vals, max_state_vals)
+    # all_rewards = []
+    # all_penalties = []
+    # all_min_penalties = []
+    # for itr in range(NUM_ITR):
+    #     # Assign current tasks from previous tasks
+    #     tasks = next_tasks
+    #     states = next_states
 
-        # Observe next state
-        cg = w_inter.update_channel_state()
-        next_tasks = tg.generate(task_set)
-        next_states = observe_system_state(next_tasks, cg, min_state_vals, max_state_vals)
+    #     # Run DVFS and offloader to assign tasks
+    #     raw_actions = dvfs_alg.execute(states)
+    #     actions = dvfs_alg.conv_raw_acts(raw_actions)
 
-        # Update RL networks
-        are_final = len(tasks)*[True]
-        rewards, penalties, min_penalties = cal_rewards(tasks, cpu_big, cpu_little, w_inter)
-        all_rewards.append(rewards.tolist())
-        all_penalties.append(penalties.tolist())
-        all_min_penalties.append(min_penalties.tolist())
-        loss = dvfs_alg.train(states, raw_actions, rewards, next_states, are_final)
-        if (itr+1) % 500 == 0:
-            print(f"At {itr+1}, loss={loss:.3f}")
-            print(f"Actions: {actions}")
-            print(f"Rewards: {rewards}")
-            print(f"Penalties: {penalties}")
-            print(f"Min penalties: {min_penalties}")
-            print(10*"-")
+    #     # Execute tasks
+    #     cpu_little.execute(tasks, actions['little'])
+    #     cpu_big.execute(tasks, actions['big'])
+    #     w_inter.offload(tasks, actions['offload'])
 
-    print(f"Current eps val: {dvfs_alg.eps}")
-    fig = plt.figure(figsize=(16, 12))
-    plt.title("Loss function values")
-    plt.plot(dvfs_alg.losses)
-    plt.grid(True)
-    fig.savefig("figs/loss_function.png")
+    #     # Observe next state
+    #     cg = w_inter.update_channel_state()
+    #     next_tasks = tg.generate(task_set)
+    #     next_states = observe_system_state(next_tasks, cg, min_state_vals, max_state_vals)
 
-    all_rewards = np.array(all_rewards)
-    fig = plt.figure(figsize=(16, 12))
-    plt.title("Reward value")
-    plt.plot(moving_avg(all_rewards[:, 0], 500))
-    plt.plot(moving_avg(all_rewards[:, 1], 500))
-    plt.plot(moving_avg(all_rewards[:, 2], 500))
-    plt.plot(moving_avg(all_rewards[:, 3], 500))
-    plt.grid(True)
-    fig.savefig("figs/all_reward.png")
+    #     # Update RL networks
+    #     are_final = len(tasks)*[True]
+    #     rewards, penalties, min_penalties = cal_rewards(tasks, cpu_big, cpu_little, w_inter)
+    #     all_rewards.append(rewards.tolist())
+    #     all_penalties.append(penalties.tolist())
+    #     all_min_penalties.append(min_penalties.tolist())
+    #     loss = dvfs_alg.train(states, raw_actions, rewards, next_states, are_final)
+    #     if (itr+1) % 500 == 0:
+    #         print(f"At {itr+1}, loss={loss:.3f}")
+    #         print(f"Actions: {actions}")
+    #         print(f"Rewards: {rewards}")
+    #         print(f"Penalties: {penalties}")
+    #         print(f"Min penalties: {min_penalties}")
+    #         print(10*"-")
 
-    all_penalties = np.array(all_penalties)
-    all_min_penalties = np.array(all_min_penalties)
+    # print(f"Current eps val: {dvfs_alg.eps}")
+    # fig = plt.figure(figsize=(16, 12))
+    # plt.title("Loss function values")
+    # plt.plot(dvfs_alg.losses)
+    # plt.grid(True)
+    # fig.savefig("figs/loss_function.png")
 
-    for i in range(4):
-        fig = plt.figure(figsize=(16, 12))
-        plt.title(f"Penalties t{i}")
-        plt.plot(moving_avg(all_penalties[:, i], 100))
-        plt.plot(moving_avg(all_min_penalties[:, i], 100))
-        plt.grid(True)
-        plt.legend(["actual", "min"])
-        fig.savefig(f"figs/pen{i}.png")
+    # all_rewards = np.array(all_rewards)
+    # fig = plt.figure(figsize=(16, 12))
+    # plt.title("Reward value")
+    # plt.plot(moving_avg(all_rewards[:, 0], 500))
+    # plt.plot(moving_avg(all_rewards[:, 1], 500))
+    # plt.plot(moving_avg(all_rewards[:, 2], 500))
+    # plt.plot(moving_avg(all_rewards[:, 3], 500))
+    # plt.grid(True)
+    # fig.savefig("figs/all_reward.png")
 
-    avg_reward = np.sum(all_rewards, axis=1)/all_rewards.shape[1]
-    fig = plt.figure(figsize=(16, 12))
-    plt.title("Average reward")
-    plt.plot(moving_avg(avg_reward, 100))
-    plt.grid(True)
-    fig.savefig("figs/avg_reward.png")
+    # all_penalties = np.array(all_penalties)
+    # all_min_penalties = np.array(all_min_penalties)
+
+    # for i in range(4):
+    #     fig = plt.figure(figsize=(16, 12))
+    #     plt.title(f"Penalties t{i}")
+    #     plt.plot(moving_avg(all_penalties[:, i], 100))
+    #     plt.plot(moving_avg(all_min_penalties[:, i], 100))
+    #     plt.grid(True)
+    #     plt.legend(["actual", "min"])
+    #     fig.savefig(f"figs/pen{i}.png")
+
+    # avg_reward = np.sum(all_rewards, axis=1)/all_rewards.shape[1]
+    # fig = plt.figure(figsize=(16, 12))
+    # plt.title("Average reward")
+    # plt.plot(moving_avg(avg_reward, 100))
+    # plt.grid(True)
+    # fig.savefig("figs/avg_reward.png")
 
     # plt.show()
