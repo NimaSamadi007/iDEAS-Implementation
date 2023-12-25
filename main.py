@@ -13,7 +13,7 @@ from dvfs.dvfs import DVFS
 ###################################################
 # Contants:
 DEADLINE_MISSED_PENALTY = 1e4
-NUM_ITR = int(1e5)
+NUM_ITR = int(1e4)
 STATE_DIM = 4
 REWARD_COEFF = 10
 LATENCY_ENERGY_COEFF = 0
@@ -123,10 +123,10 @@ if __name__ == '__main__':
     dvfs_alg = DVFS(state_dim=STATE_DIM,
                     act_space=action_space,
                     batch_size=32,
-                    gamma=0.99,
+                    gamma=0.90,
                     update_target_net= 1000,
-                    eps_decay = 1/8000.,
-                    min_eps=0.1)
+                    eps_decay = 1/2000,
+                    min_eps=0)
 
     cg = w_inter.update_channel_state()
     next_tasks = tg.generate(task_set)
@@ -154,17 +154,14 @@ if __name__ == '__main__':
         next_states = observe_system_state(next_tasks, cg, min_state_vals, max_state_vals)
 
         # Update RL networks
-        if itr == NUM_ITR-1:
-            are_final = len(tasks)*[True]
-        else:
-            are_final = len(tasks)*[False]
+        are_final = len(tasks)*[True]
         rewards, penalties, min_penalties = cal_rewards(tasks, cpu_big, cpu_little, w_inter)
         all_rewards.append(rewards.tolist())
         all_penalties.append(penalties.tolist())
         all_min_penalties.append(min_penalties.tolist())
         loss = dvfs_alg.train(states, raw_actions, rewards, next_states, are_final)
         if (itr+1) % 500 == 0:
-            print(f"At {itr}, loss={loss:.3f}")
+            print(f"At {itr+1}, loss={loss:.3f}")
             print(f"Actions: {actions}")
             print(f"Rewards: {rewards}")
             print(f"Penalties: {penalties}")
@@ -181,10 +178,10 @@ if __name__ == '__main__':
     all_rewards = np.array(all_rewards)
     fig = plt.figure(figsize=(16, 12))
     plt.title("Reward value")
-    plt.plot(moving_avg(all_rewards[:, 0], 100))
-    plt.plot(moving_avg(all_rewards[:, 1], 100))
-    plt.plot(moving_avg(all_rewards[:, 2], 100))
-    plt.plot(moving_avg(all_rewards[:, 3], 100))
+    plt.plot(moving_avg(all_rewards[:, 0], 500))
+    plt.plot(moving_avg(all_rewards[:, 1], 500))
+    plt.plot(moving_avg(all_rewards[:, 2], 500))
+    plt.plot(moving_avg(all_rewards[:, 3], 500))
     plt.grid(True)
     fig.savefig("figs/all_reward.png")
 
@@ -206,3 +203,5 @@ if __name__ == '__main__':
     plt.plot(moving_avg(avg_reward, 100))
     plt.grid(True)
     fig.savefig("figs/avg_reward.png")
+
+    # plt.show()
