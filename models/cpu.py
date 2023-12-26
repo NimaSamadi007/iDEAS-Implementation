@@ -19,9 +19,7 @@ class CPU:
         return f"'{self.model} {self.cpu_type}' CPU with {self.ncore} cores"
 
     # Assign tasks to execute
-    def execute(self, tasks: Dict[int, Task], acts: List[List]):
-        # print(f"Executing CPU {self.cpu_type} task {jobs[0]}")
-
+    def step(self, tasks: Dict[int, Task], acts: List[List]):
         # Check schedulability criteria
         total_util = 0
         for t_id, in_freq in acts:
@@ -34,6 +32,7 @@ class CPU:
                 for job in tasks[t_id]:
                     job.deadline_missed = True
             return
+        self.util = total_util
 
         # AET can only be set at the time of execution
         for t_id, in_freq in acts:
