@@ -1,6 +1,6 @@
 {
     "cg_sigma": 1e-3,
-    "bandwidth": 0.1,
+    "bandwidth": 5,
     "cn_power": 1e-9,
     "powers":
     [
