@@ -1,11 +1,18 @@
 import numpy as np
+import json
 from typing import List, Dict
 
 from models.remote import EdgeServer
 from models.task import Task
 
 class WirelessInterface:
-    def __init__(self, specs: Dict[str, List or int]):
+    def __init__(self, w_inter_conf_path):
+        try:
+            with open(w_inter_conf_path, "r") as f:
+                specs = json.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Wireless interface configuration file not found at {w_inter_conf_path}")
+
         # Power levels are represented in dbm and must be converted accordingly
         self.powers = specs["powers"] # must be sorted incrementally
         self.cg_sigma = specs["cg_sigma"]

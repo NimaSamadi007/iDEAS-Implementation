@@ -1,22 +1,27 @@
 import numpy as np
+import json
 
 from typing import List, Dict
 from models.task import Task
 
 class CPU:
-    def __init__(self, specs):
-        self.freqs = np.asarray(specs['freqs']) # Mhz - sorted incrementally
+    def __init__(self, cpu_conf_path):
+        try:
+            with open(cpu_conf_path, "r") as f:
+                specs = json.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"CPU configuration file not found at {cpu_conf_path}")
+
+        self.freqs = np.asarray(specs['freqs']) # Mhz - must be sorted incrementally
         self.powers = np.asarray(specs['powers'])*1e-3 # mW -> W - sorted incrementally
         self.model = specs['model']
-        self.ncore = specs['num_cores']
         self.cpu_type = specs['type']
 
         self.util = 0
-        self.dynamic_slack = 0
         self.freq = self.freqs[-1] # Maximum frequency by default
 
     def __repr__(self):
-        return f"'{self.model} {self.cpu_type}' CPU with {self.ncore} cores"
+        return f"'{self.model} {self.cpu_type}' CPU"
 
     # Assign tasks to execute
     def step(self, tasks: Dict[int, Task], acts: List[List]):

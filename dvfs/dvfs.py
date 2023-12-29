@@ -22,6 +22,12 @@ class Network(nn.Module):
             nn.ReLU(),
             nn.Linear(128, out_dim)
         )
+        self.net.apply(self._init_weights)
+
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            nn.init.xavier_normal_(m.weight)
+            nn.init.zeros_(m.bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
@@ -160,12 +166,14 @@ class DVFS:
 
         return loss.item()
 
-    def conv_raw_acts(self, raw_actions: np.ndarray):
-        actions = {key:[] for key in self.target_hard_name}
-        for i, action in enumerate(raw_actions):
-            action = self._conv_act_id_to_type(action)
-            actions[action[0]].append([i, action[1]])
-        return actions
+    # Convert id-based actions to string type actions
+    # so that they can be used in the environment
+    def conv_acts(self, actions: np.ndarray):
+        conv_actions = {key:[] for key in self.target_hard_name}
+        for i, act in enumerate(actions):
+            act = self._conv_act_id_to_type(act)
+            conv_actions[act[0]].append([i, act[1]])
+        return conv_actions
 
     def _compute_net_loss(self, samples: Dict[str, np.ndarray]) -> torch.Tensor:
         state = torch.FloatTensor(samples["state"]).to(self.device)
