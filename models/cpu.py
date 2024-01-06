@@ -62,3 +62,21 @@ class CPU:
                 min_energy = self.powers[i] * (wcet_scaled/1000)
                 return min_energy
         raise ValueError(f"Unable to schedult task: {task}")
+
+class TOMSCPU:
+    def __init__(self, cpu_conf_path):
+        try:
+            with open(cpu_conf_path, "r") as f:
+                specs = json.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"CPU configuration file not found at {cpu_conf_path}")
+
+        self.freqs = np.asarray(specs['freqs'])
+        self.powers_active = np.asarray(specs['powers_active'])
+        self.powers_idle = np.asarray(specs['powers_idle'])
+
+        self.util = 0
+        self.freq = self.freqs[-1] # Maximum frequency by default
+
+    def __repr__(self):
+        return "Co-TOMS model CPU"

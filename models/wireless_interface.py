@@ -2,7 +2,7 @@ import numpy as np
 import json
 from typing import List, Dict
 
-from models.remote import EdgeServer
+from models.remote import EdgeServer, Cloud
 from models.task import Task
 
 class WirelessInterface:
@@ -60,6 +60,22 @@ class WirelessInterface:
     def __len__(self):
         return len(self.powers)
 
+class TOMSWirelessInterface:
+    def __init__(self, conf_path):
+        try:
+            with open(conf_path, "r") as f:
+                conf = json.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Wireless interface configuration file not found at {conf_path}")
+
+        # Power levels are represented in dbm and must be converted accordingly
+        self.up_rate_max, self.up_rate_min = conf["upload_rate"]
+        self.down_rate_max, self.down_rate_min = conf["download_rate"]
+        self.power = conf["power"]
+
+        self.cloud = Cloud({"freq": conf["cloud_freq"],
+                            "power_active": conf["cloud_power_active"],
+                            "power_idle": conf["cloud_power_idle"]})
 
 def dbm_to_w(pow_dbm: float) -> float:
     return (10**(pow_dbm/10))/1000

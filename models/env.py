@@ -1,9 +1,9 @@
 from typing import Dict, List, Any
 import numpy as np
 
-from models.cpu import CPU
-from models.task import TaskGen
-from models.wireless_interface import WirelessInterface
+from models.cpu import CPU, TOMSCPU
+from models.task import TaskGen, TOMSTaskGen
+from models.wireless_interface import WirelessInterface, TOMSWirelessInterface
 from configs import *
 
 class Env:
@@ -87,3 +87,25 @@ class Env:
         rewards = np.exp(-REWARD_COEFF*(penalties-min_penalties))
         return rewards, penalties, min_penalties
 
+class TOMSEnv:
+    def __init__(self, confs: Dict[str, str]):
+        self.task_gen = TOMSTaskGen(confs['task_set'])
+        self.cpu = TOMSCPU(confs['cpu_conf'])
+        self.w_inter = TOMSWirelessInterface(confs['w_inter'])
+
+        # (SU, U_cpu, WCET, Data)
+        wcet_bound = self.task_gen.get_wcet_bound()
+        task_size_bound = self.task_gen.get_task_size_bound()
+        self.min_state_vals = np.array([0, 0, 0, wcet_bound[0], task_size_bound[0]], dtype=float)
+        self.max_state_vals = np.array([1, 1, 1, wcet_bound[1], task_size_bound[1]], dtype=float)
+
+        # Initialize environment state
+        self.curr_tasks = None
+        self.curr_state = None
+
+    def observe(self, time: float):
+        self.curr_tasks = self.task_gen.step(time)
+        self.curr_state = self._get_system_state()
+        is_final = len(self.curr_tasks)*[False]
+
+        return self.curr_state, is_final

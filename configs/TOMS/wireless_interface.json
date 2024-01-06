@@ -1,0 +1,8 @@
+{
+    "upload_rate": [30, 30],
+    "download_rate": [120, 120],
+    "power": 75,
+    "cloud_freq": 2,
+    "cloud_power_active": 400,
+    "cloud_power_idle": 100
+}
