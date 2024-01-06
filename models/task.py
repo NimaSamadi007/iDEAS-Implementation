@@ -80,12 +80,11 @@ class TOMSTask:
 
     def __repr__(self) -> str:
         info  = f"{{P: {self.p}, wcet: {self.wcet}\n"
-        info += f"b: {self.b}, in_size: {self.in_size}, out_size: {self.out_size}, energy: {self.cons_energy} }}"
+        info += f" b: {self.b}, in_size: {self.in_size}, out_size: {self.out_size}, energy: {self.cons_energy}}}"
         return info
 
 class TOMSTaskGen:
     def __init__(self, task_conf_path):
-        self.time = 0
         try:
             with open(task_conf_path, "r") as f:
                 task_set_conf = json.load(f)
@@ -99,13 +98,14 @@ class TOMSTaskGen:
         self.input_size_min, self.input_size_max = task_set_conf["input_size"]
         self.output_size_min, self.output_size_max = task_set_conf["output_size"]
 
+    def step(self):
+        return self._gen_task()
 
     def get_wcet_bound(self):
         return self.wcet_min, self.wcet_max
 
     def get_task_size_bound(self):
-        return np.min([self.task_size_min, self.input_size_min, self.output_size_min]), \
-               np.max([self.task_size_max, self.input_size_max, self.output_size_max])
+        return self.input_size_min, self.task_size_max+self.input_size_max
 
     def _gen_task(self):
         tasks = []
@@ -117,7 +117,7 @@ class TOMSTaskGen:
             out_size = self.output_size_min + np.random.randint(0, self.output_size_max-self.output_size_min+1)
             p = int(wcet/per_task_util)
             tasks.append(
-                Task({"p": p, "b": b, "w": wcet, "task": i,
-                      "input_size": in_size, "output_size": out_size}))
+                TOMSTask({"p": p, "b": b, "w": wcet, "task": i,
+                          "input_size": in_size, "output_size": out_size}))
 
         return tasks

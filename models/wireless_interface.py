@@ -3,7 +3,7 @@ import json
 from typing import List, Dict
 
 from models.remote import EdgeServer, Cloud
-from models.task import Task
+from models.task import Task, TOMSTask
 
 class WirelessInterface:
     def __init__(self, w_inter_conf_path):
@@ -76,6 +76,9 @@ class TOMSWirelessInterface:
         self.cloud = Cloud({"freq": conf["cloud_freq"],
                             "power_active": conf["cloud_power_active"],
                             "power_idle": conf["cloud_power_idle"]})
+
+    def is_offloaded_before(self, task: TOMSTask):
+        return self.cloud.is_executed_before(task)
 
 def dbm_to_w(pow_dbm: float) -> float:
     return (10**(pow_dbm/10))/1000
