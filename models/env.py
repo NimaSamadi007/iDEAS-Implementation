@@ -106,7 +106,7 @@ class TOMSEnv:
     def observe(self):
         self.curr_tasks = self.task_gen.step()
         self.curr_state = self._get_system_state()
-        is_final = len(self.curr_tasks)*[False]
+        is_final = len(self.curr_tasks)*[True]
 
         return self.curr_state, is_final
 
@@ -126,19 +126,26 @@ class TOMSEnv:
         min_penalties = []
         for task in self.curr_tasks:
             if task.deadline_missed:
-                penalty = DEADLINE_MISSED_PENALTY
+                penalty = -1
+                min_penalty = -1
             else:
                 penalty = (task.cons_energy+LATENCY_ENERGY_COEFF*task.aet)
+                min_penalty = np.min([self.cpu.get_min_energy(task),
+                                      self.w_inter.get_cons_energy(task)])
             penalties.append(penalty)
-
-            min_penalty = np.min([self.cpu.get_min_energy(task),
-                                  self.w_inter.get_cons_energy(task)])
             min_penalties.append(min_penalty)
 
         # Calculate reward
         min_penalties = np.asarray(min_penalties, dtype=float)
         penalties = np.asarray(penalties, dtype=float)
+        # print(penalties)
+        # print(min_penalties)
+        if len(np.where(penalties < min_penalties)[0]):
+            raise ValueError("Impossible to reach here!")
+
         rewards = np.exp(-REWARD_COEFF*(penalties-min_penalties))
+        rewards[min_penalties < 0] = -1
+
         return rewards, penalties, min_penalties
 
     def _get_system_state(self):

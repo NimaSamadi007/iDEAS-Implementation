@@ -81,6 +81,7 @@ class DVFS:
                  eps_decay: float = 1.0/2000,
                  max_eps: float = 1.0,
                  min_eps: float = 0.1,
+                 eps_update_step: int = 1e3,
                  gamma: float = 0.9,
                  weight_decay: float = 1e-5):
 
@@ -99,12 +100,14 @@ class DVFS:
         self.repl_buf = ReplayBuffer(state_dim, mem_size, batch_size)
         self.batch_size = batch_size
         self.eps = max_eps
+        self.eps_update_step = eps_update_step
         self.eps_decay = eps_decay
         self.max_eps = max_eps
         self.min_eps = min_eps
+        self.eps_update_cnt = 0
         self.update_target_net = update_target_net
         self.gamma = gamma
-        self.update_cnt = 1
+        self.update_cnt = 0
         self.losses = []
 
         # Training device
@@ -138,18 +141,21 @@ class DVFS:
         if len(self.repl_buf) >= self.batch_size:
             loss = self.update_model()
             self.losses.append(loss)
-            self.update_cnt += 1
 
             # decrease epsilon
-            self.eps = max(
-                self.min_eps, self.eps-self.eps_decay*(self.max_eps-self.min_eps)
-            )
+            self.eps_update_cnt += 1
+            if self.eps_update_cnt % self.eps_update_step == 0:
+                self.eps_update_cnt = 0
+                self.eps = max(
+                    self.min_eps, self.eps-self.eps_decay*(self.max_eps-self.min_eps)
+                )
+
+            self.update_cnt += 1
             if self.update_cnt % self.update_target_net == 0:
-                self.update_cnt = 1
+                self.update_cnt = 0
                 self._update_target_net()
             return loss
         return None
-
 
     def execute(self, states: np.ndarray) -> np.ndarray:
         actions = []
@@ -174,6 +180,17 @@ class DVFS:
             act = self._conv_act_id_to_type(act)
             conv_actions[act[0]].append([i, act[1]])
         return conv_actions
+
+    # Evaluate the DVFS model on the given tasks
+    def evaluate(self, states: np.ndarray):
+        pass
+
+    def save_model(self, path: str):
+        torch.save(self.net.state_dict(), path)
+
+    def load_pretrained_model(self, path_to_model: str):
+        self.net.load_state_dict(torch.load(path_to_model))
+        self.target_net.load_state_dict(self.net.state_dict())
 
     def _compute_net_loss(self, samples: Dict[str, np.ndarray]) -> torch.Tensor:
         state = torch.FloatTensor(samples["state"]).to(self.device)

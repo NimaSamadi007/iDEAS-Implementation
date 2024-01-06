@@ -81,8 +81,8 @@ class TOMSTask:
         self.aet = -1
 
     def __repr__(self) -> str:
-        info  = f"{{P: {self.p}, wcet: {self.wcet}\n"
-        info += f" b: {self.b}, in_size: {self.in_size}, out_size: {self.out_size}, energy: {self.cons_energy}}}"
+        info  = f"{{P: {self.p}, wcet: {self.wcet} "
+        info += f"b: {self.b}, in_size: {self.in_size}, out_size: {self.out_size}, energy: {self.cons_energy}}}"
         return info
 
 class TOMSTaskGen:

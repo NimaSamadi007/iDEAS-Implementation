@@ -37,5 +37,5 @@ class Cloud:
         self.task_buffer.add(task)
         # By default, all timing requirements of tasks are represented
         # based on the maximum frequency of the local CPU, which is 1.
-        true_exec_time = self.freq*task.wcet
+        true_exec_time = (1/self.freq)*task.wcet
         task.aet += true_exec_time

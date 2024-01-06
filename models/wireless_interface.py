@@ -70,8 +70,8 @@ class TOMSWirelessInterface:
             raise FileNotFoundError(f"Wireless interface configuration file not found at {conf_path}")
 
         # Power levels are represented in dbm and must be converted accordingly
-        self.up_rate_max, self.up_rate_min = conf["upload_rate"]
-        self.down_rate_max, self.down_rate_min = conf["download_rate"]
+        self.up_rate_min, self.up_rate_max = conf["upload_rate"]
+        self.down_rate_min, self.down_rate_max = conf["download_rate"]
         self.power = conf["power"]
 
         self.cloud = Cloud({"freq": conf["cloud_freq"],
@@ -86,15 +86,15 @@ class TOMSWirelessInterface:
 
     def _run_task(self, task: TOMSTask):
         # Must send the task input size to the cloud
-        upload_time = task.in_size/self.uplink_rate
+        upload_time = task.in_size*8/self.uplink_rate # ms
         # If cloud hasn't stored the task before, whole task must be sent, too
         if not self.is_offloaded_before(task):
-            upload_time += (task.b/self.uplink_rate)
+            upload_time += task.b*8/self.uplink_rate # ms
         # Execute the task
         task.aet = upload_time
         self.cloud.execute(task)
         # Finally, download the results from the cloud
-        download_time = task.out_size/self.downlink_rate
+        download_time = task.out_size*8/self.downlink_rate # ms
         task.aet += download_time
 
         # Check if the task deadline have been missed
