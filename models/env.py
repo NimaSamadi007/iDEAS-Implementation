@@ -116,6 +116,9 @@ class TOMSEnv:
 
         return self._cal_reward()
 
+    def get_curr_tasks(self):
+        return self.curr_tasks
+
     def get_action_space(self):
         action_space = {"offload": [1],
                         "local": self.cpu.freqs}

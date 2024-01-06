@@ -183,7 +183,10 @@ class DVFS:
 
     # Evaluate the DVFS model on the given tasks
     def evaluate(self, states: np.ndarray):
-        pass
+        actions = []
+        for state in states:
+            actions.append(self._sel_act_greedy(state))
+        return np.asarray(actions)
 
     def save_model(self, path: str):
         torch.save(self.net.state_dict(), path)
@@ -215,10 +218,15 @@ class DVFS:
             sel_act = np.random.randint(self.act_type_boundry[target_id],
                                         self.act_type_boundry[target_id+1])
         else:
-            sel_act = self.net(
-                torch.FloatTensor(state).to(self.device)
-            ).argmax()
-            sel_act = sel_act.detach().cpu().numpy()
+            sel_act = self._sel_act_greedy(state)
+
+        return sel_act
+
+    def _sel_act_greedy(self, state: np.ndarray):
+        sel_act = self.net(
+            torch.FloatTensor(state).to(self.device)
+        ).argmax()
+        sel_act = sel_act.detach().cpu().numpy()
         return sel_act
 
     def _update_target_net(self):

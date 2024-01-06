@@ -42,10 +42,10 @@ if __name__ == '__main__':
         next_state, is_final = env.observe()
         # Update RL network
         loss = dvfs_alg.train(state,
-                            actions,
-                            rewards,
-                            next_state,
-                            is_final)
+                              actions,
+                              rewards,
+                              next_state,
+                              is_final)
         # Update current state
         state = next_state
 
@@ -55,14 +55,29 @@ if __name__ == '__main__':
         all_min_penalties.append(min_penalties.tolist())
         if (itr+1) % 500 == 0:
             print(f"At {itr+1}, loss={loss:.3f}")
-            print(f"eps: {dvfs_alg.eps:.2f}")
+            # print(f"eps: {dvfs_alg.eps:.2f}")
             print(f"Rewards: {rewards}")
-            print(f"Penalties: {penalties}")
-            print(f"Min penalties: {min_penalties}")
+            # print(f"Penalties: {penalties}")
+            # print(f"Min penalties: {min_penalties}")
             print(10*"-")
 
     # Save model:
-    dvfs_alg.save_model("models/TOMS/dvfs.pt")
+    dvfs_alg.save_model("models/TOMS-dvfs.pt")
+
+    # Evaluate the model
+    cons_energy = np.zeros(state.shape[0])
+
+    print("Evaluating the network...")
+    for _ in range(100):
+        state,_ = env.observe()
+        dvfs_alg.evaluate(state)
+        actions_str = dvfs_alg.conv_acts(actions)
+        env.step(actions_str)
+        cons_energy += np.array([t.cons_energy for t in env.get_curr_tasks()])
+
+    print(20*'*')
+    avg_energy = cons_energy / 100
+    print(f"Average energy consumption:\n{avg_energy}")
 
     # Plot results
     all_rewards = np.array(all_rewards)

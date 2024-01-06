@@ -2,7 +2,7 @@
     "cpu_load": 0.6,
     "num_tasks": 10,
     "wcet": [500, 1000],
-    "task_size": [500, 750],
-    "input_size": [100, 500],
-    "output_size": [100, 250]
+    "task_size": [4000, 6000],
+    "input_size": [800, 4000],
+    "output_size": [800, 2000]
 }
