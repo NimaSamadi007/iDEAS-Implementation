@@ -110,6 +110,37 @@ class TOMSEnv:
 
         return self.curr_state, is_final
 
+    def step(self, actions: Dict[str, List[int]]):
+        self.cpu.step(self.curr_tasks, actions["local"])
+        self.w_inter.offload(self.curr_tasks, actions["offload"])
+
+        return self._cal_reward()
+
+    def get_action_space(self):
+        action_space = {"offload": [1],
+                        "local": self.cpu.freqs}
+        return action_space
+
+    def _cal_reward(self):
+        penalties = []
+        min_penalties = []
+        for task in self.curr_tasks:
+            if task.deadline_missed:
+                penalty = DEADLINE_MISSED_PENALTY
+            else:
+                penalty = (task.cons_energy+LATENCY_ENERGY_COEFF*task.aet)
+            penalties.append(penalty)
+
+            min_penalty = np.min([self.cpu.get_min_energy(task),
+                                  self.w_inter.get_cons_energy(task)])
+            min_penalties.append(min_penalty)
+
+        # Calculate reward
+        min_penalties = np.asarray(min_penalties, dtype=float)
+        penalties = np.asarray(penalties, dtype=float)
+        rewards = np.exp(-REWARD_COEFF*(penalties-min_penalties))
+        return rewards, penalties, min_penalties
+
     def _get_system_state(self):
         states = np.zeros((len(self.curr_tasks), STATE_DIM), dtype=np.float32)
         su = 0.
@@ -124,8 +155,3 @@ class TOMSEnv:
         # Normalize state values
         states = (states - self.min_state_vals)/(self.max_state_vals - self.min_state_vals)
         return states
-
-    def get_action_space(self):
-        action_space = {"offload": [1],
-                        "local": self.cpu.freqs}
-        return action_space

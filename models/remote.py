@@ -15,12 +15,12 @@ class TaskBuffer:
         self.buf = collections.deque(maxlen=size)
 
     def add(self, task: TOMSTask):
-        if task in self.buf:
-            self.buf.remove(task)
-        self.buf.append(task)
+        if task.t_id in self.buf:
+            self.buf.remove(task.t_id)
+        self.buf.append(task.t_id)
 
     def exists(self, task: TOMSTask):
-        return task in self.buf
+        return task.t_id in self.buf
 
 # Used in TOMS
 class Cloud:
@@ -35,4 +35,7 @@ class Cloud:
 
     def execute(self, task: TOMSTask):
         self.task_buffer.add(task)
-        pass
+        # By default, all timing requirements of tasks are represented
+        # based on the maximum frequency of the local CPU, which is 1.
+        true_exec_time = self.freq*task.wcet
+        task.aet += true_exec_time

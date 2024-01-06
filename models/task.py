@@ -75,8 +75,10 @@ class TOMSTask:
         self.in_size = specs['input_size']
         self.out_size = specs['output_size']
         self.t_id = specs["task"]
+        self.deadline_missed = False
 
         self.cons_energy = -1
+        self.aet = -1
 
     def __repr__(self) -> str:
         info  = f"{{P: {self.p}, wcet: {self.wcet}\n"

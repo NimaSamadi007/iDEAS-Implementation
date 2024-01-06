@@ -1,6 +1,7 @@
 import numpy as np
 import json
 from typing import List, Dict
+import copy
 
 from models.remote import EdgeServer, Cloud
 from models.task import Task, TOMSTask
@@ -76,9 +77,46 @@ class TOMSWirelessInterface:
         self.cloud = Cloud({"freq": conf["cloud_freq"],
                             "power_active": conf["cloud_power_active"],
                             "power_idle": conf["cloud_power_idle"]})
+        self.update_channel_state()
+
+
+    def offload(self, tasks: Dict[int, TOMSTask], acts: List[List]):
+        for t_id,_ in acts:
+            self._run_task(tasks[t_id])
+
+    def _run_task(self, task: TOMSTask):
+        # Must send the task input size to the cloud
+        upload_time = task.in_size/self.uplink_rate
+        # If cloud hasn't stored the task before, whole task must be sent, too
+        if not self.is_offloaded_before(task):
+            upload_time += (task.b/self.uplink_rate)
+        # Execute the task
+        task.aet = upload_time
+        self.cloud.execute(task)
+        # Finally, download the results from the cloud
+        download_time = task.out_size/self.downlink_rate
+        task.aet += download_time
+
+        # Check if the task deadline have been missed
+        if task.aet > task.p:
+            task.deadline_missed = True
+        else:
+            task.cons_energy = self.power * (download_time+upload_time)
+
+    def get_cons_energy(self, task: TOMSTask) -> float:
+        # make a copy of the task
+        task_copy = copy.deepcopy(task)
+        self._run_task(task_copy)
+        return task_copy.cons_energy
+
+    def update_channel_state(self):
+        self.uplink_rate = self.up_rate_min + np.random.randint(0, self.up_rate_max-self.up_rate_min+1)
+        self.downlink_rate = self.down_rate_min + np.random.randint(0, self.down_rate_max-self.down_rate_min+1)
+        return self.uplink_rate, self.downlink_rate
 
     def is_offloaded_before(self, task: TOMSTask):
         return self.cloud.is_executed_before(task)
+
 
 def dbm_to_w(pow_dbm: float) -> float:
     return (10**(pow_dbm/10))/1000
