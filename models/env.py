@@ -94,14 +94,19 @@ class RRLOEnv(Env):
     def observe(self):
         self.curr_tasks = self.task_gen.step()
         self._gen_aet(self.curr_tasks)
-        self.curr_state = self._get_system_state()
+        self.curr_state = self._descretize_states(self._get_system_state())
         is_final = True
 
         return self.curr_state, is_final
 
-    # Extra state related initialization can be implemented here
+    def get_state_bounds(self):
+        return self.num_states
+
     def _init_state_bounds(self):
-        pass
+        self.num_states = np.array([128, 128, 16])
+        self.min_state_vals = np.array([0, 0, 0])
+        self.max_state_vals = np.array([1, 1, 2*self.w_inter.cg_sigma])
+        self.state_steps = (self.max_state_vals-self.min_state_vals)/self.num_states
 
     def _gen_aet(self, tasks: Dict[int, List[Task]]):
         # FIXME: This is rather a weird choice as we're not
@@ -128,3 +133,6 @@ class RRLOEnv(Env):
         states[1] = ds
         states[2] = self.w_inter.update_channel_state()
         return states
+
+    def _descretize_states(self, states: np.ndarray):
+        return np.floor((states-self.min_state_vals)/self.state_steps).astype(int)

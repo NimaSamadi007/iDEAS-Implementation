@@ -28,12 +28,17 @@ if __name__ == '__main__':
                         eps_decay = 1/2000,
                         min_eps=0)
 
-    dqn_state,_ = dqn_env.observe()
-    print(dqn_state)
-    print(10*'*')
-    rrlo_state,_ = rrlo_env.observe()
-    print(rrlo_state)
+    rrlo_dvfs = RRLO_DVFS(state_bounds=rrlo_env.get_state_bounds(),
+                          num_dvfs_algs=4,
+                          num_tasks=4)
 
+    dqn_state,_ = dqn_env.observe()
+    rrlo_state,_ = rrlo_env.observe()
+    print(f"Number of states: {rrlo_env.state_steps}")
+    print(f"State values: {rrlo_state}")
+
+    print(f"Q table shape: {rrlo_dvfs.Q_table_a.shape}")
+    print(f"Q table b shape: {rrlo_dvfs.Q_table_b.shape}")
     """
     rrlo_dvfs = RRLO_DVFS()
 

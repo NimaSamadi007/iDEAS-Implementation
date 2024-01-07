@@ -3,7 +3,7 @@ DQN is implemented based on
 https://github.com/Curt-Park/rainbow-is-all-you-need
 """
 
-from typing import Dict, List
+from typing import Dict, List, Any
 
 import torch
 import torch.nn as nn
@@ -226,4 +226,22 @@ class DQN_DVFS:
 
 
 class RRLO_DVFS:
-    pass
+    def __init__(self, state_bounds, num_dvfs_algs, num_tasks):
+        self.state_bounds = state_bounds
+        self.num_states = self.state_bounds.prod()
+        self.num_dvfs_algs = num_dvfs_algs
+        self.num_tasks = num_tasks
+        self.Q_table_a = np.zeros((self.num_states, 2**self.num_tasks * self.num_dvfs_algs))
+        self.Q_table_b = np.zeros_like(self.Q_table_a)
+
+    def execute(self, state: np.ndarray) -> np.ndarray:
+        row_idx = state.prod()
+        act_a = np.argmin(self.Q_table_a[row_idx, :])
+        act_b = np.argmin(self.Q_table_b[row_idx, :])
+        if self.Q_table_a[row_idx, act_a] < self.Q_table_b[row_idx, act_b]:
+            return self._conv_act(act_a)
+        else:
+            return self._conv_act(act_b)
+
+    def _conv_act(self, act_idx: int) -> Dict[str, Any]:
+        pass
