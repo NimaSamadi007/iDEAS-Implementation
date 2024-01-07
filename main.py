@@ -1,8 +1,8 @@
 import numpy as np
 
 from configs import *
-from models.env import Env
-from dvfs.dvfs import DVFS
+from models.env import Env, RRLOEnv
+from dvfs.dvfs import DQN_DVFS, RRLO_DVFS
 from utils.utils import *
 
 # Main function
@@ -12,26 +12,34 @@ if __name__ == '__main__':
 
     ## Load tasks and CPU models
     configs = {"task_set": "configs/task_set.json",
-               "cpu_little": "configs/cpu_little.json",
-               "cpu_big": "configs/cpu_big.json",
-               "w_inter": "configs/wireless_interface.json"}
-    env = Env(configs)
+               "cpu_local": "configs/cpu_local.json",
+               "w_inter": "configs/wireless_interface.json"
+               }
 
-    # Initialize RL network
-    dvfs_alg = DVFS(state_dim=STATE_DIM,
-                    act_space=env.get_action_space(),
-                    batch_size=32,
-                    gamma=0.90,
-                    update_target_net= 1000,
-                    eps_decay = 1/2000,
-                    min_eps=0)
+    dqn_env = Env(configs)
+    rrlo_env = RRLOEnv(configs)
 
-    all_rewards = []
-    all_penalties = []
-    all_min_penalties = []
+    # Initialize DVFS algorithms
+    dqn_dvfs = DQN_DVFS(state_dim=DQN_STATE_DIM,
+                        act_space=dqn_env.get_action_space(),
+                        batch_size=32,
+                        gamma=0.90,
+                        update_target_net= 1000,
+                        eps_decay = 1/2000,
+                        min_eps=0)
+
+    dqn_state,_ = dqn_env.observe()
+    print(dqn_state)
+    print(10*'*')
+    rrlo_state,_ = rrlo_env.observe()
+    print(rrlo_state)
+
+    """
+    rrlo_dvfs = RRLO_DVFS()
 
     # Initial state observation
-    state, _ = env.observe(100)
+    state, _ = our_env.observe()
+
     for itr in range(NUM_ITR):
         # Run DVFS to assign tasks
         actions = dvfs_alg.execute(state)
@@ -50,24 +58,25 @@ if __name__ == '__main__':
         state = next_state
 
         # Print results
-        all_rewards.append(rewards.tolist())
-        all_penalties.append(penalties.tolist())
-        all_min_penalties.append(min_penalties.tolist())
-        if (itr+1) % 500 == 0:
-            print(f"At {itr+1}, loss={loss:.3f}")
-            print(f"Actions: {actions_str}")
-            print(f"Rewards: {rewards}")
-            print(f"Penalties: {penalties}")
-            print(f"Min penalties: {min_penalties}")
-            print(10*"-")
+        # all_rewards.append(rewards.tolist())
+        # all_penalties.append(penalties.tolist())
+        # all_min_penalties.append(min_penalties.tolist())
+        # if (itr+1) % 500 == 0:
+        #     print(f"At {itr+1}, loss={loss:.3f}")
+        #     print(f"Actions: {actions_str}")
+        #     print(f"Rewards: {rewards}")
+        #     print(f"Penalties: {penalties}")
+        #     print(f"Min penalties: {min_penalties}")
+        #     print(10*"-")
 
-    all_rewards = np.array(all_rewards)
-    all_penalties = np.array(all_penalties)
-    all_min_penalties = np.array(all_min_penalties)
+    # all_rewards = np.array(all_rewards)
+    # all_penalties = np.array(all_penalties)
+    # all_min_penalties = np.array(all_min_penalties)
 
-    # Plot results
-    print(f"Current eps val: {dvfs_alg.eps}")
-    plot_all_rewards(all_rewards)
-    plot_loss_function(dvfs_alg.losses)
-    for i in range(4):
-        plot_penalty(all_penalties[:, i], all_min_penalties[:, i], i)
+    # # Plot results
+    # print(f"Current eps val: {dvfs_alg.eps}")
+    # plot_all_rewards(all_rewards)
+    # plot_loss_function(dvfs_alg.losses)
+    # for i in range(4):
+    #     plot_penalty(all_penalties[:, i], all_min_penalties[:, i], i)
+    """

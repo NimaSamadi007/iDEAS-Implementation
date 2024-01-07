@@ -1,6 +1,7 @@
 import json
 import copy
 import numpy as np
+import math
 from typing import Dict, Any
 
 class Task:
@@ -14,14 +15,13 @@ class Task:
         self.deadline_missed = False
 
     def gen_aet(self):
-        self.aet = np.random.uniform(self.wcet/2, self.wcet)
+        self.aet = np.random.uniform(0, self.wcet)
 
     def __repr__(self):
         return f"(P: {self.p}, W: {self.wcet}, A: {self.aet:.3f}, b: {self.b}, energy: {self.cons_energy:.3f})"
 
 class TaskGen:
     def __init__(self, task_conf_path):
-        self.time = 0
         self.task_set = []
         try:
             with open(task_conf_path, "r") as f:
@@ -31,13 +31,11 @@ class TaskGen:
         for i in range(len(task_set_conf)):
             self.task_set.append(Task(task_set_conf[i]))
 
-    def step(self, time):
-        t_s = self.time
-        t_e = self.time + time
+    def step(self):
+        time = self.get_hyper_period()
         gen_task = dict()
         for task in self.task_set:
-            gen_task[task.t_id] = self._gen_task(task, t_s, t_e)
-        self.time = t_e
+            gen_task[task.t_id] = self._gen_task(task, time)
 
         return gen_task
 
@@ -49,20 +47,9 @@ class TaskGen:
         task_wcets = [task.wcet for task in self.task_set]
         return min(task_wcets), max(task_wcets)
 
-    def _gen_task(self, task, t_s, t_e):
-        num_tasks = self._get_num_overlapping_tasks(task.p, t_s, t_e)
+    def _gen_task(self, task, time):
+        num_tasks = time // task.p
         return [copy.deepcopy(task) for _ in range(num_tasks)]
 
-    def _get_num_overlapping_tasks(self, p, t_s, t_e):
-        if t_s > t_e:
-            raise ValueError("Start time must be less than end time")
-        if p > t_e: # No task can overlap
-            return 0
-
-        q_s = t_s // p # Start quotient
-        q_e = t_e // p # End quotient
-        if t_s % p != 0:
-            q_s += 1
-        if t_e % p == 0:
-            q_e -= 1
-        return q_e-q_s+1 # No. tasks
+    def get_hyper_period(self):
+        return math.lcm(*[t.p for t in self.task_set])

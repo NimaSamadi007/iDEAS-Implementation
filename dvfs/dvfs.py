@@ -71,7 +71,7 @@ class ReplayBuffer:
                     reward=self.rewards_buf[indices],
                     final=self.final_action_buf[indices])
 
-class DVFS:
+class DQN_DVFS:
     def __init__(self,
                  state_dim: int,
                  act_space: Dict[str, List],
@@ -223,3 +223,7 @@ class DVFS:
         target_name = self.target_hard_name[target_id]
         return (target_name,
                 self.act_space[target_name][rel_id])
+
+
+class RRLO_DVFS:
+    pass
