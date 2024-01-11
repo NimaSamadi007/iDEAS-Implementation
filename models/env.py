@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 import numpy as np
 
 from models.cpu import CPU
@@ -88,7 +88,10 @@ class RRLOEnv(Env):
     def __init__(self, confs: Dict[str, str]):
         super().__init__(confs)
 
-    def step(self, actions):
+    def step(self, actions: Dict[str, int|List[int]]):
+        # self.cpu.step(self.curr_tasks, actions["local"])
+        # self.w_inter.offload(self.curr_tasks, actions["offload"])
+        # return self._cal_reward()
         pass
 
     def observe(self):

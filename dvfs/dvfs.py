@@ -150,7 +150,6 @@ class DQN_DVFS:
             return loss
         return None
 
-
     def execute(self, states: np.ndarray) -> np.ndarray:
         actions = []
         for state in states:
@@ -258,11 +257,15 @@ class RRLO_DVFS:
         return row
 
     def _conv_col_to_act(self, act_idx: int) -> np.ndarray:
-        act = np.zeros_like(self.act_bounds)
+        local = []
+        offload = []
         for i in range(len(self.act_bounds)-1):
             multiple = self.act_bounds[i+1:].prod()
             q = act_idx // multiple
             act_idx = act_idx % multiple
-            act[i] = q
-        act[-1] = act_idx
+            if q == 0: # Execute locally
+                local.append(i)
+            else:
+                offload.append(i)
+        act = {'local': local, 'offload': offload, 'dvfs_alg': act_idx}
         return act

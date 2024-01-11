@@ -32,36 +32,33 @@ if __name__ == '__main__':
                           num_dvfs_algs=4,
                           num_tasks=4)
 
+    # Initial state observation
     dqn_state,_ = dqn_env.observe()
     rrlo_state,_ = rrlo_env.observe()
-    print(f"Number of states: {rrlo_env.state_steps}")
-    print(f"State values: {rrlo_state}")
-    print(f"Row id: {rrlo_dvfs._conv_state_to_row(rrlo_state)}")
 
-    print(f"Q table shape: {rrlo_dvfs.Q_table_a.shape}")
-    print(f"Q table b shape: {rrlo_dvfs.Q_table_b.shape}")
-    """
-    rrlo_dvfs = RRLO_DVFS()
-
-    # Initial state observation
-    state, _ = our_env.observe()
-
-    for itr in range(NUM_ITR):
+    for itr in range(1):
         # Run DVFS to assign tasks
-        actions = dvfs_alg.execute(state)
-        actions_str = dvfs_alg.conv_acts(actions)
-        # Execute tasks and get reward
-        rewards, penalties, min_penalties = env.step(actions_str)
-        # Observe next state
-        next_state, is_final = env.observe(100)
-        # Update RL network
-        loss = dvfs_alg.train(state,
-                              actions,
-                              rewards,
-                              next_state,
-                              is_final)
-        # Update current state
-        state = next_state
+        actions_dqn = dqn_dvfs.execute(dqn_state)
+        actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
+        actions_rrlo = rrlo_dvfs.execute(rrlo_state)
+
+        print(f"DQN actions: {actions_dqn_str}")
+        print(f"RRLO actions: {actions_rrlo}")
+
+        # # Execute tasks and get reward
+        rewards_dqn, penalties_dqn, min_penalties_dqn = dqn_env.step(actions_dqn_str)
+        penalties_rrlo = rrlo_env.step(actions_rrlo)
+
+        # # Observe next state
+        # next_state, is_final = env.observe(100)
+        # # Update RL network
+        # loss = dvfs_alg.train(state,
+        #                       actions,
+        #                       rewards,
+        #                       next_state,
+        #                       is_final)
+        # # Update current state
+        # state = next_state
 
         # Print results
         # all_rewards.append(rewards.tolist())
@@ -85,4 +82,3 @@ if __name__ == '__main__':
     # plot_loss_function(dvfs_alg.losses)
     # for i in range(4):
     #     plot_penalty(all_penalties[:, i], all_min_penalties[:, i], i)
-    """
