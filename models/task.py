@@ -11,6 +11,7 @@ class Task:
         self.wcet = specs['w'] # worst-case execution time, (ms)
         self.t_id = specs['task'] # task ID representing a unique task
         self.aet = -1 #(ms)
+        self.util = 0
         self.cons_energy = -1 # consumed energy when executing the task in (J)
         self.deadline_missed = False
 

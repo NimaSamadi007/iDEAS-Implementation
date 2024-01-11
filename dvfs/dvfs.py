@@ -11,6 +11,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 
+from models.task import Task
+
 class Network(nn.Module):
     def __init__(self, in_dim: int, out_dim: int):
         super(Network, self).__init__()
@@ -269,3 +271,33 @@ class RRLO_DVFS:
                 offload.append(i)
         act = {'local': local, 'offload': offload, 'dvfs_alg': act_idx}
         return act
+
+class CC_DVFS:
+    def __init__(self, freqs: List[int], tasks: List[Task]):
+        self.tasks = tasks
+        self.freqs = freqs
+        self.freqs.sort() # Make sure its sorted incrementally
+
+    #FIXME: Consider jobs per each task
+    def task_release(self, idx: int) -> int:
+        self.tasks[idx].util = self.tasks[idx].wcet / self.tasks[idx].p
+        return self._select_freq()
+
+    def task_complete(self, idx: int) -> int:
+        self.tasks[idx].util = self.tasks[idx].aet / self.tasks[idx].p
+        return self._select_freq()
+
+    def _select_freq(self):
+        total_util = sum([t.util for t in self.tasks])
+        max_freq = self.freqs[-1]
+        for freq in self.freqs:
+            if total_util <= freq/max_freq:
+                return freq
+
+    # def _upon_task_release()
+
+class LA_DVFS:
+    def __init__(self):
+        pass
+
+
