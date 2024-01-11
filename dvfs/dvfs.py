@@ -224,24 +224,45 @@ class DQN_DVFS:
         return (target_name,
                 self.act_space[target_name][rel_id])
 
-
 class RRLO_DVFS:
-    def __init__(self, state_bounds, num_dvfs_algs, num_tasks):
+    def __init__(self,
+                 state_bounds,
+                 num_dvfs_algs,
+                 num_tasks):
+
         self.state_bounds = state_bounds
-        self.num_states = self.state_bounds.prod()
+        self.num_total_states = self.state_bounds.prod()
         self.num_dvfs_algs = num_dvfs_algs
         self.num_tasks = num_tasks
-        self.Q_table_a = np.zeros((self.num_states, 2**self.num_tasks * self.num_dvfs_algs))
+        self.act_bounds = np.ones(self.num_tasks+1, dtype=int)*2 # Initialize all with value 2
+        self.act_bounds[-1] = self.num_dvfs_algs # last element refers to the number of possible dvfs algs
+        self.Q_table_a = np.zeros((self.num_total_states, 2**self.num_tasks * self.num_dvfs_algs))
         self.Q_table_b = np.zeros_like(self.Q_table_a)
 
     def execute(self, state: np.ndarray) -> np.ndarray:
-        row_idx = state.prod()
+        row_idx = self._conv_state_to_row(state)
         act_a = np.argmin(self.Q_table_a[row_idx, :])
         act_b = np.argmin(self.Q_table_b[row_idx, :])
         if self.Q_table_a[row_idx, act_a] < self.Q_table_b[row_idx, act_b]:
-            return self._conv_act(act_a)
+            print(f"Optimal action: {act_a}")
+            return self._conv_col_to_act(act_a)
         else:
-            return self._conv_act(act_b)
+            print(f"Optimal action: {act_b}")
+            return self._conv_col_to_act(act_b)
 
-    def _conv_act(self, act_idx: int) -> Dict[str, Any]:
-        pass
+    def _conv_state_to_row(self, state: np.ndarray):
+        row = 0
+        for i in range(len(state)-1):
+            row += state[i] * self.state_bounds[i+1:].prod()
+        row += state[-1]
+        return row
+
+    def _conv_col_to_act(self, act_idx: int) -> np.ndarray:
+        act = np.zeros_like(self.act_bounds)
+        for i in range(len(self.act_bounds)-1):
+            multiple = self.act_bounds[i+1:].prod()
+            q = act_idx // multiple
+            act_idx = act_idx % multiple
+            act[i] = q
+        act[-1] = act_idx
+        return act

@@ -36,6 +36,7 @@ if __name__ == '__main__':
     rrlo_state,_ = rrlo_env.observe()
     print(f"Number of states: {rrlo_env.state_steps}")
     print(f"State values: {rrlo_state}")
+    print(f"Row id: {rrlo_dvfs._conv_state_to_row(rrlo_state)}")
 
     print(f"Q table shape: {rrlo_dvfs.Q_table_a.shape}")
     print(f"Q table b shape: {rrlo_dvfs.Q_table_b.shape}")

@@ -106,7 +106,7 @@ class RRLOEnv(Env):
         self.num_states = np.array([128, 128, 16])
         self.min_state_vals = np.array([0, 0, 0])
         self.max_state_vals = np.array([1, 1, 2*self.w_inter.cg_sigma])
-        self.state_steps = (self.max_state_vals-self.min_state_vals)/self.num_states
+        self.state_steps = (self.max_state_vals-self.min_state_vals)/(self.num_states-1)
 
     def _gen_aet(self, tasks: Dict[int, List[Task]]):
         # FIXME: This is rather a weird choice as we're not
