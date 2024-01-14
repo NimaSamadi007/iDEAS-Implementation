@@ -26,7 +26,7 @@ if __name__ == '__main__':
                         gamma=0.90,
                         update_target_net= 1000,
                         eps_decay = 1/2000,
-                        min_eps=0)
+                        min_eps=0.1)
 
     rrlo_dvfs = RRLO_DVFS(state_bounds=rrlo_env.get_state_bounds(),
                           num_w_inter_powers=len(rrlo_env.w_inter.powers),
@@ -107,7 +107,7 @@ if __name__ == '__main__':
 
     dqn_state,_ = dqn_env.observe()
     rrlo_state,_ = rrlo_env.observe()
-    for itr in range(500):
+    for itr in range(5000):
         actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
         actions_rrlo, actions_rrlo_col = rrlo_dvfs.execute(rrlo_state)

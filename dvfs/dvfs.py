@@ -81,6 +81,7 @@ class DQN_DVFS:
                  eps_decay: float = 1.0/2000,
                  max_eps: float = 1.0,
                  min_eps: float = 0.1,
+                 eps_update_step: int = 1e3,
                  gamma: float = 0.9,
                  weight_decay: float = 1e-5):
 
@@ -103,8 +104,10 @@ class DQN_DVFS:
         self.max_eps = max_eps
         self.min_eps = min_eps
         self.update_target_net = update_target_net
+        self.eps_update_step = eps_update_step
+        self.eps_update_cnt = 0
         self.gamma = gamma
-        self.update_cnt = 1
+        self.update_cnt = 0
         self.losses = []
 
         # Training device
@@ -138,14 +141,18 @@ class DQN_DVFS:
         if len(self.repl_buf) >= self.batch_size:
             loss = self.update_model()
             self.losses.append(loss)
-            self.update_cnt += 1
 
             # decrease epsilon
-            self.eps = max(
-                self.min_eps, self.eps-self.eps_decay*(self.max_eps-self.min_eps)
-            )
+            self.eps_update_cnt += 1
+            if self.eps_update_cnt % self.eps_update_step == 0:
+                self.eps_update_cnt = 0
+                self.eps = max(
+                    self.min_eps, self.eps-self.eps_decay*(self.max_eps-self.min_eps)
+                )
+
+            self.update_cnt += 1
             if self.update_cnt % self.update_target_net == 0:
-                self.update_cnt = 1
+                self.update_cnt = 0
                 self._update_target_net()
             return loss
         return None
