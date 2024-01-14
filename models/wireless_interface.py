@@ -60,6 +60,26 @@ class WirelessInterface:
     def __len__(self):
         return len(self.powers)
 
+class RRLOWirelessInterface(WirelessInterface):
+    def __init__(self, w_inter_conf_path):
+        super().__init__(w_inter_conf_path)
+
+    def offload(self, tasks: Dict[int, Task], power_level: float):
+        for t_id, job in tasks.items():
+            for job in tasks[t_id]:
+                if not power_level in self.powers:
+                    raise ValueError(f"Unsupported wireless interface power: {power_level}")
+                # consumed energy when offloading
+                self.power = power_level
+                rate = self.get_channel_rate()*1e6 # unit: bps
+                if rate <= 0:
+                    raise ValueError("Negative channel rate!")
+                self.e_server.execute(job)
+                job.aet += ((job.b*1024*8)/rate)*1e3 # aet unit: ms
+                if job.aet > job.p:
+                    job.deadline_missed = True
+                else:
+                    job.cons_energy = (dbm_to_w(self.power)*job.b*1024*8) / rate
 
 def dbm_to_w(pow_dbm: float) -> float:
     return (10**(pow_dbm/10))/1000

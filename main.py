@@ -29,6 +29,7 @@ if __name__ == '__main__':
                         min_eps=0)
 
     rrlo_dvfs = RRLO_DVFS(state_bounds=rrlo_env.get_state_bounds(),
+                          num_w_inter_powers=len(rrlo_env.w_inter.powers),
                           num_dvfs_algs=1,
                           dvfs_algs=["cc"],
                           num_tasks=4)
@@ -37,46 +38,52 @@ if __name__ == '__main__':
     dqn_state,_ = dqn_env.observe()
     rrlo_state,_ = rrlo_env.observe()
 
-    for itr in range(1):
+    for itr in range(int(1e4)):
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
-        actions_rrlo = rrlo_dvfs.execute(rrlo_state)
+        actions_rrlo, actions_rrlo_col = rrlo_dvfs.execute(rrlo_state)
 
-        print(f"DQN actions: {actions_dqn_str}")
-        print(f"RRLO actions: {actions_rrlo}")
+        # print(f"DQN actions: {actions_dqn_str}")
+        # print(f"RRLO actions: {actions_rrlo}")
 
         # # Execute tasks and get reward
         rewards_dqn, penalties_dqn, min_penalties_dqn = dqn_env.step(actions_dqn_str)
-        finished_tasks = rrlo_env.step(actions_rrlo)
-        for t in finished_tasks:
-            print(f"T_{t.t_id} exec time:")
-            for i, e_time in enumerate(t.exec_time_history):
-                print(f"\t{i}: {e_time[0]:.3f} -- {e_time[1]:.3f} @ {t.exec_freq_history[i]}")
-            print(20*'-')
+        penalty_rrlo = rrlo_env.step(actions_rrlo)
+        # for t in finished_tasks:
+        #     print(f"T_{t.t_id} exec time:")
+        #     for i, e_time in enumerate(t.exec_time_history):
+        #         print(f"\t{i}: {e_time[0]:.3f} -- {e_time[1]:.3f} @ {t.exec_freq_history[i]}")
+        #     print(f"\tconsumed {t.cons_energy:.3f} mJ")
+        #     print(20*'-')
 
-        # # Observe next state
-        # next_state, is_final = env.observe(100)
-        # # Update RL network
-        # loss = dvfs_alg.train(state,
-        #                       actions,
-        #                       rewards,
-        #                       next_state,
-        #                       is_final)
-        # # Update current state
-        # state = next_state
+        # Observe next state
+        next_state_dqn, is_final_dqn = dqn_env.observe()
+        next_state_rrlo,_ = rrlo_env.observe()
+
+        # Update RL network
+        loss = dqn_dvfs.train(dqn_state,
+                              actions_dqn,
+                              rewards_dqn,
+                              next_state_dqn,
+                              is_final_dqn)
+        rrlo_dvfs.update(rrlo_state, actions_rrlo_col, penalty_rrlo, next_state_rrlo)
+
+        # Update current state
+        dqn_state = next_state_dqn
+        rrlo_state = next_state_rrlo
 
         # Print results
         # all_rewards.append(rewards.tolist())
         # all_penalties.append(penalties.tolist())
         # all_min_penalties.append(min_penalties.tolist())
-        # if (itr+1) % 500 == 0:
-        #     print(f"At {itr+1}, loss={loss:.3f}")
-        #     print(f"Actions: {actions_str}")
-        #     print(f"Rewards: {rewards}")
-        #     print(f"Penalties: {penalties}")
-        #     print(f"Min penalties: {min_penalties}")
-        #     print(10*"-")
+        if (itr+1) % 500 == 0:
+            print(f"At {itr+1}, loss={loss:.3f}")
+            # print(f"Actions: {actions_str}")
+            # print(f"Rewards: {rewards}")
+            # print(f"Penalties: {penalties}")
+            # print(f"Min penalties: {min_penalties}")
+            print(10*"-")
 
     # all_rewards = np.array(all_rewards)
     # all_penalties = np.array(all_penalties)
@@ -88,3 +95,5 @@ if __name__ == '__main__':
     # plot_loss_function(dvfs_alg.losses)
     # for i in range(4):
     #     plot_penalty(all_penalties[:, i], all_min_penalties[:, i], i)
+    # np.save("q_a.npy", rrlo_dvfs.Q_table_a)
+    # np.save("q_b.npy", rrlo_dvfs.Q_table_b)

@@ -3,7 +3,7 @@ import numpy as np
 
 from models.cpu import CPU, CPU_CC
 from models.task import TaskGen, Task, RRLOTaskGen
-from models.wireless_interface import WirelessInterface
+from models.wireless_interface import WirelessInterface, RRLOWirelessInterface
 from configs import *
 
 class Env:
@@ -89,7 +89,7 @@ class RRLOEnv():
         self.cpu_cc = CPU_CC(confs['cpu_local'])
         # Pass CPU frequency to RRLO task generator
         self.task_gen = RRLOTaskGen(self.cpu_cc.freq, confs['task_set'])
-        self.w_inter = WirelessInterface(confs['w_inter'])
+        self.w_inter = RRLOWirelessInterface(confs['w_inter'])
 
         # Initialize environment state
         self._init_state_bounds()
@@ -97,10 +97,17 @@ class RRLOEnv():
         self.curr_state = None
 
     def step(self, actions: Dict[str, int|List[int]]):
+        # Execute local tasks
         if actions["dvfs_alg"] != 0:
             raise ValueError("RRLO only supports CC algorithm")
         local_tasks = {t_id: self.curr_tasks[t_id] for t_id in actions["local"]}
-        return self.cpu_cc.step(local_tasks)
+        exec_local_tasks = self.cpu_cc.step(local_tasks)
+        # Execute offloaded tasks
+        power_level = self.w_inter.powers[actions["power_level"]]
+        offload_tasks = {t_id: self.curr_tasks[t_id] for t_id in actions["offload"]}
+        self.w_inter.offload(offload_tasks, power_level)
+
+        return self._cal_penalty(exec_local_tasks, offload_tasks)
 
     def observe(self):
         self.curr_tasks = self.task_gen.step()
@@ -113,8 +120,23 @@ class RRLOEnv():
     def get_state_bounds(self):
         return self.num_states
 
+    def _cal_penalty(self, local_tasks, offload_tasks):
+        penalty = 0
+        for t in local_tasks:
+            if t.deadline_missed:
+                penalty += DEADLINE_MISSED_PENALTY
+            else:
+                penalty += t.cons_energy
+        for tasks in offload_tasks.values():
+            for job in tasks:
+                if job.deadline_missed:
+                    penalty += DEADLINE_MISSED_PENALTY
+                else:
+                    penalty += job.cons_energy
+        return penalty
+
     def _init_state_bounds(self):
-        self.num_states = np.array([128, 128, 16])
+        self.num_states = np.array([16, 16, 8])
         self.min_state_vals = np.array([0, 0, 0])
         self.max_state_vals = np.array([1, 1, 2*self.w_inter.cg_sigma])
         self.state_steps = (self.max_state_vals-self.min_state_vals)/(self.num_states-1)

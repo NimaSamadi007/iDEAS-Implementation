@@ -76,12 +76,12 @@ class CPU_CC(CPU):
         super().__init__(cpu_conf_path)
 
     def step(self, jobs: Dict[int, List[RRLOTask]]) -> List[RRLOTask]:
-        tasks = [copy.deepcopy(job[0]) for job in jobs.values()]
+        tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
         # Check schedulability criteria
         total_util = self._cal_total_util(tasks)
         if total_util > 1:
             raise ValueError("Total utilization is greater than 1")
-        self.hp = math.lcm(*[task.p for task in tasks])
+        self.hp = math.lcm(*[task.p for task in tasks.values()])
         self.tasks = tasks
 
         issue_times = self._cal_task_issue_times()
@@ -132,11 +132,16 @@ class CPU_CC(CPU):
         # Check if any job is remained:
         if len(curr_jobs):
             print("Some tasks are not completed!")
-        # Check deadline miss
+        # Calculate energy consumption
         for t in finished_jobs:
+            # Task deadline is missed
             if t.exec_time_history[-1][1] > t.deadline:
                 t.deadline_missed = True
-                print(f"T_{t.t_id} missed deadline")
+                continue
+            for i in range(len(t.exec_time_history)):
+                dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
+                power = self.powers[self.freqs == t.exec_freq_history[i]][0]
+                t.cons_energy += power * (dt/1000) # mJ
 
         return finished_jobs
 
@@ -152,7 +157,7 @@ class CPU_CC(CPU):
         return self._select_freq()
 
     def _select_freq(self):
-        total_util = sum([j.util for j in self.tasks])
+        total_util = sum([j.util for j in self.tasks.values()])
         max_freq = self.freqs[-1]
         for freq in self.freqs:
             if total_util <= freq/max_freq:
@@ -161,18 +166,18 @@ class CPU_CC(CPU):
 
     def _cal_task_issue_times(self):
         issue_times = dict()
-        for i in range(len(self.tasks)):
-            for j in range(self.hp//self.tasks[i].p):
-                if j*self.tasks[i].p in issue_times.keys():
-                    issue_times[j*self.tasks[i].p].append(i)
+        for task in self.tasks.values():
+            for j in range(self.hp//task.p):
+                if j*task.p in issue_times.keys():
+                    issue_times[j*task.p].append(task.t_id)
                 else:
-                    issue_times[j*self.tasks[i].p] = [i]
+                    issue_times[j*task.p] = [task.t_id]
         # Sort based on issue time
         sorted_issue_times = dict(sorted(issue_times.items()))
         return sorted_issue_times
 
     def _cal_total_util(self, tasks):
         total_util = 0
-        for task in tasks:
+        for task in tasks.values():
             total_util += task.wcet / task.p
         return total_util
