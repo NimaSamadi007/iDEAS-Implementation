@@ -16,7 +16,7 @@ class Task:
         self.deadline_missed = False
 
     def gen_aet(self):
-        self.aet = np.random.uniform(0, self.wcet)
+        self.aet = np.random.uniform(self.wcet/2, self.wcet)
 
     def __repr__(self):
         return f"(P: {self.p}, W: {self.wcet}, A: {self.aet:.3f}, b: {self.b}, energy: {self.cons_energy:.3f})"

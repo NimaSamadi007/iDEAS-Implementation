@@ -150,10 +150,10 @@ class DQN_DVFS:
             return loss
         return None
 
-    def execute(self, states: np.ndarray) -> np.ndarray:
+    def execute(self, states: np.ndarray, eval_mode=False) -> np.ndarray:
         actions = []
         for state in states:
-            actions.append(self._sel_act(state))
+            actions.append(self._sel_act(state, eval_mode))
         return np.asarray(actions)
 
     def update_model(self):
@@ -189,8 +189,8 @@ class DQN_DVFS:
         loss = F.smooth_l1_loss(curr_q_val, target_val)
         return loss
 
-    def _sel_act(self, state: np.ndarray):
-        if self.eps > np.random.random():
+    def _sel_act(self, state: np.ndarray, eval_mode=False):
+        if not eval_mode and self.eps > np.random.random():
             # First select between 3 possible targets
             target_id = np.random.randint(len(self.act_space))
             # Then select action from the selected target
