@@ -1,7 +1,7 @@
 # Project related stuff
 .vscode
 *.png
-test.ipynb
+test.*
 *.pt
 
 # Byte-compiled / optimized / DLL files

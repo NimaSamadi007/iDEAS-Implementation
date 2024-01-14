@@ -1,8 +1,8 @@
 from typing import Dict, List, Any
 import numpy as np
 
-from models.cpu import CPU
-from models.task import TaskGen, Task
+from models.cpu import CPU, CPU_CC
+from models.task import TaskGen, Task, RRLOTaskGen
 from models.wireless_interface import WirelessInterface
 from configs import *
 
@@ -84,15 +84,23 @@ class Env:
         rewards = np.exp(-REWARD_COEFF*(penalties-min_penalties))
         return rewards, penalties, min_penalties
 
-class RRLOEnv(Env):
+class RRLOEnv():
     def __init__(self, confs: Dict[str, str]):
-        super().__init__(confs)
+        self.cpu_cc = CPU_CC(confs['cpu_local'])
+        # Pass CPU frequency to RRLO task generator
+        self.task_gen = RRLOTaskGen(self.cpu_cc.freq, confs['task_set'])
+        self.w_inter = WirelessInterface(confs['w_inter'])
+
+        # Initialize environment state
+        self._init_state_bounds()
+        self.curr_tasks = None
+        self.curr_state = None
 
     def step(self, actions: Dict[str, int|List[int]]):
-        # self.cpu.step(self.curr_tasks, actions["local"])
-        # self.w_inter.offload(self.curr_tasks, actions["offload"])
-        # return self._cal_reward()
-        pass
+        if actions["dvfs_alg"] != 0:
+            raise ValueError("RRLO only supports CC algorithm")
+        local_tasks = {t_id: self.curr_tasks[t_id] for t_id in actions["local"]}
+        return self.cpu_cc.step(local_tasks)
 
     def observe(self):
         self.curr_tasks = self.task_gen.step()

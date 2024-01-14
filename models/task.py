@@ -21,6 +21,28 @@ class Task:
     def __repr__(self):
         return f"(P: {self.p}, W: {self.wcet}, A: {self.aet:.3f}, b: {self.b}, energy: {self.cons_energy:.3f})"
 
+class RRLOTask(Task):
+    def __init__(self, specs: Dict[str, Any]):
+        super().__init__(specs)
+        self.base_freq = specs['cpu_freq']
+
+        self.executed_time = 0
+        self.finished = False
+        self.deadline = -1
+        # Buffer holding the execution time and frequency of the task
+        # so that the energy consumption can be calculated
+        self.exec_time_history = []
+        self.exec_freq_history = []
+
+    def gen_aet(self, curr_freq=-1):
+        if self.aet == -1: # AET has not generated before
+            self.aet = np.random.uniform(self.wcet/2, self.wcet)
+        # Scale AET and executed time based on the current CPU freq
+        if curr_freq != -1: # No scaling is required if curr_freq is not provided
+            self.aet *= (self.base_freq/curr_freq)
+            self.executed_time *= (self.base_freq/curr_freq)
+            self.base_freq = curr_freq
+
 class TaskGen:
     def __init__(self, task_conf_path):
         self.task_set = []
@@ -54,3 +76,15 @@ class TaskGen:
 
     def get_hyper_period(self):
         return math.lcm(*[t.p for t in self.task_set])
+
+class RRLOTaskGen(TaskGen):
+    def __init__(self, cpu_freq, task_conf_path):
+        self.task_set = []
+        try:
+            with open(task_conf_path, "r") as f:
+                task_set_conf = json.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Task configuration file not found at {task_conf_path}")
+        for i in range(len(task_set_conf)):
+            task_set_conf[i]['cpu_freq'] = cpu_freq
+            self.task_set.append(RRLOTask(task_set_conf[i]))

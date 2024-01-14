@@ -29,7 +29,8 @@ if __name__ == '__main__':
                         min_eps=0)
 
     rrlo_dvfs = RRLO_DVFS(state_bounds=rrlo_env.get_state_bounds(),
-                          num_dvfs_algs=4,
+                          num_dvfs_algs=1,
+                          dvfs_algs=["cc"],
                           num_tasks=4)
 
     # Initial state observation
@@ -47,7 +48,12 @@ if __name__ == '__main__':
 
         # # Execute tasks and get reward
         rewards_dqn, penalties_dqn, min_penalties_dqn = dqn_env.step(actions_dqn_str)
-        penalties_rrlo = rrlo_env.step(actions_rrlo)
+        finished_tasks = rrlo_env.step(actions_rrlo)
+        for t in finished_tasks:
+            print(f"T_{t.t_id} exec time:")
+            for i, e_time in enumerate(t.exec_time_history):
+                print(f"\t{i}: {e_time[0]:.3f} -- {e_time[1]:.3f} @ {t.exec_freq_history[i]}")
+            print(20*'-')
 
         # # Observe next state
         # next_state, is_final = env.observe(100)
