@@ -68,7 +68,7 @@ class CPU:
             if wcet_scaled < task.p:
                 min_energy = self.powers[i] * (wcet_scaled/1000)
                 return min_energy
-        raise ValueError(f"Unable to schedult task: {task}")
+        raise ValueError(f"Unable to schedule task: {task}")
 
 # CPU model that uses the cycle conserving algorithm for DVFS
 class CPU_CC(CPU):
@@ -179,5 +179,121 @@ class CPU_CC(CPU):
     def _cal_total_util(self, tasks):
         total_util = 0
         for task in tasks.values():
+            total_util += task.wcet / task.p
+        return total_util
+# CPU model that uses the look ahead algorithm for DVFS. the implementation can handle LA-2 and soft LA-2 as well
+class CPU_LA(CPU):
+    def __init__(self, cpu_conf_path):
+        super().__init__(cpu_conf_path)
+
+    def step(self, jobs: Dict[int, List[RRLOTask]]) -> List[RRLOTask]:
+        tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
+        total_util = self._cal_total_util(tasks)
+        if total_util > 1:
+            raise ValueError("Total utilization is greater than 1")
+        self.hp = math.lcm(*[task.p for task in tasks.values()])
+        self.tasks = tasks
+
+        issue_times = self._cal_task_issue_times()
+        curr_jobs = []
+        finished_jobs = []
+        for i, issued_info in enumerate(issue_times.items()):
+            issue_time = issued_info[0]
+            issued_tasks_id = issued_info[1]
+            issued_jobs = [jobs[t_id].pop(0) for t_id in issued_tasks_id]
+            for t in issued_jobs:
+                t.deadline = issue_time + t.p
+            for t in issued_jobs:   #TODO is there any better way? I believe I needed the deadlines saved before running the LA algo 
+                self.freq = self._task_release(tasks=issued_jobs, task_id=t.t_id, curr_time=issue_time)
+
+            curr_jobs.extend(issued_jobs)
+            curr_jobs.sort(key=lambda x: x.deadline)
+
+            if i == len(issue_times) - 1:
+                next_issue_time = self.hp
+            else:
+                next_issue_time = list(issue_times.keys())[i + 1]
+            curr_time = issue_time
+            remain_time = next_issue_time - issue_time
+
+            for job in curr_jobs:
+                job.gen_aet(self.freq)
+                if (job.aet - job.executed_time) < remain_time:
+                    job.exec_time_history.append([curr_time, curr_time + job.aet - job.executed_time])
+                    job.exec_freq_history.append(job.base_freq)
+                    job.finished = True
+                    curr_time += (job.aet - job.executed_time)
+                    remain_time -= (job.aet - job.executed_time)
+                    self.freq = self._task_complete(tasks=issued_jobs, task_id=job.t_id, curr_time=curr_time)
+                else:
+                    job.exec_time_history.append([curr_time, next_issue_time])
+                    job.exec_freq_history.append(job.base_freq)
+                    job.executed_time += remain_time
+                    break
+
+            finished_jobs.extend([t for t in curr_jobs if t.finished])
+            curr_jobs = [t for t in curr_jobs if not t.finished]
+
+        if len(curr_jobs):
+            print("Some tasks are not completed!")
+
+        for t in finished_jobs:
+            if t.exec_time_history[-1][1] > t.deadline:
+                t.deadline_missed = True
+                continue
+            for i in range(len(t.exec_time_history)):
+                dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
+                power = self.powers[self.freqs.index(t.exec_freq_history[i])]
+                t.cons_energy += power * (dt / 1000)
+
+        return finished_jobs
+
+    def _task_release(self, tasks, task_id: int, curr_time) -> int:
+        self.tasks[task_id].c_left = self.tasks[task_id].wcet
+        return self._defer(tasks=tasks, current_time=curr_time)
+
+    def _task_complete(self, tasks, curr_time, task_id: int) -> int:
+        self.tasks[task_id].c_left = 0
+        return self._defer(tasks=tasks, current_time=curr_time)
+
+    def _select_freq(self, util):
+        max_freq = self.freqs[-1]
+        for freq in self.freqs[::-1]:
+            if util <= freq / max_freq:
+                return freq
+        raise ValueError("Unable to set CPU frequency")
+
+    def _defer(self, tasks, current_time: int) -> int:
+        S = 0
+        util_tot = self._cal_total_util(tasks)
+        tsks = tasks
+        tsks.sort(key=lambda x: x.deadline, reverse=True)
+        Min_D = tsks[-1].deadline
+        for task in tsks:
+            util_tot -= task.wcet / task.p
+            x = max(0, task.c_left - (1 - util_tot) * (task.deadline - Min_D))
+            if task.deadline != Min_D:   # TODO: ask dev by 0 for the min deadline task. what is best to do ? 
+              util_tot += (task.c_left - x) / (task.deadline - Min_D)
+            S += x
+        return self._select_freq(S / (Min_D - current_time))
+
+    def _cal_task_issue_times(self):
+        issue_times = dict()
+        for task in self.tasks.values():
+            for j in range(self.hp // task.p):
+                if j * task.p in issue_times.keys():
+                    issue_times[j * task.p].append(task.t_id)
+                else:
+                    issue_times[j * task.p] = [task.t_id]
+        sorted_issue_times = dict(sorted(issue_times.items()))
+        return sorted_issue_times
+
+    def _cal_total_util(self, tasks):
+        total_util = 0
+        if isinstance(tasks, dict):
+            task_list = tasks.values()
+        else:
+            task_list=tasks
+        for task in task_list:
             total_util += task.wcet / task.p
         return total_util

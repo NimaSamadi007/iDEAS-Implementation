@@ -14,6 +14,7 @@ class Task:
         self.util = 0
         self.cons_energy = 0 # consumed energy when executing the task in (J)
         self.deadline_missed = False
+        self.c_left = self.wcet
 
     def gen_aet(self):
         self.aet = np.random.uniform(self.wcet/2, self.wcet)
