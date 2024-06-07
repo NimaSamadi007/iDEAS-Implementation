@@ -1,7 +1,7 @@
 from typing import Dict, List, Any
 import numpy as np
 
-from models.cpu import CPU, CPU_CC
+from models.cpu import CPU, CPU_CC , CPU_LA
 from models.task import TaskGen, Task, RRLOTaskGen
 from models.wireless_interface import WirelessInterface, RRLOWirelessInterface
 from configs import *
@@ -87,6 +87,7 @@ class Env:
 class RRLOEnv():
     def __init__(self, confs: Dict[str, str]):
         self.cpu_cc = CPU_CC(confs['cpu_local'])
+        self.cpu_la = CPU_LA(confs['cpu_local'])
         # Pass CPU frequency to RRLO task generator
         self.task_gen = RRLOTaskGen(self.cpu_cc.freq, confs['task_set'])
         self.w_inter = RRLOWirelessInterface(confs['w_inter'])
@@ -98,10 +99,13 @@ class RRLOEnv():
 
     def step(self, actions: Dict[str, int|List[int]]):
         # Execute local tasks
-        if actions["dvfs_alg"] != 0:
-            raise ValueError("RRLO only supports CC algorithm")
+        #if actions["dvfs_alg"] != 0:
+         #   raise ValueError("RRLO only supports CC algorithm")
         local_tasks = {t_id: self.curr_tasks[t_id] for t_id in actions["local"]}
-        exec_local_tasks = self.cpu_cc.step(local_tasks)
+        if actions["dvfs_alg"] == 0:
+            exec_local_tasks = self.cpu_cc.step(local_tasks)
+        else :
+            exec_local_tasks = self.cpu_la.step(local_tasks)
         # Execute offloaded tasks
         power_level = self.w_inter.powers[actions["power_level"]]
         offload_tasks = {t_id: self.curr_tasks[t_id] for t_id in actions["offload"]}

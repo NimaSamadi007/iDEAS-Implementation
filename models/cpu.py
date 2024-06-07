@@ -142,6 +142,7 @@ class CPU_CC(CPU):
                 dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
                 power = self.powers[self.freqs == t.exec_freq_history[i]][0]
                 t.cons_energy += power * (dt/1000) # mJ
+            
 
         return finished_jobs
 
@@ -243,10 +244,12 @@ class CPU_LA(CPU):
                 continue
             for i in range(len(t.exec_time_history)):
                 dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
-                power = self.powers[self.freqs.index(t.exec_freq_history[i])]
+                power = self.powers[self.freqs == t.exec_freq_history[i]][0]
                 t.cons_energy += power * (dt / 1000)
+            
 
         return finished_jobs
+    
 
     def _task_release(self, tasks, task_id: int, curr_time) -> int:
         self.tasks[task_id].c_left = self.tasks[task_id].wcet

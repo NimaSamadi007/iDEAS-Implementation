@@ -245,8 +245,8 @@ class RRLO_DVFS:
         self.dvfs_algs = dvfs_algs
         self.num_tasks = num_tasks
         self.act_bounds = np.ones(self.num_tasks+2, dtype=int)*2 # Initialize all with value 2
-        self.act_bounds[-2] = self.num_w_inter_powers # number of possible dvfs algs
-        self.act_bounds[-1] = self.num_dvfs_algs # number of possible power levels
+        self.act_bounds[-2] = self.num_w_inter_powers # number of possible power levels
+        self.act_bounds[-1] = self.num_dvfs_algs # number of possible dvfs algs
         self.alpha = 0.8
         self.beta = 0.9
         self.Q_table_a = np.zeros((self.num_total_states, 2**self.num_tasks * self.num_dvfs_algs * self.num_w_inter_powers))

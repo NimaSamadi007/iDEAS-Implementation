@@ -30,8 +30,8 @@ if __name__ == '__main__':
 
     rrlo_dvfs = RRLO_DVFS(state_bounds=rrlo_env.get_state_bounds(),
                           num_w_inter_powers=len(rrlo_env.w_inter.powers),
-                          num_dvfs_algs=1,
-                          dvfs_algs=["cc"],
+                          num_dvfs_algs=2,
+                          dvfs_algs=["cc","la"],
                           num_tasks=4)
 
     # Initial state observation
