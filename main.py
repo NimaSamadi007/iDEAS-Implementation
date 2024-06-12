@@ -23,10 +23,10 @@ if __name__ == '__main__':
     dqn_dvfs = DQN_DVFS(state_dim=DQN_STATE_DIM,
                         act_space=dqn_env.get_action_space(),
                         batch_size=32,
-                        gamma=0.90,
+                        gamma=0.95,
                         update_target_net= 1000,
                         eps_decay = 1/2000,
-                        min_eps=0.1)
+                        min_eps=0)
 
     rrlo_dvfs = RRLO_DVFS(state_bounds=rrlo_env.get_state_bounds(),
                           num_w_inter_powers=len(rrlo_env.w_inter.powers),
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     dqn_state,_ = dqn_env.observe()
     rrlo_state,_ = rrlo_env.observe()
 
-    for itr in range(int(1.5e5)):
+    for itr in range(int(2e5)):
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
@@ -77,12 +77,11 @@ if __name__ == '__main__':
         # all_rewards.append(rewards.tolist())
         # all_penalties.append(penalties.tolist())
         # all_min_penalties.append(min_penalties.tolist())
-        if (itr+1) % 500 == 0:
-            print(f"At {itr+1}, loss={loss:.3f}")
-            # print(f"Actions: {actions_str}")
-            # print(f"Rewards: {rewards}")
-            # print(f"Penalties: {penalties}")
-            # print(f"Min penalties: {min_penalties}")
+        if (itr+1) % 1000 == 0:
+            print(f"At {itr+1}, DQN loss={loss:.3f}")
+            print(f"Penalties DQN sum: {np.sum(penalties_dqn):.3e}, all: {penalties_dqn}")
+            print(f"Min penalties DQN sum: {np.sum(min_penalties_dqn):.3e}, all: {min_penalties_dqn}")
+            print(f"Penalties RRLO: {penalty_rrlo:.3e}")
             print(10*"-")
 
     # all_rewards = np.array(all_rewards)
@@ -118,12 +117,12 @@ if __name__ == '__main__':
         # Save energy consumption
         for jobs in dqn_env.curr_tasks.values():
             for j in jobs:
-                dqn_task_energy_cons[j.t_id] = j.cons_energy
+                dqn_task_energy_cons[j.t_id] += j.cons_energy
             dqn_num_tasks[j.t_id] += len(jobs)
 
         for jobs in rrlo_env.curr_tasks.values():
             for j in jobs:
-                rrlo_task_energy_cons[j.t_id] = j.cons_energy
+                rrlo_task_energy_cons[j.t_id] += j.cons_energy
             rrlo_num_tasks[j.t_id] += len(jobs)
 
         next_state_dqn, is_final_dqn = dqn_env.observe()
@@ -140,5 +139,5 @@ if __name__ == '__main__':
     print(f"DQN energy consumption: {dqn_task_energy_cons/dqn_num_tasks}")
     print(f"RRLO energy consumption: {rrlo_task_energy_cons/rrlo_num_tasks}")
 
-    print(f"DQN task set avg energy consumption: {np.sum(dqn_task_energy_cons)/np.sum(dqn_num_tasks)}")
-    print(f"RRLO task set avg energy consumption: {np.sum(rrlo_task_energy_cons)/np.sum(rrlo_num_tasks)}")
+    print(f"DQN task set avg energy consumption: {np.sum(dqn_task_energy_cons)/np.sum(dqn_num_tasks):.3e}")
+    print(f"RRLO task set avg energy consumption: {np.sum(rrlo_task_energy_cons)/np.sum(rrlo_num_tasks):.3e}")

@@ -1,7 +1,7 @@
 from typing import Dict, List, Any
 import numpy as np
 
-from models.cpu import CPU, CPU_CC , CPU_LA
+from models.cpu import CPU, CPU_CC, CPU_LA
 from models.task import TaskGen, Task, RRLOTaskGen
 from models.wireless_interface import WirelessInterface, RRLOWirelessInterface
 from configs import *
@@ -99,12 +99,12 @@ class RRLOEnv():
 
     def step(self, actions: Dict[str, int|List[int]]):
         # Execute local tasks
-        #if actions["dvfs_alg"] != 0:
-         #   raise ValueError("RRLO only supports CC algorithm")
+        if not (actions["dvfs_alg"] == 0 or actions["dvfs_alg"] == 1):
+           raise ValueError("RRLO only supports CC and LA algorithms")
         local_tasks = {t_id: self.curr_tasks[t_id] for t_id in actions["local"]}
         if actions["dvfs_alg"] == 0:
             exec_local_tasks = self.cpu_cc.step(local_tasks)
-        else :
+        else:
             exec_local_tasks = self.cpu_la.step(local_tasks)
         # Execute offloaded tasks
         power_level = self.w_inter.powers[actions["power_level"]]
