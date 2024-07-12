@@ -22,10 +22,10 @@ if __name__ == '__main__':
     # Initialize DVFS algorithms
     dqn_dvfs = DQN_DVFS(state_dim=DQN_STATE_DIM,
                         act_space=dqn_env.get_action_space(),
-                        batch_size=32,
-                        gamma=0.95,
+                        batch_size=64,
+                        gamma=0.95,  
                         update_target_net= 1000,
-                        eps_decay = 1/2000,
+                        eps_decay = 1/200,
                         min_eps=0)
 
     rrlo_dvfs = RRLO_DVFS(state_bounds=rrlo_env.get_state_bounds(),
