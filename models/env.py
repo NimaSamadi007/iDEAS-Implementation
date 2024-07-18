@@ -39,19 +39,19 @@ class Env:
         # (SU, U_local, WCET, B, h)
         wcet_bound = self.task_gen.get_wcet_bound()
         task_size_bound = self.task_gen.get_task_size_bound()
-        self.min_state_vals = np.array([0, 0, wcet_bound[0], task_size_bound[0], 0], dtype=float)
-        self.max_state_vals = np.array([1, 1, wcet_bound[1], task_size_bound[1], 2*self.w_inter.cg_sigma], dtype=float)
+        self.min_state_vals = np.array([0, 0, wcet_bound[0], task_size_bound[0]], dtype=float)
+        self.max_state_vals = np.array([1, 1, wcet_bound[1], task_size_bound[1]], dtype=float)
 
     def _get_system_state(self):
         states = np.zeros((len(self.curr_tasks), DQN_STATE_DIM), dtype=np.float32)
         su = 0.
         for i, task in enumerate(self.curr_tasks.values()):
             su += task[0].wcet/task[0].p
-            states[i, 3] = task[0].wcet
-            states[i, 4] = task[0].b
+            states[i, 2] = task[0].wcet
+            states[i, 3] = task[0].b
         states[:, 0] = su
         states[:, 1] = self.cpu.util
-        states[:, 4] = self.w_inter.update_channel_state()
+        # states[:, 4] = self.w_inter.update_channel_state()
         states = (states - self.min_state_vals)/(self.max_state_vals - self.min_state_vals)
         return states
 

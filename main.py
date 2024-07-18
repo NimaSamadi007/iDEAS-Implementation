@@ -22,10 +22,10 @@ if __name__ == '__main__':
     # Initialize DVFS algorithms
     dqn_dvfs = DQN_DVFS(state_dim=DQN_STATE_DIM,
                         act_space=dqn_env.get_action_space(),
-                        batch_size=64,
-                        gamma=0.95,  
+                        batch_size=32,
+                        gamma=0.95,
                         update_target_net= 1000,
-                        eps_decay = 1/200,
+                        eps_decay = 1/4000,
                         min_eps=0)
 
     rrlo_dvfs = RRLO_DVFS(state_bounds=rrlo_env.get_state_bounds(),
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     dqn_state,_ = dqn_env.observe()
     rrlo_state,_ = rrlo_env.observe()
 
-    for itr in range(int(2e5)):
+    for itr in range(int(4e5)):
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     dqn_state,_ = dqn_env.observe()
     rrlo_state,_ = rrlo_env.observe()
-    for itr in range(5000):
+    for itr in range(10000):
         actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
         actions_rrlo, actions_rrlo_col = rrlo_dvfs.execute(rrlo_state)
@@ -136,8 +136,16 @@ if __name__ == '__main__':
     print(dqn_num_tasks)
     print(rrlo_num_tasks)
     np.set_printoptions(suppress=True)
-    print(f"DQN energy consumption: {dqn_task_energy_cons/dqn_num_tasks}")
-    print(f"RRLO energy consumption: {rrlo_task_energy_cons/rrlo_num_tasks}")
+    dqn_avg_task_energy_cons = dqn_task_energy_cons/dqn_num_tasks
+    rrlo_avg_task_energy_cons = rrlo_task_energy_cons/rrlo_num_tasks
+    print(f"DQN energy consumption: {dqn_avg_task_energy_cons}")
+    print(f"RRLO energy consumption: {rrlo_avg_task_energy_cons}")
 
-    print(f"DQN task set avg energy consumption: {np.sum(dqn_task_energy_cons)/np.sum(dqn_num_tasks):.3e}")
-    print(f"RRLO task set avg energy consumption: {np.sum(rrlo_task_energy_cons)/np.sum(rrlo_num_tasks):.3e}")
+    avg_dqn_energy_cons = np.sum(dqn_task_energy_cons)/np.sum(dqn_num_tasks)
+    avg_rrlo_energy_cons = np.sum(rrlo_task_energy_cons)/np.sum(rrlo_num_tasks)
+    print(f"DQN task set avg energy consumption: {avg_dqn_energy_cons:.3e}")
+    print(f"RRLO task set avg energy consumption: {avg_rrlo_energy_cons:.3e}")
+    dqn_improvement = (avg_dqn_energy_cons-avg_rrlo_energy_cons)/(avg_dqn_energy_cons)*100
+    dqn_task_improvement = (dqn_avg_task_energy_cons-rrlo_avg_task_energy_cons)/dqn_avg_task_energy_cons*100
+    print(f"DQN per task energy usage: {dqn_task_improvement} %")
+    print(f"DQN avg energy usage: {dqn_improvement:.3f} %")

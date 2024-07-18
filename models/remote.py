@@ -6,4 +6,7 @@ class EdgeServer:
 
     def execute(self, job: Task):
         job.gen_aet()
-
+        #TODO: Update execution model - Now I consider
+        # Edge server has twice processing power of mobile
+        # devices
+        job.aet /= 2.
