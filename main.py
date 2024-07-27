@@ -15,17 +15,23 @@ if __name__ == '__main__':
                "cpu_local": "configs/cpu_local.json",
                "w_inter": "configs/wireless_interface.json"
                }
-
+    tconfigs = {"task_set": "configs/task_set.json",
+               "cpu_local": "configs/cpu_local.json",
+               "w_inter": "configs/wireless_interface.json"
+               }
     dqn_env = Env(configs)
     rrlo_env = RRLOEnv(configs)
+    tdqn_env = Env(tconfigs)
+    trrlo_env = RRLOEnv(tconfigs)
 
     # Initialize DVFS algorithms
     dqn_dvfs = DQN_DVFS(state_dim=DQN_STATE_DIM,
                         act_space=dqn_env.get_action_space(),
-                        batch_size=32,
+                        batch_size=64,
                         gamma=0.95,
+                        mem_size=1000,
                         update_target_net= 1000,
-                        eps_decay = 1/4000,
+                        eps_decay = 1/200,
                         min_eps=0)
 
     rrlo_dvfs = RRLO_DVFS(state_bounds=rrlo_env.get_state_bounds(),
@@ -38,7 +44,7 @@ if __name__ == '__main__':
     dqn_state,_ = dqn_env.observe()
     rrlo_state,_ = rrlo_env.observe()
 
-    for itr in range(int(4e5)):
+    for itr in range(int(5e4)):
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
@@ -104,29 +110,29 @@ if __name__ == '__main__':
     rrlo_task_energy_cons = np.zeros(4)
     rrlo_num_tasks = np.zeros(4)
 
-    dqn_state,_ = dqn_env.observe()
-    rrlo_state,_ = rrlo_env.observe()
+    dqn_state,_ = tdqn_env.observe()
+    rrlo_state,_ = trrlo_env.observe()
     for itr in range(10000):
         actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
         actions_rrlo, actions_rrlo_col = rrlo_dvfs.execute(rrlo_state)
 
-        rewards_dqn, penalties_dqn, min_penalties_dqn = dqn_env.step(actions_dqn_str)
-        penalty_rrlo = rrlo_env.step(actions_rrlo)
+        rewards_dqn, penalties_dqn, min_penalties_dqn = tdqn_env.step(actions_dqn_str)
+        penalty_rrlo = trrlo_env.step(actions_rrlo)
 
         # Save energy consumption
-        for jobs in dqn_env.curr_tasks.values():
+        for jobs in tdqn_env.curr_tasks.values():
             for j in jobs:
                 dqn_task_energy_cons[j.t_id] += j.cons_energy
             dqn_num_tasks[j.t_id] += len(jobs)
 
-        for jobs in rrlo_env.curr_tasks.values():
+        for jobs in trrlo_env.curr_tasks.values():
             for j in jobs:
                 rrlo_task_energy_cons[j.t_id] += j.cons_energy
             rrlo_num_tasks[j.t_id] += len(jobs)
 
-        next_state_dqn, is_final_dqn = dqn_env.observe()
-        next_state_rrlo,_ = rrlo_env.observe()
+        next_state_dqn, is_final_dqn = tdqn_env.observe()
+        next_state_rrlo,_ = trrlo_env.observe()
 
         # Update current state
         dqn_state = next_state_dqn
@@ -145,7 +151,7 @@ if __name__ == '__main__':
     avg_rrlo_energy_cons = np.sum(rrlo_task_energy_cons)/np.sum(rrlo_num_tasks)
     print(f"DQN task set avg energy consumption: {avg_dqn_energy_cons:.3e}")
     print(f"RRLO task set avg energy consumption: {avg_rrlo_energy_cons:.3e}")
-    dqn_improvement = (avg_dqn_energy_cons-avg_rrlo_energy_cons)/(avg_dqn_energy_cons)*100
-    dqn_task_improvement = (dqn_avg_task_energy_cons-rrlo_avg_task_energy_cons)/dqn_avg_task_energy_cons*100
+    dqn_improvement = (avg_dqn_energy_cons-avg_rrlo_energy_cons)/(avg_rrlo_energy_cons)*100
+    dqn_task_improvement = (dqn_avg_task_energy_cons-rrlo_avg_task_energy_cons)/rrlo_avg_task_energy_cons*100
     print(f"DQN per task energy usage: {dqn_task_improvement} %")
     print(f"DQN avg energy usage: {dqn_improvement:.3f} %")
