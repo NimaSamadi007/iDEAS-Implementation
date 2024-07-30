@@ -44,7 +44,7 @@ if __name__ == '__main__':
     dqn_state,_ = dqn_env.observe()
     rrlo_state,_ = rrlo_env.observe()
 
-    for itr in range(int(5e4)):
+    for itr in range(int(4e5)):
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     for itr in range(10000):
         actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
-        actions_rrlo, actions_rrlo_col = rrlo_dvfs.execute(rrlo_state)
+        actions_rrlo,_ = rrlo_dvfs.execute(rrlo_state)
 
         rewards_dqn, penalties_dqn, min_penalties_dqn = tdqn_env.step(actions_dqn_str)
         penalty_rrlo = trrlo_env.step(actions_rrlo)
