@@ -2,7 +2,8 @@ import numpy as np
 from tqdm import tqdm
 
 from env_models.env import Env, RRLOEnv
-from dvfs.dvfs import DQN_DVFS, RRLO_DVFS
+from dvfs.dqn_dvfs import DQN_DVFS
+from dvfs.rrlo_dvfs import RRLO_DVFS
 from configs import DQN_STATE_DIM
 
 

@@ -1,8 +1,10 @@
 import numpy as np
+from tqdm import tqdm
 
 from configs import DQN_STATE_DIM
 from env_models.env import Env, RRLOEnv
-from dvfs.dvfs import DQN_DVFS, RRLO_DVFS
+from dvfs.dqn_dvfs import DQN_DVFS
+from dvfs.rrlo_dvfs import RRLO_DVFS
 from utils.utils import set_random_seed
 
 
@@ -44,7 +46,7 @@ def train():
     dqn_state, _ = dqn_env.observe()
     rrlo_state, _ = rrlo_env.observe()
 
-    for itr in range(int(4e3)):
+    for itr in tqdm(range(int(2e5))):
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
@@ -70,12 +72,12 @@ def train():
 
         # Print results
         if (itr + 1) % 1000 == 0:
-            print(f"At {itr+1}, DQN loss={loss:.5f}")
-            print(
+            tqdm.write(f"At {itr+1}, DQN loss={loss:.5f}")
+            tqdm.write(
                 f"Penalties DQN sum: {np.sum(penalties_dqn):.3e}, all: {penalties_dqn}"
             )
-            print(f"Penalties RRLO: {penalty_rrlo:.3e}")
-            print(10 * "-")
+            tqdm.write(f"Penalties RRLO: {penalty_rrlo:.3e}")
+            tqdm.write(10 * "-")
 
     print("Saving trained model...")
     dqn_dvfs.save_model("models")

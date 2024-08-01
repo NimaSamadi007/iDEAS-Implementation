@@ -4,28 +4,30 @@ import numpy as np
 import math
 from typing import Dict, Any
 
+
 class Task:
     def __init__(self, specs: Dict[str, Any]):
-        self.p = specs['p'] # period time, (ms)
-        self.b = specs['b'] # task input data (KB)
-        self.wcet = specs['w'] # worst-case execution time, (ms)
-        self.t_id = specs['task'] # task ID representing a unique task
-        self.aet = -1 #(ms)
+        self.p = specs["p"]  # period time, (ms)
+        self.b = specs["b"]  # task input data (KB)
+        self.wcet = specs["w"]  # worst-case execution time, (ms)
+        self.t_id = specs["task"]  # task ID representing a unique task
+        self.aet = -1  # (ms)
         self.util = 0
-        self.cons_energy = 0 # consumed energy when executing the task in (J)
+        self.cons_energy = 0  # consumed energy when executing the task in (J)
         self.deadline_missed = False
         self.c_left = self.wcet
 
     def gen_aet(self):
-        self.aet = np.random.uniform(self.wcet/2, self.wcet)
+        self.aet = np.random.uniform(self.wcet / 2, self.wcet)
 
     def __repr__(self):
         return f"(P: {self.p}, W: {self.wcet}, A: {self.aet:.3f}, b: {self.b}, energy: {self.cons_energy:.3f})"
 
+
 class RRLOTask(Task):
     def __init__(self, specs: Dict[str, Any]):
         super().__init__(specs)
-        self.base_freq = specs['cpu_freq']
+        self.base_freq = specs["cpu_freq"]
 
         self.executed_time = 0
         self.finished = False
@@ -36,13 +38,14 @@ class RRLOTask(Task):
         self.exec_freq_history = []
 
     def gen_aet(self, curr_freq=-1):
-        if self.aet == -1: # AET has not generated before
-            self.aet = np.random.uniform(self.wcet/2, self.wcet)
+        if self.aet == -1:  # AET has not generated before
+            self.aet = np.random.uniform(self.wcet / 2, self.wcet)
         # Scale AET and executed time based on the current CPU freq
-        if curr_freq != -1: # No scaling is required if curr_freq is not provided
-            self.aet *= (self.base_freq/curr_freq)
-            self.executed_time *= (self.base_freq/curr_freq)
+        if curr_freq != -1:  # No scaling is required if curr_freq is not provided
+            self.aet *= self.base_freq / curr_freq
+            self.executed_time *= self.base_freq / curr_freq
             self.base_freq = curr_freq
+
 
 class TaskGen:
     def __init__(self, task_conf_path):
@@ -51,7 +54,9 @@ class TaskGen:
             with open(task_conf_path, "r") as f:
                 task_set_conf = json.load(f)
         except FileNotFoundError:
-            raise FileNotFoundError(f"Task configuration file not found at {task_conf_path}")
+            raise FileNotFoundError(
+                f"Task configuration file not found at {task_conf_path}"
+            )
         for i in range(len(task_set_conf)):
             self.task_set.append(Task(task_set_conf[i]))
 
@@ -78,6 +83,7 @@ class TaskGen:
     def get_hyper_period(self):
         return math.lcm(*[t.p for t in self.task_set])
 
+
 class RRLOTaskGen(TaskGen):
     def __init__(self, cpu_freq, task_conf_path):
         self.task_set = []
@@ -85,7 +91,9 @@ class RRLOTaskGen(TaskGen):
             with open(task_conf_path, "r") as f:
                 task_set_conf = json.load(f)
         except FileNotFoundError:
-            raise FileNotFoundError(f"Task configuration file not found at {task_conf_path}")
+            raise FileNotFoundError(
+                f"Task configuration file not found at {task_conf_path}"
+            )
         for i in range(len(task_set_conf)):
-            task_set_conf[i]['cpu_freq'] = cpu_freq
+            task_set_conf[i]["cpu_freq"] = cpu_freq
             self.task_set.append(RRLOTask(task_set_conf[i]))
