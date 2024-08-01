@@ -1,4 +1,4 @@
-from models.task import Task
+from env_models.task import Task
 
 class EdgeServer:
     def __init__(self):

@@ -1,9 +1,9 @@
-from typing import Dict, List, Any
+from typing import Dict, List
 import numpy as np
 
-from models.cpu import CPU, CPU_CC, CPU_LA
-from models.task import TaskGen, Task, RRLOTaskGen
-from models.wireless_interface import WirelessInterface, RRLOWirelessInterface
+from env_models.cpu import CPU, CPU_CC, CPU_LA
+from env_models.task import TaskGen, Task, RRLOTaskGen
+from env_models.wireless_interface import WirelessInterface, RRLOWirelessInterface
 from configs import *
 
 class Env:

@@ -4,7 +4,7 @@ import math
 import copy
 
 from typing import List, Dict
-from models.task import Task, RRLOTask
+from env_models.task import Task, RRLOTask
 
 class CPU:
     def __init__(self, cpu_conf_path):

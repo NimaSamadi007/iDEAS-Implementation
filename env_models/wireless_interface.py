@@ -2,8 +2,8 @@ import numpy as np
 import json
 from typing import List, Dict
 
-from models.remote import EdgeServer
-from models.task import Task
+from env_models.remote import EdgeServer
+from env_models.task import Task
 
 class WirelessInterface:
     def __init__(self, w_inter_conf_path):

@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
+import os
 
 class Network(nn.Module):
     def __init__(self, in_dim: int, out_dim: int):
@@ -113,7 +114,6 @@ class DQN_DVFS:
         # Training device
         # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.device = "cpu"
-        print(f"Using {self.device} device for training")
 
         # Network initialization
         self.net = Network(state_dim, self.act_dim).to(self.device)
@@ -180,6 +180,22 @@ class DQN_DVFS:
             act = self._conv_act_id_to_type(act)
             conv_actions[act[0]].append([i, act[1]])
         return conv_actions
+
+    def save_model(self, path: str):
+        """
+        Save trained model to the provided path
+        """
+        os.makedirs(path, exist_ok=True)
+        torch.save(self.net.state_dict(), f"{path}/dqn_model.pt")
+
+    def load_model(self, path: str):
+        """
+        Load pretrained model from the provided path
+        """
+        if os.path.exists(f"{path}/dqn_model.pt"):
+            self.net.load_state_dict(torch.load(f"{path}/dqn_model.pt"))
+        else:
+            print(f"Model {path}/dqn_model.pt does not exist!")
 
     def _compute_net_loss(self, samples: Dict[str, np.ndarray]) -> torch.Tensor:
         state = torch.FloatTensor(samples["state"]).to(self.device)
@@ -272,6 +288,19 @@ class RRLO_DVFS:
         next_action = np.argmin(Q_table[next_state_row_idx, :])
         Q_table[state_row_idx, actions] += self.alpha * (penalty + self.beta*Q_table[next_state_row_idx, next_action] - Q_table[state_row_idx, actions])
 
+    def save_model(self, path: str):
+        """
+        Save the trained models to path
+        """
+        np.save(f"{path}/rrlo_Q_table_a.npy", self.Q_table_a)
+        np.save(f"{path}/rrlo_Q_table_b.npy", self.Q_table_b)
+
+    def load_model(self, path: str):
+        """
+        Load pretrained model weights from the path
+        """
+        self.Q_table_a = np.load(f"{path}/rrlo_Q_table_a.npy")
+        self.Q_table_b = np.load(f"{path}/rrlo_Q_table_b.npy")
 
     def _conv_state_to_row(self, state: np.ndarray):
         row = 0
