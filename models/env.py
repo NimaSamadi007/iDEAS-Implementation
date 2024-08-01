@@ -111,6 +111,10 @@ class RRLOEnv():
         offload_tasks = {t_id: self.curr_tasks[t_id] for t_id in actions["offload"]}
         self.w_inter.offload(offload_tasks, power_level)
 
+        # Add locally execuated tasks to current tasks list as
+        # current tasks list is modifier in DVFS algorithms
+        for t in exec_local_tasks:
+            self.curr_tasks[t.t_id].append(t)
         return self._cal_penalty(exec_local_tasks, offload_tasks)
 
     def observe(self):

@@ -15,7 +15,7 @@ if __name__ == '__main__':
                "cpu_local": "configs/cpu_local.json",
                "w_inter": "configs/wireless_interface.json"
                }
-    tconfigs = {"task_set": "configs/task_set.json",
+    tconfigs = {"task_set": "configs/task_set2.json",
                "cpu_local": "configs/cpu_local.json",
                "w_inter": "configs/wireless_interface.json"
                }
@@ -50,18 +50,9 @@ if __name__ == '__main__':
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
         actions_rrlo, actions_rrlo_col = rrlo_dvfs.execute(rrlo_state)
 
-        # print(f"DQN actions: {actions_dqn_str}")
-        # print(f"RRLO actions: {actions_rrlo}")
-
-        # # Execute tasks and get reward
+        # Execute tasks and get reward
         rewards_dqn, penalties_dqn, min_penalties_dqn = dqn_env.step(actions_dqn_str)
         penalty_rrlo = rrlo_env.step(actions_rrlo)
-        # for t in finished_tasks:
-        #     print(f"T_{t.t_id} exec time:")
-        #     for i, e_time in enumerate(t.exec_time_history):
-        #         print(f"\t{i}: {e_time[0]:.3f} -- {e_time[1]:.3f} @ {t.exec_freq_history[i]}")
-        #     print(f"\tconsumed {t.cons_energy:.3f} mJ")
-        #     print(20*'-')
 
         # Observe next state
         next_state_dqn, is_final_dqn = dqn_env.observe()
@@ -80,28 +71,11 @@ if __name__ == '__main__':
         rrlo_state = next_state_rrlo
 
         # Print results
-        # all_rewards.append(rewards.tolist())
-        # all_penalties.append(penalties.tolist())
-        # all_min_penalties.append(min_penalties.tolist())
         if (itr+1) % 1000 == 0:
             print(f"At {itr+1}, DQN loss={loss:.3f}")
             print(f"Penalties DQN sum: {np.sum(penalties_dqn):.3e}, all: {penalties_dqn}")
-            print(f"Min penalties DQN sum: {np.sum(min_penalties_dqn):.3e}, all: {min_penalties_dqn}")
             print(f"Penalties RRLO: {penalty_rrlo:.3e}")
             print(10*"-")
-
-    # all_rewards = np.array(all_rewards)
-    # all_penalties = np.array(all_penalties)
-    # all_min_penalties = np.array(all_min_penalties)
-
-    # # Plot results
-    # print(f"Current eps val: {dvfs_alg.eps}")
-    # plot_all_rewards(all_rewards)
-    # plot_loss_function(dvfs_alg.losses)
-    # for i in range(4):
-    #     plot_penalty(all_penalties[:, i], all_min_penalties[:, i], i)
-    # np.save("q_a.npy", rrlo_dvfs.Q_table_a)
-    # np.save("q_b.npy", rrlo_dvfs.Q_table_b)
 
     # Evaluate the trained model
     print("Evaluating the trained model...")

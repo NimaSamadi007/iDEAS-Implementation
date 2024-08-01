@@ -67,7 +67,7 @@ class RRLOWirelessInterface(WirelessInterface):
     def offload(self, tasks: Dict[int, Task], power_level: float):
         for t_id, job in tasks.items():
             for job in tasks[t_id]:
-                if not power_level in self.powers:
+                if power_level not in self.powers:
                     raise ValueError(f"Unsupported wireless interface power: {power_level}")
                 # consumed energy when offloading
                 self.power = power_level
