@@ -4,7 +4,7 @@ import math
 import copy
 
 from typing import List, Dict
-from env_models.task import Task, RRLOTask
+from env_models.task import Task
 
 
 class CPU:
@@ -57,7 +57,8 @@ class CPU:
                 true_exec_time = (self.freq / in_freq) * job.aet
                 if true_exec_time > job.p:
                     job.deadline_missed = True
-                    continue
+                    #FIXME: How to consider energy consumption of tasks that have missed their deadline?
+                    # continue
                 # Calculate energy consumption (chip energy conusmption at given frequency)
                 cons_power = self.powers[self.freqs == in_freq][
                     0
@@ -81,7 +82,7 @@ class CPU_CC(CPU):
     def __init__(self, cpu_conf_path):
         super().__init__(cpu_conf_path)
 
-    def step(self, jobs: Dict[int, List[RRLOTask]]) -> List[RRLOTask]:
+    def step(self, jobs: Dict[int, List[Task]]) -> List[Task]:
         tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
         # Check schedulability criteria
         total_util = self._cal_total_util(tasks)
@@ -170,6 +171,8 @@ class CPU_CC(CPU):
         for freq in self.freqs:
             if total_util <= freq / max_freq:
                 return freq
+        #FIXME: Check if this is a currect choice!
+        return max_freq
         raise ValueError("Unable to set CPU frequency")
 
     def _cal_task_issue_times(self):
@@ -196,7 +199,7 @@ class CPU_LA(CPU):
     def __init__(self, cpu_conf_path):
         super().__init__(cpu_conf_path)
 
-    def step(self, jobs: Dict[int, List[RRLOTask]]) -> List[RRLOTask]:
+    def step(self, jobs: Dict[int, List[Task]]) -> List[Task]:
         tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
         total_util = self._cal_total_util(tasks)
         if total_util > 1:
@@ -277,6 +280,8 @@ class CPU_LA(CPU):
         for freq in self.freqs[::-1]:
             if util <= freq / max_freq:
                 return freq
+        #FIXME: Check if this is a currect choice!
+        return max_freq
         raise ValueError("Unable to set CPU frequency")
 
     def _defer(self, tasks, current_time: int) -> int:
