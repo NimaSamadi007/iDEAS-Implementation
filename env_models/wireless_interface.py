@@ -42,6 +42,7 @@ class WirelessInterface:
                 job.aet += ((job.b * 1024 * 8) / rate) * 1e3  # aet unit: ms
                 if job.aet > job.p:
                     job.deadline_missed = True
+                    job.cons_energy = (dbm_to_w(self.power) * job.b * 1024 * 8) / rate
                 else:
                     job.cons_energy = (dbm_to_w(self.power) * job.b * 1024 * 8) / rate
 

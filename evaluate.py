@@ -1,8 +1,10 @@
 import numpy as np
 from tqdm import tqdm
+import copy
 
 from env_models.env import Env, RRLOEnv
 from dvfs.dqn_dvfs import DQN_DVFS
+from env_models.task import TaskGen
 from dvfs.rrlo_dvfs import RRLO_DVFS
 from configs import DQN_STATE_DIM
 
@@ -17,6 +19,16 @@ def evaluate(env_configs):
     dqn_env = Env(env_configs)
     local_env = Env(env_configs)
     remote_env = Env(env_configs)
+    rrlo_env = RRLOEnv(env_configs)
+    #configs = {
+        #"task_set": "configs/task_set_eval.json",
+        #"cpu_local": "configs/cpu_local.json",
+        #"w_inter": "configs/wireless_interface.json",
+    #}
+    task_gen = TaskGen(env_configs["task_set"])
+    dqn_env = Env(env_configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
+    local_env = Env(env_configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
+    remote_env = Env(env_configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
     rrlo_env = RRLOEnv(env_configs)
 
     dqn_dvfs = DQN_DVFS(state_dim=DQN_STATE_DIM, act_space=dqn_env.get_action_space())
@@ -43,10 +55,12 @@ def evaluate(env_configs):
     remote_task_energy_cons = np.zeros(4)
     remote_num_tasks = np.zeros(4)
 
-    dqn_state, _ = dqn_env.observe()
-    local_state, _ = local_env.observe()
-    remote_state, _ = remote_env.observe()
-    rrlo_state, _ = rrlo_env.observe()
+
+    tasks = task_gen.step()
+    dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+    local_state, _ = local_env.observe(copy.deepcopy(tasks))
+    remote_state, _ = remote_env.observe(copy.deepcopy(tasks))
+    rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
     for _ in tqdm(range(5000)):
         actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
@@ -86,8 +100,9 @@ def evaluate(env_configs):
                 rrlo_task_energy_cons[j.t_id] += j.cons_energy
             rrlo_num_tasks[j.t_id] += len(jobs)
 
-        next_state_dqn, _ = dqn_env.observe()
-        next_state_rrlo, _ = rrlo_env.observe()
+        tasks = task_gen.step()
+        next_state_dqn,_ = dqn_env.observe(copy.deepcopy(tasks))
+        next_state_rrlo,_ = rrlo_env.observe(copy.deepcopy(tasks))
 
         # Update current state
         dqn_state = next_state_dqn

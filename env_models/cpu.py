@@ -4,7 +4,7 @@ import math
 import copy
 
 from typing import List, Dict
-from env_models.task import Task, RRLOTask
+from env_models.task import Task
 
 
 class CPU:
@@ -57,7 +57,8 @@ class CPU:
                 true_exec_time = (self.freq / in_freq) * job.aet
                 if true_exec_time > job.p:
                     job.deadline_missed = True
-                    continue
+                    #FIXME: How to consider energy consumption of tasks that have missed their deadline?
+                    true_exec_time = job.p
                 # Calculate energy consumption (chip energy conusmption at given frequency)
                 cons_power = self.powers[self.freqs == in_freq][
                     0
@@ -81,7 +82,7 @@ class CPU_CC(CPU):
     def __init__(self, cpu_conf_path):
         super().__init__(cpu_conf_path)
 
-    def step(self, jobs: Dict[int, List[RRLOTask]]) -> List[RRLOTask]:
+    def step(self, jobs: Dict[int, List[Task]]) -> List[Task]:
         tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
         # Check schedulability criteria
         total_util = self._cal_total_util(tasks)
@@ -145,7 +146,9 @@ class CPU_CC(CPU):
             # Task deadline is missed
             if t.exec_time_history[-1][1] > t.deadline:
                 t.deadline_missed = True
-                continue
+                #FIXME: Check if this is an appropriate choice
+                t.exec_time_history[-1][1] = t.deadline
+
             for i in range(len(t.exec_time_history)):
                 dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
                 power = self.powers[self.freqs == t.exec_freq_history[i]][0]
@@ -154,9 +157,6 @@ class CPU_CC(CPU):
         return finished_jobs
 
     def _task_release(self, task_id: int) -> int:
-        # TODO: Another possible approach for task utilization is to
-        # set the util values of all tasks (not just task_id) to the
-        # current utilization based on wcet
         self.tasks[task_id].util = self.tasks[task_id].wcet / self.tasks[task_id].p
         return self._select_freq()
 
@@ -170,7 +170,8 @@ class CPU_CC(CPU):
         for freq in self.freqs:
             if total_util <= freq / max_freq:
                 return freq
-        raise ValueError("Unable to set CPU frequency")
+        #FIXME: Check if this is a currect choice!
+        return max_freq
 
     def _cal_task_issue_times(self):
         issue_times = dict()
@@ -196,7 +197,7 @@ class CPU_LA(CPU):
     def __init__(self, cpu_conf_path):
         super().__init__(cpu_conf_path)
 
-    def step(self, jobs: Dict[int, List[RRLOTask]]) -> List[RRLOTask]:
+    def step(self, jobs: Dict[int, List[Task]]) -> List[Task]:
         tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
         total_util = self._cal_total_util(tasks)
         if total_util > 1:
@@ -256,7 +257,9 @@ class CPU_LA(CPU):
         for t in finished_jobs:
             if t.exec_time_history[-1][1] > t.deadline:
                 t.deadline_missed = True
-                continue
+                #FIXME: Check if this is a correct choice
+                t.exec_time_history[-1][1] = t.deadline
+
             for i in range(len(t.exec_time_history)):
                 dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
                 power = self.powers[self.freqs == t.exec_freq_history[i]][0]
@@ -277,7 +280,8 @@ class CPU_LA(CPU):
         for freq in self.freqs[::-1]:
             if util <= freq / max_freq:
                 return freq
-        raise ValueError("Unable to set CPU frequency")
+        #FIXME: Check if this is a currect choice!
+        return max_freq
 
     def _defer(self, tasks, current_time: int) -> int:
         S = 0

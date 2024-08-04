@@ -1,8 +1,9 @@
 from typing import Dict, List
 import numpy as np
+import math
 
 from env_models.cpu import CPU, CPU_CC, CPU_LA
-from env_models.task import TaskGen, Task, RRLOTaskGen
+from env_models.task import Task
 from env_models.wireless_interface import WirelessInterface, RRLOWirelessInterface
 from configs import (
     DQN_STATE_DIM,
@@ -14,13 +15,12 @@ from configs import (
 
 
 class Env:
-    def __init__(self, confs: Dict[str, str]):
-        self.task_gen = TaskGen(confs["task_set"])
+    def __init__(self, confs: Dict[str, str], wcet_bound, task_size_bound):
         self.cpu = CPU(confs["cpu_local"])
         self.w_inter = WirelessInterface(confs["w_inter"])
 
         # Initialize environment state
-        self._init_state_bounds()
+        self._init_state_bounds(wcet_bound, task_size_bound)
         self.curr_tasks = None
         self.curr_state = None
 
@@ -30,8 +30,8 @@ class Env:
 
         return self._cal_reward()
 
-    def observe(self):
-        self.curr_tasks = self.task_gen.step()
+    def observe(self, tasks):
+        self.curr_tasks = tasks
         self.curr_state = self._get_system_state()
         is_final = len(self.curr_tasks) * [True]
 
@@ -41,10 +41,8 @@ class Env:
         action_space = {"offload": self.w_inter.powers, "local": self.cpu.freqs}
         return action_space
 
-    def _init_state_bounds(self):
+    def _init_state_bounds(self, wcet_bound, task_size_bound):
         # (SU, U_local, WCET, B, h)
-        wcet_bound = self.task_gen.get_wcet_bound()
-        task_size_bound = self.task_gen.get_task_size_bound()
         self.min_state_vals = np.array(
             [0, 0, wcet_bound[0], task_size_bound[0]], dtype=float
         )
@@ -103,7 +101,6 @@ class RRLOEnv:
         self.cpu_cc = CPU_CC(confs["cpu_local"])
         self.cpu_la = CPU_LA(confs["cpu_local"])
         # Pass CPU frequency to RRLO task generator
-        self.task_gen = RRLOTaskGen(self.cpu_cc.freq, confs["task_set"])
         self.w_inter = RRLOWirelessInterface(confs["w_inter"])
 
         # Initialize environment state
@@ -131,8 +128,8 @@ class RRLOEnv:
             self.curr_tasks[t.t_id].append(t)
         return self._cal_penalty(exec_local_tasks, offload_tasks)
 
-    def observe(self):
-        self.curr_tasks = self.task_gen.step()
+    def observe(self, tasks):
+        self.curr_tasks = tasks
         self._gen_aet(self.curr_tasks)
         self.curr_state = self._descretize_states(self._get_system_state())
         is_final = True
@@ -175,7 +172,7 @@ class RRLOEnv:
 
     def _get_system_state(self):
         states = np.zeros(RRLO_STATE_DIM, dtype=np.float32)
-        h_p = self.task_gen.get_hyper_period()
+        h_p = math.lcm(*[t[0].p for t in self.curr_tasks.values()])
         eth_p = 0.0
         ds_deonm = 0.0
         su = 0.0

@@ -1,8 +1,10 @@
 import numpy as np
 from tqdm import tqdm
+import copy
 
 from configs import DQN_STATE_DIM
 from env_models.env import Env, RRLOEnv
+from env_models.task import RandomTaskGen
 from dvfs.dqn_dvfs import DQN_DVFS
 from dvfs.rrlo_dvfs import RRLO_DVFS
 from utils.utils import set_random_seed
@@ -19,7 +21,9 @@ def train(configs):
         "cpu_local": "configs/cpu_local.json",
         "w_inter": "configs/wireless_interface.json",
     }
-    dqn_env = Env(configs)
+    target_cpu_load = 0.35
+    task_gen = RandomTaskGen(configs["task_set"])
+    dqn_env = Env(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
     rrlo_env = RRLOEnv(configs)
 
     # Initialize DVFS algorithms
@@ -43,22 +47,24 @@ def train(configs):
     )
 
     # Initial state observation
-    dqn_state, _ = dqn_env.observe()
-    rrlo_state, _ = rrlo_env.observe()
+    tasks = task_gen.step(target_cpu_load)
+    dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+    rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
 
-    for itr in tqdm(range(int(2e5))):
+    for itr in tqdm(range(int(3e5))):
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
         actions_rrlo, actions_rrlo_col = rrlo_dvfs.execute(rrlo_state)
 
         # Execute tasks and get reward
-        rewards_dqn, penalties_dqn, min_penalties_dqn = dqn_env.step(actions_dqn_str)
+        rewards_dqn, penalties_dqn, _ = dqn_env.step(actions_dqn_str)
         penalty_rrlo = rrlo_env.step(actions_rrlo)
 
         # Observe next state
-        next_state_dqn, is_final_dqn = dqn_env.observe()
-        next_state_rrlo, _ = rrlo_env.observe()
+        tasks = task_gen.step(target_cpu_load)
+        next_state_dqn, is_final_dqn = dqn_env.observe(copy.deepcopy(tasks))
+        next_state_rrlo, _ = rrlo_env.observe(copy.deepcopy(tasks))
 
         # Update RL network
         loss = dqn_dvfs.train(
