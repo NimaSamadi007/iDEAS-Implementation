@@ -16,10 +16,7 @@ def evaluate(env_configs):
       #  "cpu_local": "configs/cpu_local.json",
        # "w_inter": "configs/wireless_interface.json",
     #}
-    dqn_env = Env(env_configs)
-    local_env = Env(env_configs)
-    remote_env = Env(env_configs)
-    rrlo_env = RRLOEnv(env_configs)
+
     #configs = {
         #"task_set": "configs/task_set_eval.json",
         #"cpu_local": "configs/cpu_local.json",

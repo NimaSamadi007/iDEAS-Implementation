@@ -16,11 +16,11 @@ def train(configs):
     set_random_seed(42)
 
     ## Load tasks and CPU models
-    configs = {
-        "task_set": "configs/task_set_train.json",
-        "cpu_local": "configs/cpu_local.json",
-        "w_inter": "configs/wireless_interface.json",
-    }
+    #configs = {
+     #   "task_set": "configs/task_set_train.json",
+      #  "cpu_local": "configs/cpu_local.json",
+       # "w_inter": "configs/wireless_interface.json",
+    #}
     target_cpu_load = 0.35
     task_gen = RandomTaskGen(configs["task_set"])
     dqn_env = Env(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
