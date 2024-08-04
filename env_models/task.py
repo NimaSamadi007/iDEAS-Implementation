@@ -107,18 +107,20 @@ class RandomTaskGen:
         single_task_load = target_cpu_load / self.num_tasks
         self.task_set = []
         for t_id in range(self.num_tasks):
-            p = np.random.randint(1, self.p_max // self.p_min) * self.p_min
+            p = np.random.randint(self.p_min // 20, self.p_max // 20) * 50
             # Generate w based on p and task load while considering w ranges
             w = np.min([self.w_max, np.max([self.w_min, p * single_task_load])])
-            b = np.random.randint(1, self.b_max // self.b_min) * self.b_min
+            b = np.random.randint(self.b_min // 50, self.b_max // 50) * 50
             self.task_set.append(
                 Task(
                     {"task": t_id, "p": p, "w": w, "b": b, "base_freq": self.base_freq}
                 )
             )
-        tasks_load = np.sum([t.wcet/t.p for t in self.task_set])
+        tasks_load = np.sum([t.wcet / t.p for t in self.task_set])
         if tasks_load >= 1:
-            raise ValueError(f"Generated tasks are non-schedulable! Task load: {tasks_load}")
+            raise ValueError(
+                f"Generated tasks are non-schedulable! Task load: {tasks_load}"
+            )
 
     def get_task_size_bound(self):
         return self.b_min, self.b_max

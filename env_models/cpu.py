@@ -58,7 +58,7 @@ class CPU:
                 if true_exec_time > job.p:
                     job.deadline_missed = True
                     #FIXME: How to consider energy consumption of tasks that have missed their deadline?
-                    # continue
+                    true_exec_time = job.p
                 # Calculate energy consumption (chip energy conusmption at given frequency)
                 cons_power = self.powers[self.freqs == in_freq][
                     0
@@ -146,7 +146,9 @@ class CPU_CC(CPU):
             # Task deadline is missed
             if t.exec_time_history[-1][1] > t.deadline:
                 t.deadline_missed = True
-                continue
+                #FIXME: Check if this is an appropriate choice
+                t.exec_time_history[-1][1] = t.deadline
+
             for i in range(len(t.exec_time_history)):
                 dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
                 power = self.powers[self.freqs == t.exec_freq_history[i]][0]
@@ -155,9 +157,6 @@ class CPU_CC(CPU):
         return finished_jobs
 
     def _task_release(self, task_id: int) -> int:
-        # TODO: Another possible approach for task utilization is to
-        # set the util values of all tasks (not just task_id) to the
-        # current utilization based on wcet
         self.tasks[task_id].util = self.tasks[task_id].wcet / self.tasks[task_id].p
         return self._select_freq()
 
@@ -173,7 +172,6 @@ class CPU_CC(CPU):
                 return freq
         #FIXME: Check if this is a currect choice!
         return max_freq
-        raise ValueError("Unable to set CPU frequency")
 
     def _cal_task_issue_times(self):
         issue_times = dict()
@@ -259,7 +257,9 @@ class CPU_LA(CPU):
         for t in finished_jobs:
             if t.exec_time_history[-1][1] > t.deadline:
                 t.deadline_missed = True
-                continue
+                #FIXME: Check if this is a correct choice
+                t.exec_time_history[-1][1] = t.deadline
+
             for i in range(len(t.exec_time_history)):
                 dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
                 power = self.powers[self.freqs == t.exec_freq_history[i]][0]
@@ -282,7 +282,6 @@ class CPU_LA(CPU):
                 return freq
         #FIXME: Check if this is a currect choice!
         return max_freq
-        raise ValueError("Unable to set CPU frequency")
 
     def _defer(self, tasks, current_time: int) -> int:
         S = 0

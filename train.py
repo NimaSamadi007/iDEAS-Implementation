@@ -21,7 +21,7 @@ def train():
         "cpu_local": "configs/cpu_local.json",
         "w_inter": "configs/wireless_interface.json",
     }
-    target_cpu_load = 0.6
+    target_cpu_load = 0.35
     task_gen = RandomTaskGen(configs["task_set"])
     dqn_env = Env(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
     rrlo_env = RRLOEnv(configs)
@@ -51,7 +51,7 @@ def train():
     dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
     rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
 
-    for itr in tqdm(range(int(2e5))):
+    for itr in tqdm(range(int(3e5))):
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
