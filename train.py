@@ -9,7 +9,7 @@ from utils.utils import set_random_seed
 
 
 # Main function
-def train():
+def train(configs):
     # Set random seed
     set_random_seed(42)
 
