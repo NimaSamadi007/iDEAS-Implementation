@@ -9,24 +9,12 @@ from dvfs.rrlo_dvfs import RRLO_DVFS
 from configs import DQN_STATE_DIM
 
 
-def evaluate(env_configs):
-    # Load pre-trained models
-    #env_configs = {
-     #   "task_set": "configs/task_set_eval.json",
-      #  "cpu_local": "configs/cpu_local.json",
-       # "w_inter": "configs/wireless_interface.json",
-    #}
-
-    #configs = {
-        #"task_set": "configs/task_set_eval.json",
-        #"cpu_local": "configs/cpu_local.json",
-        #"w_inter": "configs/wireless_interface.json",
-    #}
-    task_gen = TaskGen(env_configs["task_set"])
-    dqn_env = Env(env_configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
-    local_env = Env(env_configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
-    remote_env = Env(env_configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
-    rrlo_env = RRLOEnv(env_configs)
+def evaluate(configs):
+    task_gen = TaskGen(configs["task_set"])
+    dqn_env = Env(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
+    local_env = Env(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
+    remote_env = Env(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
+    rrlo_env = RRLOEnv(configs)
 
     dqn_dvfs = DQN_DVFS(state_dim=DQN_STATE_DIM, act_space=dqn_env.get_action_space())
     rrlo_dvfs = RRLO_DVFS(
@@ -142,4 +130,9 @@ def evaluate(env_configs):
 
 
 if __name__ == "__main__":
-    evaluate()
+    configs = {
+        "task_set": "configs/task_set_eval.json",
+        "cpu_local": "configs/cpu_local.json",
+        "w_inter": "configs/wireless_interface.json",
+    }
+    evaluate(configs)
