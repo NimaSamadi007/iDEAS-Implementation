@@ -4,27 +4,27 @@
         "p": 50,
         "w": 7,
         "b": 300,
-        "base_freq": 1880
+        "base_freq": 1820
     },
     {
         "task": 1,
         "p": 30,
         "w": 2,
         "b": 150,
-        "base_freq": 1880
+        "base_freq": 1820
     },
     {
         "task": 2,
         "p": 30,
         "w": 2,
         "b": 150,
-        "base_freq": 1880
+        "base_freq": 1820
     },
     {
         "task": 3,
         "p": 60,
         "w": 3,
         "b": 400,
-        "base_freq": 1880
+        "base_freq": 1820
     }
 ]

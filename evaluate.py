@@ -39,6 +39,12 @@ def evaluate(configs):
     local_num_tasks = np.zeros(4)
     remote_task_energy_cons = np.zeros(4)
     remote_num_tasks = np.zeros(4)
+    
+    local_task_deadline_missed = np.zeros(4)
+    remote_task_deadline_missed = np.zeros(4)
+    dqn_task_deadline_missed = np.zeros(4)
+    rrlo_task_deadline_missed = np.zeros(4)
+
 
 
     tasks = task_gen.step()
@@ -64,12 +70,16 @@ def evaluate(configs):
             for j in jobs:
                 #print(j)
                 local_task_energy_cons[j.t_id] += j.cons_energy
+                if j.deadline_missed:
+                    local_task_deadline_missed[j.t_id] +=1
             local_num_tasks[j.t_id] += len(jobs)
 
         for jobs in remote_env.curr_tasks.values():
             for j in jobs:
                 #print(j)
                 remote_task_energy_cons[j.t_id] += j.cons_energy
+                if j.deadline_missed:
+                    remote_task_deadline_missed[j.t_id] +=1
             remote_num_tasks[j.t_id] += len(jobs)
 
 
@@ -77,12 +87,16 @@ def evaluate(configs):
             for j in jobs:
                 #print(j)
                 dqn_task_energy_cons[j.t_id] += j.cons_energy
+                if j.deadline_missed:
+                    dqn_task_deadline_missed[j.t_id] +=1
             dqn_num_tasks[j.t_id] += len(jobs)
 
         for jobs in rrlo_env.curr_tasks.values():
             for j in jobs:
                 #print(j)
                 rrlo_task_energy_cons[j.t_id] += j.cons_energy
+                if j.deadline_missed:
+                    rrlo_task_deadline_missed[j.t_id] +=1
             rrlo_num_tasks[j.t_id] += len(jobs)
 
         tasks = task_gen.step()
@@ -103,10 +117,26 @@ def evaluate(configs):
     local_avg_task_energy_cons = local_task_energy_cons / local_num_tasks
     remote_avg_task_energy_cons = remote_task_energy_cons / remote_num_tasks
     rrlo_avg_task_energy_cons = rrlo_task_energy_cons / rrlo_num_tasks
+    
     print(f"DQN energy consumption: {dqn_avg_task_energy_cons}")
     print(f"local energy consumption: {local_avg_task_energy_cons}")
     print(f"remote energy consumption: {remote_avg_task_energy_cons}")
     print(f"RRLO energy consumption: {rrlo_avg_task_energy_cons}")
+
+    dqn_percent_task_missed = dqn_task_deadline_missed / dqn_num_tasks*100
+    local_percent_task_missed = local_task_deadline_missed / local_num_tasks*100
+    remote_percent_task_missed = remote_task_deadline_missed / remote_num_tasks*100
+    rrlo_percent_task_missed = rrlo_task_deadline_missed / rrlo_num_tasks*100
+
+    print(f"DQN deadline missed: {dqn_task_deadline_missed}")
+    print(f"local deadline missed: {local_task_deadline_missed}")
+    print(f"remote deadline missed: {remote_task_deadline_missed}")
+    print(f"RRLO deadline missed: {rrlo_task_deadline_missed}")
+    
+    print(f"DQN deadline missed %: {dqn_percent_task_missed}")
+    print(f"local deadline missed %: {local_percent_task_missed}")
+    print(f"remote deadline missed %: {remote_percent_task_missed}")
+    print(f"RRLO deadline missed %: {rrlo_percent_task_missed}")
 
     avg_dqn_energy_cons = np.sum(dqn_task_energy_cons) / np.sum(dqn_num_tasks)
     avg_local_energy_cons = np.sum(local_task_energy_cons) / np.sum(local_num_tasks)
@@ -116,6 +146,16 @@ def evaluate(configs):
     print(f"local task set avg energy consumption: {avg_local_energy_cons:.3e}")
     print(f"remote task set avg energy consumption: {avg_remote_energy_cons:.3e}")
     print(f"RRLO task set avg energy consumption: {avg_rrlo_energy_cons:.3e}")
+
+    total_dqn_missed_task = np.sum(dqn_task_deadline_missed) / np.sum(dqn_num_tasks)*100
+    total_local_missed_task = np.sum(local_task_deadline_missed) / np.sum(local_num_tasks)*100
+    total_remote_missed_task = np.sum(remote_task_deadline_missed) / np.sum(remote_num_tasks)*100
+    total_rrlo_missed_task = np.sum(rrlo_task_deadline_missed) / np.sum(rrlo_num_tasks)*100
+    print(f"DQN tasks deadline missed: {total_dqn_missed_task:2.3e}%")
+    print(f"local tasks deadline missed: {total_local_missed_task:2.3e}%")
+    print(f"remote tasks deadline missed: {total_remote_missed_task:2.3e}%")
+    print(f"RRLO tasks deadline missed: {total_rrlo_missed_task:2.3e}%")
+
     dqn_improvement = (
         (avg_dqn_energy_cons - avg_rrlo_energy_cons) / (avg_rrlo_energy_cons) * 100
     )
@@ -126,7 +166,9 @@ def evaluate(configs):
     )
     print(f"DQN per task energy usage: {dqn_task_improvement} %")
     print(f"DQN avg energy usage: {dqn_improvement:.3f} %")
-    return [avg_local_energy_cons, avg_remote_energy_cons, avg_rrlo_energy_cons, avg_dqn_energy_cons]
+    return np.array([avg_local_energy_cons, avg_remote_energy_cons, avg_rrlo_energy_cons, avg_dqn_energy_cons]) ,\
+        np.array([total_local_missed_task, total_remote_missed_task, total_rrlo_missed_task, total_dqn_missed_task])
+
 
 
 if __name__ == "__main__":
