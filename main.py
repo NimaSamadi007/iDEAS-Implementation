@@ -21,7 +21,7 @@ def results():
         "cpu_local": "configs/cpu_local.json",
         "w_inter": "configs/wireless_interface.json",
     }
-    #train(train_configs)
+    train(train_configs)
     energy_consumption_eval1, missed_deadline_eval1 = evaluate(eval_configs)
     energy_consumption_eval2, missed_deadline_eval2 = evaluate(test_configs)
     alg_set= ['Local','Remote','RRLO', 'DQN']
