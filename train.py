@@ -86,8 +86,8 @@ def train(configs):
 
 if __name__ == "__main__":
     configs = {
-       "task_set": "configs/task_set_train.json",
-       "cpu_local": "configs/cpu_local.json",
-       "w_inter": "configs/wireless_interface.json",
+        "task_set": "configs/task_set_train.json",
+        "cpu_local": "configs/cpu_local.json",
+        "w_inter": "configs/wireless_interface.json",
     }
     train(configs)

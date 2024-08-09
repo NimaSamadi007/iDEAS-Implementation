@@ -57,7 +57,7 @@ class CPU:
                 true_exec_time = (self.freq / in_freq) * job.aet
                 if true_exec_time > job.p:
                     job.deadline_missed = True
-                    #FIXME: How to consider energy consumption of tasks that have missed their deadline?
+                    # FIXME: How to consider energy consumption of tasks that have missed their deadline?
                     true_exec_time = job.p
                 # Calculate energy consumption (chip energy conusmption at given frequency)
                 cons_power = self.powers[self.freqs == in_freq][
@@ -146,7 +146,7 @@ class CPU_CC(CPU):
             # Task deadline is missed
             if t.exec_time_history[-1][1] > t.deadline:
                 t.deadline_missed = True
-                #FIXME: Check if this is an appropriate choice
+                # FIXME: Check if this is an appropriate choice
                 t.exec_time_history[-1][1] = t.deadline
 
             for i in range(len(t.exec_time_history)):
@@ -170,7 +170,7 @@ class CPU_CC(CPU):
         for freq in self.freqs:
             if total_util <= freq / max_freq:
                 return freq
-        #FIXME: Check if this is a currect choice!
+        # FIXME: Check if this is a currect choice!
         return max_freq
 
     def _cal_task_issue_times(self):
@@ -257,7 +257,7 @@ class CPU_LA(CPU):
         for t in finished_jobs:
             if t.exec_time_history[-1][1] > t.deadline:
                 t.deadline_missed = True
-                #FIXME: Check if this is a correct choice
+                # FIXME: Check if this is a correct choice
                 t.exec_time_history[-1][1] = t.deadline
 
             for i in range(len(t.exec_time_history)):
@@ -280,7 +280,7 @@ class CPU_LA(CPU):
         for freq in self.freqs[::-1]:
             if util <= freq / max_freq:
                 return freq
-        #FIXME: Check if this is a currect choice!
+        # FIXME: Check if this is a currect choice!
         return max_freq
 
     def _defer(self, tasks, current_time: int) -> int:
