@@ -39,7 +39,7 @@ def evaluate(configs):
     local_num_tasks = np.zeros(4)
     remote_task_energy_cons = np.zeros(4)
     remote_num_tasks = np.zeros(4)
-    
+
     local_task_deadline_missed = np.zeros(4)
     remote_task_deadline_missed = np.zeros(4)
     dqn_task_deadline_missed = np.zeros(4)
@@ -49,21 +49,20 @@ def evaluate(configs):
 
     tasks = task_gen.step()
     dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
-    local_state, _ = local_env.observe(copy.deepcopy(tasks))
-    remote_state, _ = remote_env.observe(copy.deepcopy(tasks))
+    local_env.observe(copy.deepcopy(tasks))
+    remote_env.observe(copy.deepcopy(tasks))
     rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
-    for _ in tqdm(range(5000)):
+    for _ in tqdm(range(10000)):
         actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
         actions_local_str = {'offload': [], 'local': [[0, 1820], [1, 1820], [2, 1820], [3, 1820]]}
         actions_remote_str = {'offload': [[0, 28], [1, 28], [2, 28], [3, 28]], 'local': []}
         actions_rrlo, _ = rrlo_dvfs.execute(rrlo_state)
 
-        _, _, _ = dqn_env.step(actions_dqn_str)
-        _ = rrlo_env.step(actions_rrlo)
-        _, _, _ = local_env.step(actions_local_str)
-        _, _, _ = remote_env.step(actions_remote_str)
-
+        dqn_env.step(actions_dqn_str)
+        rrlo_env.step(actions_rrlo)
+        local_env.step(actions_local_str)
+        remote_env.step(actions_remote_str)
 
         # Gather energy consumption values
         for jobs in local_env.curr_tasks.values():
@@ -102,6 +101,8 @@ def evaluate(configs):
         tasks = task_gen.step()
         next_state_dqn,_ = dqn_env.observe(copy.deepcopy(tasks))
         next_state_rrlo,_ = rrlo_env.observe(copy.deepcopy(tasks))
+        local_env.observe(copy.deepcopy(tasks))
+        remote_env.observe(copy.deepcopy(tasks))
 
         # Update current state
         dqn_state = next_state_dqn

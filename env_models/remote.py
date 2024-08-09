@@ -6,8 +6,5 @@ class EdgeServer:
         pass
 
     def execute(self, job: Task):
-        job.gen_aet()
-        # TODO: Update execution model - Now I consider
-        # Edge server has twice processing power of mobile
-        # devices
-        job.aet /= 2.0
+        #TODO: Edge server CPU has a 3200 MHz CPU frequency
+        job.gen_aet(3200)

@@ -25,8 +25,10 @@ class Env:
         self.curr_state = None
 
     def step(self, actions: Dict[str, List[int]]):
-        self.cpu.step(self.curr_tasks, actions["local"])
-        self.w_inter.offload(self.curr_tasks, actions["offload"])
+        if len(actions["local"]):
+            self.cpu.step(self.curr_tasks, actions["local"])
+        if len(actions["offload"]):
+            self.w_inter.offload(self.curr_tasks, actions["offload"])
 
         return self._cal_reward()
 
@@ -51,6 +53,9 @@ class Env:
         )
 
     def _get_system_state(self):
+        # Update channel status when we are observing environment
+        self.w_inter.update_channel_state()
+
         states = np.zeros((len(self.curr_tasks), DQN_STATE_DIM), dtype=np.float32)
         su = 0.0
         for i, task in enumerate(self.curr_tasks.values()):
@@ -59,7 +64,6 @@ class Env:
             states[i, 3] = task[0].b
         states[:, 0] = su
         states[:, 1] = self.cpu.util
-        # states[:, 4] = self.w_inter.update_channel_state()
         states = (states - self.min_state_vals) / (
             self.max_state_vals - self.min_state_vals
         )

@@ -29,7 +29,7 @@ def results():
               'Algorithm', 'Energy Consumption (dBm)', 'Energy Consumption of Different Algorithms', 'Energy_Consumption')
     plot_res(alg_set,missed_deadline_eval1,missed_deadline_eval2,\
               'Algorithm', 'Dropped Tasks (%) ', 'Dropped Taks of Different Algorithms', 'Missed_Deadline')
-    
+
 
 if __name__ == "__main__":
     results()
