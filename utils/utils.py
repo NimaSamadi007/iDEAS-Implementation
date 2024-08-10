@@ -54,7 +54,7 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel,title, fig_name ):
     ind = range(len(alg_set))
     # Plotting both tasksets
     current_directory = os.getcwd()
-    file_path = os.path.join(current_directory, fig_name + ".png")
+    file_path = f"{current_directory}/results/{fig_name}.png"
     fig = plt.figure(figsize=(16, 12))
     plt.bar(ind, taskset1, width=0.4, label='Taskset1', color='r')
     plt.bar([i + 0.4 for i in ind], taskset2, width=0.4, label='Taskset2', color='b')

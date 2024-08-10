@@ -1,33 +1,37 @@
-from train import train
-from evaluate import evaluate
+from train.train import train_rrlo_scenario, train_dqn_scenario
+from eval.evaluate import evaluate_rrlo_scenario, evaluate_dqn_scenario
 from utils.utils import plot_res
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def results(eval_itr=10000):
+def compare_dqn_rrlo(eval_itr=10000):
+    DQN_STATE_DIM = 4
     train_configs = {
         "task_set": "configs/task_set_train.json",
         "cpu_local": "configs/cpu_local.json",
         "w_inter": "configs/wireless_interface.json",
+        "dqn_state_dim": DQN_STATE_DIM,
     }
 
     eval_configs = {
         "task_set": "configs/task_set_eval.json",
         "cpu_local": "configs/cpu_local.json",
         "w_inter": "configs/wireless_interface.json",
+        "dqn_state_dim": DQN_STATE_DIM,
     }
     test_configs = {
         "task_set": "configs/task_set_eval2.json",
         "cpu_local": "configs/cpu_local.json",
         "w_inter": "configs/wireless_interface.json",
+        "dqn_state_dim": DQN_STATE_DIM,
     }
 
-    train(train_configs)
-    energy_consumption_eval1, missed_deadline_eval1, percent1 = evaluate(
+    train_rrlo_scenario(train_configs)
+    energy_consumption_eval1, missed_deadline_eval1, percent1 = evaluate_rrlo_scenario(
         eval_configs, eval_itr
     )
-    energy_consumption_eval2, missed_deadline_eval2, percent2 = evaluate(
+    energy_consumption_eval2, missed_deadline_eval2, percent2 = evaluate_rrlo_scenario(
         test_configs, eval_itr
     )
 
@@ -85,6 +89,59 @@ def results(eval_itr=10000):
         "Missed_Deadline",
     )
 
+def compare_dqn_base(eval_itr=10000):
+    DQN_STATE_DIM = 5
+    train_configs = {
+        "task_set": "configs/task_set_train.json",
+        "cpu_little": "configs/cpu_little.json",
+        "cpu_big": "configs/cpu_big.json",
+        "w_inter": "configs/wireless_interface.json",
+        "dqn_state_dim": DQN_STATE_DIM,
+    }
+
+    eval_configs = {
+        "task_set": "configs/task_set_eval.json",
+        "cpu_little": "configs/cpu_little.json",
+        "cpu_big": "configs/cpu_big.json",
+        "w_inter": "configs/wireless_interface.json",
+        "dqn_state_dim": DQN_STATE_DIM,
+    }
+
+    test_configs = {
+        "task_set": "configs/task_set_eval2.json",
+        "cpu_little": "configs/cpu_little.json",
+        "cpu_big": "configs/cpu_big.json",
+        "w_inter": "configs/wireless_interface.json",
+        "dqn_state_dim": DQN_STATE_DIM,
+    }
+
+    train_dqn_scenario(train_configs)
+    energy_consumption_eval1, missed_deadline_eval1, percent1 = evaluate_dqn_scenario(
+        eval_configs, eval_itr
+    )
+    energy_consumption_eval2, missed_deadline_eval2, percent2 = evaluate_dqn_scenario(
+        test_configs, eval_itr
+    )
+
+    alg_set = ["Local", "Remote", "DQN"]
+    plot_res(
+        alg_set,
+        10 * np.log10(energy_consumption_eval1 / 1e-3),
+        10 * np.log10(energy_consumption_eval2 / 1e-3),
+        "Algorithm",
+        "Energy Consumption (dBm)",
+        "Energy Consumption of Different Algorithms",
+        "Energy_Consumption",
+    )
+    plot_res(
+        alg_set,
+        missed_deadline_eval1,
+        missed_deadline_eval2,
+        "Algorithm",
+        "Dropped Tasks (%) ",
+        "Dropped Taks of Different Algorithms",
+        "Missed_Deadline",
+    )
 
 if __name__ == "__main__":
-    results()
+    compare_dqn_base()
