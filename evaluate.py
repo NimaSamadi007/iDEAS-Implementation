@@ -198,6 +198,11 @@ def evaluate(configs, eval_itr=10000):
     print(f"random tasks deadline missed: {total_random_missed_task:.3e}%")
     print(f"RRLO tasks deadline missed: {total_rrlo_missed_task:.3e}%")
 
+    dqn_deadline_improvement = (
+        np.sum(dqn_task_deadline_missed-rrlo_task_deadline_missed) / np.sum(rrlo_task_deadline_missed) * 100
+    )
+
+
     dqn_improvement = (
         (avg_dqn_energy_cons - avg_rrlo_energy_cons) / (avg_rrlo_energy_cons) * 100
     )
@@ -208,6 +213,7 @@ def evaluate(configs, eval_itr=10000):
     )
     print(f"DQN per task energy usage: {dqn_task_improvement} %")
     print(f"DQN avg energy usage: {dqn_improvement:.3f} %")
+    print(f"DQN missed deadline improvement: {dqn_deadline_improvement:.3f} %")
     return (
         np.array(
             [
@@ -228,20 +234,19 @@ def evaluate(configs, eval_itr=10000):
             ]
         ),
         dqn_improvement,
+        dqn_deadline_improvement
     )
 
 
 def RandomPolicyGen(freqs, powers):
-    offload = np.random.randint(0, 2)
-    actions = {"offload": [], "local": list()}
-    random_freq_idx = np.random.choice(len(freqs), size=4, replace=True)
-    random_power_idx = np.random.choice(len(powers), size=4, replace=True)
-    if offload:
-        actions["offload"] = [
+    offload = np.random.randint(0, 5)
+    actions = {"offload": [], "local": []}
+    random_freq_idx = np.random.choice(len(freqs), size=4-offload, replace=True)
+    random_power_idx = np.random.choice(len(powers), size=offload, replace=True)
+    actions["offload"] = [
             [i, powers[idx]] for i, idx in enumerate(random_power_idx)
-        ]
-    else:
-        actions["local"] = [[i, freqs[idx]] for i, idx in enumerate(random_freq_idx)]
+    ]
+    actions["local"] = [[i+offload, freqs[idx]] for i, idx in enumerate(random_freq_idx)]
 
     return actions
 
@@ -253,3 +258,11 @@ if __name__ == "__main__":
         "w_inter": "configs/wireless_interface.json",
     }
     evaluate(configs, 5000)
+    #freqs=[384, 480, 632, 767,
+     #           863, 959, 1247, 1341,
+      #          1440, 1534, 1632, 1690,
+       #         1820]
+    #powers=[
+     #   0, 4, 8, 12, 16, 20, 24, 28
+    #]
+    #print(RandomPolicyGen(freqs,powers))
