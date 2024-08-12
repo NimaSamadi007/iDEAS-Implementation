@@ -157,4 +157,4 @@ if __name__ == "__main__":
         "dqn_state_dim": 5,
     }
 
-    train_rrlo_scenario(configs_dqn_scenario)
+    train_dqn_scenario(configs_dqn_scenario)

@@ -46,7 +46,7 @@ def plot_penalty(penalty, min_penalty, t_id):
     fig.savefig(f"figs/pen{t_id}.png")
 
 
-def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel,title, fig_name ):
+def plot_res(alg_set, taskset1, taskset2, std1,std2, xlabel, ylabel,title, fig_name ):
     # Data for plotting
     #algorithms = ['Local Scheduling', 'RRLO [8]', 'Our Algorithm']
 
@@ -54,16 +54,21 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel,title, fig_name ):
     ind = range(len(alg_set))
     # Plotting both tasksets
     current_directory = os.getcwd()
-    file_path = f"{current_directory}/results/{fig_name}.png"
+    file_path = os.path.join(current_directory, fig_name + ".png")
     fig = plt.figure(figsize=(16, 12))
-    plt.bar(ind, taskset1, width=0.4, label='Taskset1', color='r')
-    plt.bar([i + 0.4 for i in ind], taskset2, width=0.4, label='Taskset2', color='b')
+    plt.bar(ind, taskset1, width=0.4, label='Taskset1', color='r',yerr=std1,edgecolor='black', capsize=20)
+    plt.bar([i + 0.4 for i in ind], taskset2, width=0.4, label='Taskset2', color='b',yerr=std2,edgecolor='black',capsize=20)
+
+    for i, value in enumerate(taskset1):
+        plt.text(i, value, f"{value:.3f}", ha='center', va='bottom', fontweight='bold')
+    for i, value in enumerate(taskset2):
+        plt.text(i+0.4, value, f"{value:.3f}", ha='center', va='bottom', fontweight='bold')
     # Labels and Title
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
+    plt.xlabel(xlabel,fontweight='bold')
+    plt.ylabel(ylabel,fontweight='bold')
+    plt.title(title,fontweight='bold')
     # X-axis tick labels positioning
-    plt.xticks([i + 0.2 for i in ind], alg_set)
+    plt.xticks([i + 0.2 for i in ind], alg_set,fontweight='bold')
     # Adding legend to specify which color represents which task set
     plt.legend()
     # Displaying the plot
