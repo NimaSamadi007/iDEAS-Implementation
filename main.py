@@ -1,8 +1,9 @@
 from train import train_rrlo_scenario, train_dqn_scenario
 from evaluate import evaluate_rrlo_scenario, evaluate_dqn_scenario
-from utils.utils import plot_res
+from utils.utils import plot_res,print_improvement
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 
 def compare_dqn_rrlo(eval_itr=10000, iter=100):
@@ -36,27 +37,41 @@ def compare_dqn_rrlo(eval_itr=10000, iter=100):
     all_deadline_eval1 = np.empty((0, 5))
     all_deadline_eval2 = np.empty((0, 5))
 
-    for j in range(iter):
-        energy_consumption_eval1, missed_deadline_eval1, energy_improvement1,deadline_improvement1 = evaluate_rrlo_scenario(
+
+    all_energy_improvement1 = np.empty((0, 4))
+    all_energy_improvement2 = np.empty((0, 4))
+
+
+    for j in tqdm(range(iter)):
+        energy_consumption_eval1, missed_deadline_eval1, energy_improvement1 = evaluate_rrlo_scenario(
         eval_configs, eval_itr
         )
         all_energy_eval1=np.vstack((all_energy_eval1,energy_consumption_eval1))
         all_deadline_eval1=np.vstack((all_deadline_eval1,missed_deadline_eval1))
-        energy_consumption_eval2, missed_deadline_eval2, energy_improvement2,deadline_improvement2 = evaluate_rrlo_scenario(
+        all_energy_improvement1=np.vstack((all_energy_improvement1,energy_improvement1))
+
+        energy_consumption_eval2, missed_deadline_eval2, energy_improvement2 = evaluate_rrlo_scenario(
         test_configs, eval_itr
         )
         all_energy_eval2=np.vstack((all_energy_eval2,energy_consumption_eval2))
         all_deadline_eval2=np.vstack((all_deadline_eval2,missed_deadline_eval2))
+        all_energy_improvement2=np.vstack((all_energy_improvement2,energy_improvement2))
+
     # Calculate mean and standard deviation column-wise
     mean_energy_consumption_eval1 = np.mean(all_energy_eval1, axis=0)
     std_energy_consumption_eval1 = np.std(10*np.log10(all_energy_eval1/1e-3), axis=0)
 
+    mean_energy_consumption_improvement1 = np.mean(all_energy_improvement1, axis=0)
+
     mean_missed_deadline_eval1 = np.mean(all_deadline_eval1, axis=0)
     std_missed_deadline_eval1 = np.std(all_deadline_eval1, axis=0)
+
 
     # Repeat the same process for eval2
     mean_energy_consumption_eval2 = np.mean(all_energy_eval2, axis=0)
     std_energy_consumption_eval2 = np.std(10*np.log10(all_energy_eval2/1e-3), axis=0)
+
+    mean_energy_consumption_improvement2 = np.mean(all_energy_improvement2, axis=0)
 
     mean_missed_deadline_eval2 = np.mean(all_deadline_eval2, axis=0)
     std_missed_deadline_eval2 = np.std(all_deadline_eval2, axis=0)
@@ -66,16 +81,17 @@ def compare_dqn_rrlo(eval_itr=10000, iter=100):
 
 
 
-    print("*"*20)
-    print(mean_energy_consumption_eval1)
-    print(mean_energy_consumption_eval2)
-    print(mean_missed_deadline_eval1)
-    print(mean_missed_deadline_eval2)
-    print("*"*20)
-    print(std_energy_consumption_eval1)
-    print(std_energy_consumption_eval2)
-    print(std_missed_deadline_eval1)
-    print(std_missed_deadline_eval2)
+
+    #print("*"*20)
+    #print(mean_energy_consumption_eval1)
+    #print(mean_energy_consumption_eval2)
+    #print(mean_missed_deadline_eval1)
+    #print(mean_missed_deadline_eval2)
+    #print("*"*20)
+    #print(std_energy_consumption_eval1)
+    #print(std_energy_consumption_eval2)
+    #print(std_missed_deadline_eval1)
+    #print(std_missed_deadline_eval2)
     alg_set = ["Random", "Local", "Remote", "RRLO", "DQN"]
     plot_res(
         alg_set,
@@ -85,7 +101,7 @@ def compare_dqn_rrlo(eval_itr=10000, iter=100):
         std_energy_consumption_eval2,
         "Algorithm",
         "Energy Consumption (dBm)",
-        "Energy Consumption of Different Algorithms in RRLO SScenario",
+        "Energy Consumption of Different Algorithms in RRLO Scenario",
         "Energy_Consumption_RRLO",
     )
     plot_res(
@@ -96,9 +112,40 @@ def compare_dqn_rrlo(eval_itr=10000, iter=100):
         std_missed_deadline_eval2,
         "Algorithm",
         "Dropped Tasks (%) ",
-        "Dropped Tasks of Different Algorithms in RRLO SScenario",
+        "Dropped Tasks of Different Algorithms in RRLO Scenario",
         "Missed_Deadline_RRLO",
     )
+    
+
+    print(" Energy Consumption Improvements.......")
+    print("")
+    print("")
+    print(
+        print_improvement(
+            alg_set,
+            mean_energy_consumption_improvement1,
+            mean_energy_consumption_improvement2,
+            4,
+            4
+        )
+    )
+   # print("")
+    #print("")
+    #print(" Missed Deadline Improvements.......")
+    #print(
+     #   print_improvement(
+      #      alg_set,
+       #     mean_missed_deadline_improvement1,
+        #    mean_missed_deadline_improvement2,
+         #   4,
+          #  4
+        #)
+    #)
+    
+
+
+
+
 
 
 def compare_dqn_base(eval_itr=10000,iter=100):
@@ -133,40 +180,50 @@ def compare_dqn_base(eval_itr=10000,iter=100):
     all_deadline_eval1 = np.empty((0, 4))
     all_deadline_eval2 = np.empty((0, 4))
 
-    for j in range(iter):
-        energy_consumption_eval1, missed_deadline_eval1 = evaluate_dqn_scenario(
+    all_energy_improvement1 = np.empty((0, 3))
+    all_energy_improvement2 = np.empty((0, 3))
+
+    for j in tqdm(range(iter)):
+        energy_consumption_eval1, missed_deadline_eval1, energy_improvement1 = evaluate_dqn_scenario(
         eval_configs, eval_itr
         )
         all_energy_eval1=np.vstack((all_energy_eval1,energy_consumption_eval1))
         all_deadline_eval1=np.vstack((all_deadline_eval1,missed_deadline_eval1))
-        energy_consumption_eval2, missed_deadline_eval2 = evaluate_dqn_scenario(
+        all_energy_improvement1=np.vstack((all_energy_improvement1,energy_improvement1))
+        energy_consumption_eval2, missed_deadline_eval2,energy_improvement2= evaluate_dqn_scenario(
         test_configs, eval_itr
         )
         all_energy_eval2=np.vstack((all_energy_eval2,energy_consumption_eval2))
         all_deadline_eval2=np.vstack((all_deadline_eval2,missed_deadline_eval2))
+        all_energy_improvement2=np.vstack((all_energy_improvement2,energy_improvement2))
     # Calculate mean and standard deviation column-wise
     mean_energy_consumption_eval1 = np.mean(all_energy_eval1, axis=0)
     std_energy_consumption_eval1 = np.std(10*np.log10(all_energy_eval1/1e-3), axis=0)
+    mean_energy_consumption_improvement1 = np.mean(all_energy_improvement1, axis=0)
 
     mean_missed_deadline_eval1 = np.mean(all_deadline_eval1, axis=0)
     std_missed_deadline_eval1 = np.std(all_deadline_eval1, axis=0)
 
+
     # Repeat the same process for eval2
     mean_energy_consumption_eval2 = np.mean(all_energy_eval2, axis=0)
     std_energy_consumption_eval2 = np.std(10*np.log10(all_energy_eval2/1e-3), axis=0)
+    mean_energy_consumption_improvement2 = np.mean(all_energy_improvement2, axis=0)
 
     mean_missed_deadline_eval2 = np.mean(all_deadline_eval2, axis=0)
     std_missed_deadline_eval2 = np.std(all_deadline_eval2, axis=0)
-    print("*"*20)
-    print(mean_energy_consumption_eval1)
-    print(mean_energy_consumption_eval2)
-    print(mean_missed_deadline_eval1)
-    print(mean_missed_deadline_eval2)
-    print("*"*20)
-    print(std_energy_consumption_eval1)
-    print(std_energy_consumption_eval2)
-    print(std_missed_deadline_eval1)
-    print(std_missed_deadline_eval2)
+
+
+    #print("*"*20)
+    #print(mean_energy_consumption_eval1)
+    #print(mean_energy_consumption_eval2)
+    #print(mean_missed_deadline_eval1)
+    #print(mean_missed_deadline_eval2)
+    #print("*"*20)
+    #print(std_energy_consumption_eval1)
+    #print(std_energy_consumption_eval2)
+    #print(std_missed_deadline_eval1)
+    #print(std_missed_deadline_eval2)
     alg_set = ["Random", "Local", "Remote","DQN"]
     plot_res(
         alg_set,
@@ -176,7 +233,7 @@ def compare_dqn_base(eval_itr=10000,iter=100):
         std_energy_consumption_eval2,
         "Algorithm",
         "Energy Consumption (dBm)",
-        "Energy Consumption of Different Algorithms in DQN SScenario",
+        "Energy Consumption of Different Algorithms in DQN Scenario",
         "Energy_Consumption_DQN",
     )
     plot_res(
@@ -187,9 +244,33 @@ def compare_dqn_base(eval_itr=10000,iter=100):
         std_missed_deadline_eval2,
         "Algorithm",
         "Dropped Tasks (%) ",
-        "Dropped Tasks of Different Algorithms in DQN SScenario",
+        "Dropped Tasks of Different Algorithms in DQN Scenario",
         "Missed_Deadline_DQN",
     )
+    print(" Energy Consumption Improvements.......")
+    print("")
+    print("")
+    print(
+        print_improvement(
+            alg_set,
+            mean_energy_consumption_improvement1,
+            mean_energy_consumption_improvement2,
+            3,
+            3
+        )
+    )
+    print("")
+    print("")
+    #print(" Missed Deadline Improvements.......")
+    #print(
+     #   print_improvement(
+      #      alg_set,
+       #     mean_missed_deadline_improvement1,
+        #    mean_missed_deadline_improvement2,
+         #   3,
+          #  3
+        #)
+    #)
 
 
 if __name__ == "__main__":

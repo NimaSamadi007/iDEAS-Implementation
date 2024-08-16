@@ -31,7 +31,7 @@ def evaluate_rrlo_scenario(configs, eval_itr=10000):
     rrlo_dvfs.load_model("models/rrlo_scenario")
 
     # Evaluate the trained model
-    print("Evaluating the trained model...")
+    #print("Evaluating the trained model...")
     dqn_task_energy_cons = np.zeros(4)
     dqn_num_tasks = np.zeros(4)
     rrlo_task_energy_cons = np.zeros(4)
@@ -56,7 +56,7 @@ def evaluate_rrlo_scenario(configs, eval_itr=10000):
     remote_env.observe(copy.deepcopy(tasks))
     random_env.observe(copy.deepcopy(tasks))
 
-    for _ in tqdm(range(eval_itr)):
+    for _ in range(eval_itr):
         actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
         actions_local_str = {
@@ -129,11 +129,11 @@ def evaluate_rrlo_scenario(configs, eval_itr=10000):
         rrlo_state = next_state_rrlo
 
     # Average energy consumption:
-    print(dqn_num_tasks)
-    print(rrlo_num_tasks)
-    print(local_num_tasks)
-    print(remote_num_tasks)
-    print(random_num_tasks)
+    #print(dqn_num_tasks)
+    #print(rrlo_num_tasks)
+    #print(local_num_tasks)
+    #print(remote_num_tasks)
+    #print(random_num_tasks)
     np.set_printoptions(suppress=True)
     dqn_avg_task_energy_cons = dqn_task_energy_cons / dqn_num_tasks
     local_avg_task_energy_cons = local_task_energy_cons / local_num_tasks
@@ -141,11 +141,11 @@ def evaluate_rrlo_scenario(configs, eval_itr=10000):
     random_avg_task_energy_cons = random_task_energy_cons / random_num_tasks
     rrlo_avg_task_energy_cons = rrlo_task_energy_cons / rrlo_num_tasks
 
-    print(f"DQN energy consumption: {dqn_avg_task_energy_cons}")
-    print(f"local energy consumption: {local_avg_task_energy_cons}")
-    print(f"remote energy consumption: {remote_avg_task_energy_cons}")
-    print(f"random energy consumption: {random_avg_task_energy_cons}")
-    print(f"RRLO energy consumption: {rrlo_avg_task_energy_cons}")
+    #print(f"DQN energy consumption: {dqn_avg_task_energy_cons}")
+    #print(f"local energy consumption: {local_avg_task_energy_cons}")
+    #print(f"remote energy consumption: {remote_avg_task_energy_cons}")
+    #print(f"random energy consumption: {random_avg_task_energy_cons}")
+    #print(f"RRLO energy consumption: {rrlo_avg_task_energy_cons}")
 
     dqn_percent_task_missed = dqn_task_deadline_missed / dqn_num_tasks * 100
     local_percent_task_missed = local_task_deadline_missed / local_num_tasks * 100
@@ -153,28 +153,28 @@ def evaluate_rrlo_scenario(configs, eval_itr=10000):
     random_percent_task_missed = random_task_deadline_missed / random_num_tasks * 100
     rrlo_percent_task_missed = rrlo_task_deadline_missed / rrlo_num_tasks * 100
 
-    print(f"DQN deadline missed: {dqn_task_deadline_missed}")
-    print(f"local deadline missed: {local_task_deadline_missed}")
-    print(f"remote deadline missed: {remote_task_deadline_missed}")
-    print(f"random deadline missed: {random_task_deadline_missed}")
-    print(f"RRLO deadline missed: {rrlo_task_deadline_missed}")
+    #print(f"DQN deadline missed: {dqn_task_deadline_missed}")
+    #print(f"local deadline missed: {local_task_deadline_missed}")
+    #print(f"remote deadline missed: {remote_task_deadline_missed}")
+    #print(f"random deadline missed: {random_task_deadline_missed}")
+    #print(f"RRLO deadline missed: {rrlo_task_deadline_missed}")
 
-    print(f"DQN deadline missed %: {dqn_percent_task_missed}")
-    print(f"local deadline missed %: {local_percent_task_missed}")
-    print(f"remote deadline missed %: {remote_percent_task_missed}")
-    print(f"random deadline missed %: {random_percent_task_missed}")
-    print(f"RRLO deadline missed %: {rrlo_percent_task_missed}")
+    #print(f"DQN deadline missed %: {dqn_percent_task_missed}")
+    #print(f"local deadline missed %: {local_percent_task_missed}")
+    #print(f"remote deadline missed %: {remote_percent_task_missed}")
+    #print(f"random deadline missed %: {random_percent_task_missed}")
+    #print(f"RRLO deadline missed %: {rrlo_percent_task_missed}")
 
     avg_dqn_energy_cons = np.sum(dqn_task_energy_cons) / np.sum(dqn_num_tasks)
     avg_local_energy_cons = np.sum(local_task_energy_cons) / np.sum(local_num_tasks)
     avg_remote_energy_cons = np.sum(remote_task_energy_cons) / np.sum(remote_num_tasks)
     avg_random_energy_cons = np.sum(random_task_energy_cons) / np.sum(random_num_tasks)
     avg_rrlo_energy_cons = np.sum(rrlo_task_energy_cons) / np.sum(rrlo_num_tasks)
-    print(f"DQN task set avg energy consumption: {avg_dqn_energy_cons:.3e}")
-    print(f"local task set avg energy consumption: {avg_local_energy_cons:.3e}")
-    print(f"remote task set avg energy consumption: {avg_remote_energy_cons:.3e}")
-    print(f"random task set avg energy consumption: {avg_random_energy_cons:.3e}")
-    print(f"RRLO task set avg energy consumption: {avg_rrlo_energy_cons:.3e}")
+    #print(f"DQN task set avg energy consumption: {avg_dqn_energy_cons:.3e}")
+    #print(f"local task set avg energy consumption: {avg_local_energy_cons:.3e}")
+    #print(f"remote task set avg energy consumption: {avg_remote_energy_cons:.3e}")
+    #print(f"random task set avg energy consumption: {avg_random_energy_cons:.3e}")
+    #print(f"RRLO task set avg energy consumption: {avg_rrlo_energy_cons:.3e}")
 
     total_dqn_missed_task = (
         np.sum(dqn_task_deadline_missed) / np.sum(dqn_num_tasks) * 100
@@ -191,12 +191,37 @@ def evaluate_rrlo_scenario(configs, eval_itr=10000):
     total_rrlo_missed_task = (
         np.sum(rrlo_task_deadline_missed) / np.sum(rrlo_num_tasks) * 100
     )
-    print(f"DQN tasks deadline missed: {total_dqn_missed_task:.3e}%")
-    print(f"local tasks deadline missed: {total_local_missed_task:.3e}%")
-    print(f"remote tasks deadline missed: {total_remote_missed_task:.3e}%")
-    print(f"random tasks deadline missed: {total_random_missed_task:.3e}%")
-    print(f"RRLO tasks deadline missed: {total_rrlo_missed_task:.3e}%")
+    #print(f"DQN tasks deadline missed: {total_dqn_missed_task:.3e}%")
+    #print(f"local tasks deadline missed: {total_local_missed_task:.3e}%")
+    #print(f"remote tasks deadline missed: {total_remote_missed_task:.3e}%")
+    #print(f"random tasks deadline missed: {total_random_missed_task:.3e}%")
+    #print(f"RRLO tasks deadline missed: {total_rrlo_missed_task:.3e}%")
 
+    #dqn_random_deadline_improvement = (
+     #   np.sum(dqn_task_deadline_missed-random_task_deadline_missed) / np.sum(random_task_deadline_missed) * 100
+    #)
+
+    #dqn_local_deadline_improvement = (
+     #   np.sum(dqn_task_deadline_missed-local_task_deadline_missed) / np.sum(local_task_deadline_missed) * 100
+    #)
+
+    #dqn_remote_deadline_improvement = (
+     #   np.sum(dqn_task_deadline_missed-remote_task_deadline_missed) / np.sum(remote_task_deadline_missed) * 100
+    #)
+
+
+    dqn_random_improvement = (
+        (avg_dqn_energy_cons - avg_random_energy_cons) / (avg_random_energy_cons) * 100
+    )
+
+    dqn_local_improvement = (
+        (avg_dqn_energy_cons - avg_local_energy_cons) / (avg_local_energy_cons) * 100
+    )
+
+    dqn_remote_improvement = (
+        (avg_dqn_energy_cons - avg_remote_energy_cons) / (avg_remote_energy_cons) * 100
+    )
+    
     dqn_deadline_improvement = (
         np.sum(dqn_task_deadline_missed-rrlo_task_deadline_missed) / np.sum(rrlo_task_deadline_missed) * 100
     )
@@ -210,9 +235,9 @@ def evaluate_rrlo_scenario(configs, eval_itr=10000):
         / rrlo_avg_task_energy_cons
         * 100
     )
-    print(f"DQN per task energy usage: {dqn_task_improvement} %")
-    print(f"DQN avg energy usage: {dqn_improvement:.3f} %")
-    print(f"DQN missed deadline improvement: {dqn_deadline_improvement:.3f} %")
+    #print(f"DQN per task energy usage: {dqn_task_improvement} %")
+    #print(f"DQN avg energy usage: {dqn_improvement:.3f} %")
+    #print(f"DQN missed deadline improvement: {dqn_deadline_improvement:.3f} %")
     return (
         np.array(
             [
@@ -232,8 +257,22 @@ def evaluate_rrlo_scenario(configs, eval_itr=10000):
                 total_dqn_missed_task,
             ]
         ),
-        dqn_improvement,
-        dqn_deadline_improvement
+        np.array(
+            [
+                dqn_random_improvement,
+                dqn_local_improvement,
+                dqn_remote_improvement,
+                dqn_improvement
+            ]
+        )
+        #np.array(
+         #   [
+          #      dqn_random_deadline_improvement,
+           #     dqn_local_deadline_improvement,
+            #    dqn_remote_deadline_improvement,
+             #   dqn_deadline_improvement
+            #]
+        #)
     )
 
 
@@ -251,7 +290,7 @@ def evaluate_dqn_scenario(configs, eval_itr=10000):
     dqn_dvfs.load_model("models/dqn_scenario")
 
     # Evaluate the trained model
-    print("Evaluating the trained model...")
+    #print("Evaluating the trained model...")
     dqn_task_energy_cons = np.zeros(4)
     dqn_num_tasks = np.zeros(4)
 
@@ -275,7 +314,7 @@ def evaluate_dqn_scenario(configs, eval_itr=10000):
     remote_env.observe(copy.deepcopy(tasks))
     random_env.observe(copy.deepcopy(tasks))
 
-    for _ in tqdm(range(eval_itr)):
+    for _ in range(eval_itr):
         actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
         #FIXME: Check out local actions
@@ -339,44 +378,44 @@ def evaluate_dqn_scenario(configs, eval_itr=10000):
         dqn_state = next_state_dqn
 
     # Average energy consumption:
-    print(dqn_num_tasks)
-    print(local_num_tasks)
-    print(remote_num_tasks)
-    print(random_num_tasks)
+    #print(dqn_num_tasks)
+    #print(local_num_tasks)
+    #print(remote_num_tasks)
+    #print(random_num_tasks)
     np.set_printoptions(suppress=True)
     dqn_avg_task_energy_cons = dqn_task_energy_cons / dqn_num_tasks
     local_avg_task_energy_cons = local_task_energy_cons / local_num_tasks
     remote_avg_task_energy_cons = remote_task_energy_cons / remote_num_tasks
     random_avg_task_energy_cons = random_task_energy_cons / random_num_tasks
 
-    print(f"DQN energy consumption: {dqn_avg_task_energy_cons}")
-    print(f"local energy consumption: {local_avg_task_energy_cons}")
-    print(f"remote energy consumption: {remote_avg_task_energy_cons}")
-    print(f"random energy consumption: {random_avg_task_energy_cons}")
+    #print(f"DQN energy consumption: {dqn_avg_task_energy_cons}")
+    #print(f"local energy consumption: {local_avg_task_energy_cons}")
+    #print(f"remote energy consumption: {remote_avg_task_energy_cons}")
+    #print(f"random energy consumption: {random_avg_task_energy_cons}")
 
     dqn_percent_task_missed = dqn_task_deadline_missed / dqn_num_tasks * 100
     local_percent_task_missed = local_task_deadline_missed / local_num_tasks * 100
     remote_percent_task_missed = remote_task_deadline_missed / remote_num_tasks * 100
     random_percent_task_missed = random_task_deadline_missed / random_num_tasks * 100
 
-    print(f"DQN deadline missed: {dqn_task_deadline_missed}")
-    print(f"local deadline missed: {local_task_deadline_missed}")
-    print(f"remote deadline missed: {remote_task_deadline_missed}")
-    print(f"random deadline missed: {random_task_deadline_missed}")
+    #print(f"DQN deadline missed: {dqn_task_deadline_missed}")
+    #print(f"local deadline missed: {local_task_deadline_missed}")
+    #print(f"remote deadline missed: {remote_task_deadline_missed}")
+    #print(f"random deadline missed: {random_task_deadline_missed}")
 
-    print(f"DQN deadline missed %: {dqn_percent_task_missed}")
-    print(f"local deadline missed %: {local_percent_task_missed}")
-    print(f"remote deadline missed %: {remote_percent_task_missed}")
-    print(f"random deadline missed %: {random_percent_task_missed}")
+    #print(f"DQN deadline missed %: {dqn_percent_task_missed}")
+    #print(f"local deadline missed %: {local_percent_task_missed}")
+    #print(f"remote deadline missed %: {remote_percent_task_missed}")
+    #print(f"random deadline missed %: {random_percent_task_missed}")
 
     avg_dqn_energy_cons = np.sum(dqn_task_energy_cons) / np.sum(dqn_num_tasks)
     avg_local_energy_cons = np.sum(local_task_energy_cons) / np.sum(local_num_tasks)
     avg_remote_energy_cons = np.sum(remote_task_energy_cons) / np.sum(remote_num_tasks)
     avg_random_energy_cons = np.sum(random_task_energy_cons) / np.sum(random_num_tasks)
-    print(f"DQN task set avg energy consumption: {avg_dqn_energy_cons:.3e}")
-    print(f"local task set avg energy consumption: {avg_local_energy_cons:.3e}")
-    print(f"remote task set avg energy consumption: {avg_remote_energy_cons:.3e}")
-    print(f"random task set avg energy consumption: {avg_random_energy_cons:.3e}")
+    #print(f"DQN task set avg energy consumption: {avg_dqn_energy_cons:.3e}")
+    #print(f"local task set avg energy consumption: {avg_local_energy_cons:.3e}")
+    #print(f"remote task set avg energy consumption: {avg_remote_energy_cons:.3e}")
+    #print(f"random task set avg energy consumption: {avg_random_energy_cons:.3e}")
 
     total_dqn_missed_task = (
         np.sum(dqn_task_deadline_missed) / np.sum(dqn_num_tasks) * 100
@@ -391,22 +430,38 @@ def evaluate_dqn_scenario(configs, eval_itr=10000):
          np.sum(random_task_deadline_missed) / np.sum(random_num_tasks) * 100
     )
 
-    print(f"DQN tasks deadline missed: {total_dqn_missed_task:.3e}%")
-    print(f"local tasks deadline missed: {total_local_missed_task:.3e}%")
-    print(f"remote tasks deadline missed: {total_remote_missed_task:.3e}%")
-    print(f"random tasks deadline missed: {total_random_missed_task:.3e}%")
+    #print(f"DQN tasks deadline missed: {total_dqn_missed_task:.3e}%")
+    #print(f"local tasks deadline missed: {total_local_missed_task:.3e}%")
+    #print(f"remote tasks deadline missed: {total_remote_missed_task:.3e}%")
+    #print(f"random tasks deadline missed: {total_random_missed_task:.3e}%")
 
 
     #FIXME: Fixe DQN improvement
     #dqn_improvement=0
-    #dqn_deadline_improvement = (
-     #   np.sum(dqn_task_deadline_missed-rrlo_task_deadline_missed) / np.sum(rrlo_task_deadline_missed) * 100
+    #dqn_random_deadline_improvement = (
+     #   np.sum(dqn_task_deadline_missed-random_task_deadline_missed) / np.sum(random_task_deadline_missed) * 100
+    #)
+
+    #dqn_local_deadline_improvement = (
+     #   np.sum(dqn_task_deadline_missed-local_task_deadline_missed) / np.sum(local_task_deadline_missed) * 100
+    #)
+
+    #dqn_remote_deadline_improvement = (
+     #   np.sum(dqn_task_deadline_missed-remote_task_deadline_missed) / np.sum(remote_task_deadline_missed) * 100
     #)
 
 
-    #dqn_improvement = (
-     #   (avg_dqn_energy_cons - avg_rrlo_energy_cons) / (avg_rrlo_energy_cons) * 100
-    #)
+    dqn_random_improvement = (
+        (avg_dqn_energy_cons - avg_random_energy_cons) / (avg_random_energy_cons) * 100
+    )
+
+    dqn_local_improvement = (
+        (avg_dqn_energy_cons - avg_local_energy_cons) / (avg_local_energy_cons) * 100
+    )
+
+    dqn_remote_improvement = (
+        (avg_dqn_energy_cons - avg_remote_energy_cons) / (avg_remote_energy_cons) * 100
+    )
     #dqn_task_improvement = (
      #   (dqn_avg_task_energy_cons - rrlo_avg_task_energy_cons)
       #  / rrlo_avg_task_energy_cons
@@ -431,9 +486,21 @@ def evaluate_dqn_scenario(configs, eval_itr=10000):
                 total_remote_missed_task,
                 total_dqn_missed_task
             ]
+        ),
+        np.array(
+            [
+                dqn_random_improvement,
+                dqn_local_improvement,
+                dqn_remote_improvement
+            ]
         )
-        #dqn_improvement,
-        #dqn_deadline_improvement
+        #np.array(
+         #   [
+          #      dqn_random_deadline_improvement,
+           #     dqn_local_deadline_improvement,
+            #    dqn_remote_deadline_improvement
+            #]
+        #)
     )
 
 

@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import os
+from tabulate import tabulate
 
 
 def set_random_seed(seed):
@@ -51,13 +52,14 @@ def plot_res(alg_set, taskset1, taskset2, std1,std2, xlabel, ylabel,title, fig_n
     #algorithms = ['Local Scheduling', 'RRLO [8]', 'Our Algorithm']
 
     # Positioning of bars on x-axis
+    plt.rcParams['font.size'] = 20
     ind = range(len(alg_set))
     # Plotting both tasksets
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
     fig = plt.figure(figsize=(16, 12))
-    plt.bar(ind, taskset1, width=0.4, label='Taskset1', color='r',yerr=std1,edgecolor='black', capsize=20)
-    plt.bar([i + 0.4 for i in ind], taskset2, width=0.4, label='Taskset2', color='b',yerr=std2,edgecolor='black',capsize=20)
+    plt.bar(ind, taskset1, width=0.4, label='Taskset1', color='#17becf',yerr=std1,edgecolor='black', capsize=20)
+    plt.bar([i + 0.4 for i in ind], taskset2, width=0.4, label='Taskset2', color='#ffbb78',yerr=std2,edgecolor='black',capsize=20)
 
     for i, value in enumerate(taskset1):
         plt.text(i, value, f"{value:.3f}", ha='center', va='bottom', fontweight='bold')
@@ -70,7 +72,32 @@ def plot_res(alg_set, taskset1, taskset2, std1,std2, xlabel, ylabel,title, fig_n
     # X-axis tick labels positioning
     plt.xticks([i + 0.2 for i in ind], alg_set,fontweight='bold')
     # Adding legend to specify which color represents which task set
-    plt.legend()
+    legend=plt.legend()
+    for text in legend.get_texts():
+        text.set_fontweight('bold')  # Set legend text to bold
+    plt.tight_layout()
     # Displaying the plot
     plt.grid(True)
     fig.savefig(file_path)
+
+
+
+def print_improvement(alg_set,improvements_task1, improvements_task2,num1,num2):
+    algorithms = ['Random', 'Local', 'Remote', 'RRLO']
+    
+    if len(improvements_task1) != num1 or len(improvements_task2) != num2:
+        raise ValueError(f" input 1 array should contain exactly {num1} elements and input 2 array should contain exactly {num2} elements.")
+    
+    # Prepare data for the table
+    table_data = [
+        [alg, f"{imp1:.2f}%", f"{imp2:.2f}%"] 
+        for alg, imp1, imp2 in zip(algorithms, improvements_task1, improvements_task2)
+    ]
+    
+    
+    # Create the table
+    table = tabulate(table_data, 
+                     headers=['Algorithm', 'DQN Improvement (Task Set 1)', 'DQN Improvement (Task Set 2)'],
+                     tablefmt='grid')
+    
+    return table
