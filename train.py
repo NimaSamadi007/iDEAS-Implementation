@@ -2,23 +2,32 @@ import numpy as np
 from tqdm import tqdm
 import copy
 import os
+from itertools import cycle
 
 from env_models.env import BaseDQNEnv, DQNEnv, RRLOEnv
 from env_models.task import RandomTaskGen
 from dvfs.dqn_dvfs import DQN_DVFS
 from dvfs.rrlo_dvfs import RRLO_DVFS
+from dvfs.conference_dvfs import conference_DVFS
 from utils.utils import set_random_seed
+
 
 
 # Main function
 def train_rrlo_scenario(configs):
     # Set random seed
     set_random_seed(42)
+    
+    cpu_load_values=np.arange(0.01, 1.01, 0.01)
+    cpu_load_generator = cycle(cpu_load_values)
 
-    target_cpu_load = 0.35
+    target_cpu_load = next(cpu_load_generator)
     task_gen = RandomTaskGen(configs["task_set"])
     dqn_env = DQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
     rrlo_env = RRLOEnv(configs)
+    conference_env=RRLOEnv(configs)
+
+    dqn_loss=[]
 
     # Initialize DVFS algorithms
     dqn_dvfs = DQN_DVFS(
@@ -39,58 +48,79 @@ def train_rrlo_scenario(configs):
         dvfs_algs=["cc", "la"],
         num_tasks=4,
     )
-
+    conference_dvfs = conference_DVFS(
+        state_bounds=conference_env.get_state_bounds(),
+        num_w_inter_powers=len(conference_env.w_inter.powers),
+        num_dvfs_algs=1,
+        dvfs_algs=["cc"],
+        num_tasks=4,
+    )
     # Initial state observation
     tasks = task_gen.step(target_cpu_load)
     dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
     rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
+    conference_state, _ = conference_env.observe(copy.deepcopy(tasks))
 
     for itr in tqdm(range(int(3e5))):
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
         actions_rrlo, actions_rrlo_col = rrlo_dvfs.execute(rrlo_state)
+        actions_conference, actions_conference_col = conference_dvfs.execute(conference_state)
 
         # Execute tasks and get reward
         rewards_dqn, penalties_dqn, _ = dqn_env.step(actions_dqn_str)
         penalty_rrlo = rrlo_env.step(actions_rrlo)
+        penalty_conference = conference_env.step(actions_conference)
 
         # Observe next state
+        target_cpu_load=next(cpu_load_generator)
         tasks = task_gen.step(target_cpu_load)
         next_state_dqn, is_final_dqn = dqn_env.observe(copy.deepcopy(tasks))
         next_state_rrlo, _ = rrlo_env.observe(copy.deepcopy(tasks))
+        next_state_conference, _ = conference_env.observe(copy.deepcopy(tasks))
 
         # Update RL network
         loss = dqn_dvfs.train(
             dqn_state, actions_dqn, rewards_dqn, next_state_dqn, is_final_dqn
         )
+        dqn_loss.append(loss)
         rrlo_dvfs.update(rrlo_state, actions_rrlo_col, penalty_rrlo, next_state_rrlo)
+        conference_dvfs.update(conference_state, actions_conference_col, penalty_conference, next_state_conference)
 
         # Update current state
         dqn_state = next_state_dqn
         rrlo_state = next_state_rrlo
+        conference_state = next_state_conference
 
         # Print results
-        if (itr + 1) % 1000 == 0:
-            tqdm.write(f"At {itr+1}, DQN loss={loss:.5f}")
-            tqdm.write(
-                f"Penalties DQN sum: {np.sum(penalties_dqn):.3e}, all: {penalties_dqn}"
-            )
-            tqdm.write(f"Penalties RRLO: {penalty_rrlo:.3e}")
-            tqdm.write(10 * "-")
+        #if (itr + 1) % 1000 == 0:
+         #   tqdm.write(f"At {itr+1}, DQN loss={loss:.5f}")
+          #  tqdm.write(
+           #     f"Penalties DQN sum: {np.sum(penalties_dqn):.3e}, all: {penalties_dqn}"
+            #)
+            #tqdm.write(f"Penalties RRLO: {penalty_rrlo:.3e}")
+            #tqdm.write(f"Penalties conference: {penalty_conference:.3e}")
+            #tqdm.write(10 * "-")
 
     print("Saving trained model...")
     os.makedirs("models/rrlo_scenario", exist_ok=True)
     dqn_dvfs.save_model("models/rrlo_scenario")
     rrlo_dvfs.save_model("models/rrlo_scenario")
+    conference_dvfs.save_model("models/rrlo_scenario")
+    return np.array(dqn_loss)
 
 def train_dqn_scenario(configs):
     # Set random seed
-    set_random_seed(42)
+    cpu_load_values=np.arange(0.1, 1.01, 0.01)
+    cpu_load_generator = cycle(cpu_load_values)
 
-    target_cpu_load = 0.35
+    target_cpu_load = next(cpu_load_generator)
     task_gen = RandomTaskGen(configs["task_set"])
     dqn_env = BaseDQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
+    conference_env=RRLOEnv(configs)
+
+    dqn_loss=[]
 
     # Initialize DVFS algorithms
     dqn_dvfs = DQN_DVFS(
@@ -104,41 +134,61 @@ def train_dqn_scenario(configs):
         min_eps=0,
     )
 
+    conference_dvfs = conference_DVFS(
+        state_bounds=conference_env.get_state_bounds(),
+        num_w_inter_powers=len(conference_env.w_inter.powers),
+        num_dvfs_algs=1,
+        dvfs_algs=["cc"],
+        num_tasks=4,
+    )
+
     # Initial state observation
     tasks = task_gen.step(target_cpu_load)
     dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+    conference_state, _ = conference_env.observe(copy.deepcopy(tasks))
 
     for itr in tqdm(range(int(3e5))):
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
+        actions_conference, actions_conference_col = conference_dvfs.execute(conference_state)
 
         # Execute tasks and get reward
         rewards_dqn, penalties_dqn, _ = dqn_env.step(actions_dqn_str)
+        penalty_conference = conference_env.step(actions_conference)
+
 
         # Observe next state
+        target_cpu_load = next(cpu_load_generator)
         tasks = task_gen.step(target_cpu_load)
         next_state_dqn, is_final_dqn = dqn_env.observe(copy.deepcopy(tasks))
+        next_state_conference, _ = conference_env.observe(copy.deepcopy(tasks))
 
         # Update RL network
         loss = dqn_dvfs.train(
             dqn_state, actions_dqn, rewards_dqn, next_state_dqn, is_final_dqn
         )
+        dqn_loss.append(loss)
+        conference_dvfs.update(conference_state, actions_conference_col, penalty_conference, next_state_conference)
 
         # Update current state
         dqn_state = next_state_dqn
+        conference_state = next_state_conference
 
         # Print results
-        if (itr + 1) % 1000 == 0:
-            tqdm.write(f"At {itr+1}, DQN loss={loss:.5f}")
-            tqdm.write(
-                f"Penalties DQN sum: {np.sum(penalties_dqn):.3e}, all: {penalties_dqn}"
-            )
-            tqdm.write(10 * "-")
+       # if (itr + 1) % 1000 == 0:
+        #    tqdm.write(f"At {itr+1}, DQN loss={loss:.5f}")
+         #   tqdm.write(
+          #      f"Penalties DQN sum: {np.sum(penalties_dqn):.3e}, all: {penalties_dqn}"
+           # )
+            #tqdm.write(f"Penalties conference: {penalty_conference:.3e}")
+            #tqdm.write(10 * "-")
 
     print("Saving trained model...")
     os.makedirs("models/dqn_scenario", exist_ok=True)
     dqn_dvfs.save_model("models/dqn_scenario")
+    conference_dvfs.save_model("models/dqn_scenario")
+    return np.array(dqn_loss)
 
 if __name__ == "__main__":
     configs_rrlo_scenario = {
