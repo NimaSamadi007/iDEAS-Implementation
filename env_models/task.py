@@ -107,10 +107,72 @@ class RandomTaskGen:
         single_task_load = target_cpu_load / self.num_tasks
         self.task_set = []
         for t_id in range(self.num_tasks):
-            p = np.random.randint(self.p_min // 20, self.p_max // 20) * 50
+            p = np.random.randint(self.p_min//20, self.p_max//20) * 50
             # Generate w based on p and task load while considering w ranges
             w = np.min([self.w_max, np.max([self.w_min, p * single_task_load])])
-            b = np.random.randint(self.b_min // 50, self.b_max // 50) * 50
+            b = np.random.randint(self.b_min//50, self.b_max//50)*50
+            self.task_set.append(
+                Task(
+                    {"task": t_id, "p": p, "w": w, "b": b, "base_freq": self.base_freq}
+                )
+            )
+        tasks_load = np.sum([t.wcet / t.p for t in self.task_set])
+        if tasks_load >= 1:
+            raise ValueError(
+                f"Generated tasks are non-schedulable! Task load: {tasks_load}"
+            )
+
+    def get_task_size_bound(self):
+        return self.b_min, self.b_max
+
+    def get_wcet_bound(self):
+        return self.w_min, self.w_max
+    
+
+
+
+class NormalTaskGen:
+    def __init__(self, task_conf_path):
+        try:
+            with open(task_conf_path, "r") as f:
+                task_set_conf = json.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Task configuration file not found at {task_conf_path}"
+            )
+        self.num_tasks = task_set_conf["num_tasks"]
+        self.p_min, self.p_max = task_set_conf["p"]
+        self.w_min, self.w_max = task_set_conf["w"]
+        self.b_min, self.b_max = task_set_conf["b"]
+        self.base_freq = task_set_conf["base_freq"]
+
+    def step(self, target_cpu_load,mean):
+        # Generate base tasks
+        self._gen_base_tasks(target_cpu_load,mean)
+        time = math.lcm(*[t.p for t in self.task_set])
+        gen_task = dict()
+        for task in self.task_set:
+            gen_task[task.t_id] = self._gen_task(task, time)
+
+        return gen_task
+
+    def _gen_task(self, task, time):
+        num_tasks = time // task.p
+        return [copy.deepcopy(task) for _ in range(num_tasks)]
+
+    def _gen_base_tasks(self, target_cpu_load, mean):
+        single_task_load = target_cpu_load / self.num_tasks
+        std=20/3
+        self.task_set = []
+        for t_id in range(self.num_tasks):
+            p = np.random.randint(self.p_min//20, self.p_max//20) * 50
+            # Generate w based on p and task load while considering w ranges
+            w = np.min([self.w_max, np.max([self.w_min, p * single_task_load])])
+            b = np.random.normal(round(mean),std)
+            if mean<100:
+                b=100
+            if b>500:
+                b=500
             self.task_set.append(
                 Task(
                     {"task": t_id, "p": p, "w": w, "b": b, "base_freq": self.base_freq}

@@ -100,11 +100,11 @@ def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=Fal
         [
             '#ffbb78',  # Light orange
             '#17becf',  # Cyan
-            '#1f77b4',  # Blue
-            '#ff7f0e',  # Orange
             '#2ca02c',  # Green
             '#d62728',  # Red
+            '#1f77b4',  # Blue
             '#9467bd',  # Purple
+            '#ff7f0e',  # Orange
             '#8c564b',  # Brown
             '#e377c2',  # Pink
             '#7f7f7f',  # Gray
@@ -112,6 +112,8 @@ def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=Fal
             '#aec7e8'   # Light blue
         ]
     ).colors
+
+    markers = ['o', 's', 'D', '^', 'v', '<', '>', '*', '+', 'x', 'p', 'H']
     
     # Plotting both tasksets
     current_directory = os.getcwd()
@@ -120,7 +122,7 @@ def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=Fal
     if ylog:
         plt.yscale('log')
     for i in range(data1.shape[0]):
-        plt.plot(y_val, data1[i], label=alg_set[i], color=colors[i],linewidth=5)
+        plt.plot(y_val, data1[i], label=alg_set[i], color=colors[i],linewidth=5, marker=markers[i],markersize=10)
 
 
     # Labels and Title

@@ -1,12 +1,12 @@
 from train import train_rrlo_scenario, train_dqn_scenario
-from evaluate import evaluate_rrlo_scenario, evaluate_dqn_scenario,evaluate_cpu_load_scenario
+from evaluate import evaluate_rrlo_scenario, evaluate_dqn_scenario,evaluate_cpu_load_scenario, evaluate_task_size_scenario
 from utils.utils import plot_res,print_improvement,plot_loss_function,moving_avg,line_plot_res
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 
-def compare_dqn_rrlo(eval_itr=10000, iter=5,Train=False):
+def compare_dqn_rrlo(eval_itr=10000, iter=3,Train=False):
     DQN_STATE_DIM = 4
     train_configs = {
         "task_set": "configs/task_set_train.json",
@@ -35,14 +35,14 @@ def compare_dqn_rrlo(eval_itr=10000, iter=5,Train=False):
         plot_loss_function(dqn_loss, "DQN", "iterations", "loss","DQN_Loss_RRLO_Scenario")
 
 
-    all_energy_eval1 = np.empty((0, 6))
-    all_energy_eval2 = np.empty((0, 6))
-    all_deadline_eval1 = np.empty((0, 6))
-    all_deadline_eval2 = np.empty((0, 6))
+    all_energy_eval1 = np.empty((0, 5))
+    all_energy_eval2 = np.empty((0, 5))
+    all_deadline_eval1 = np.empty((0, 5))
+    all_deadline_eval2 = np.empty((0, 5))
 
 
-    all_energy_improvement1 = np.empty((0, 5))
-    all_energy_improvement2 = np.empty((0, 5))
+    all_energy_improvement1 = np.empty((0, 4))
+    all_energy_improvement2 = np.empty((0, 4))
 
 
     for j in tqdm(range(iter)):
@@ -95,7 +95,7 @@ def compare_dqn_rrlo(eval_itr=10000, iter=5,Train=False):
     #print(std_energy_consumption_eval2)
     #print(std_missed_deadline_eval1)
     #print(std_missed_deadline_eval2)
-    alg_set = ["Random", "Local", "Remote", "RRLO", "Conference", "DQN"]
+    alg_set = ["Random", "Local", "Remote", "RRLO", "DQN"]
     plot_res(
         alg_set,
         mean_energy_consumption_eval1,
@@ -129,8 +129,8 @@ def compare_dqn_rrlo(eval_itr=10000, iter=5,Train=False):
             alg_set,
             mean_energy_consumption_improvement1,
             mean_energy_consumption_improvement2,
-            5,
-            5
+            4,
+            4
         )
     )
    # print("")
@@ -145,14 +145,7 @@ def compare_dqn_rrlo(eval_itr=10000, iter=5,Train=False):
           #  4
         #)
     #)
-    
-
-
-
-
-
-
-def compare_dqn_base(eval_itr=10000,iter=5, Train= False):
+def compare_dqn_base(eval_itr=10000,iter=3, Train= False):
     DQN_STATE_DIM = 5
     train_configs = {
         "task_set": "configs/task_set_train.json",
@@ -187,13 +180,13 @@ def compare_dqn_base(eval_itr=10000,iter=5, Train= False):
         plot_loss_function(dqn_loss, "DQN", "iterations", "loss","DQN_Loss_DQN Scenario")
 
 
-    all_energy_eval1 = np.empty((0, 5))
-    all_energy_eval2 = np.empty((0, 5))
-    all_deadline_eval1 = np.empty((0, 5))
-    all_deadline_eval2 = np.empty((0, 5))
+    all_energy_eval1 = np.empty((0, 4))
+    all_energy_eval2 = np.empty((0, 4))
+    all_deadline_eval1 = np.empty((0, 4))
+    all_deadline_eval2 = np.empty((0, 4))
 
-    all_energy_improvement1 = np.empty((0, 4))
-    all_energy_improvement2 = np.empty((0, 4))
+    all_energy_improvement1 = np.empty((0, 3))
+    all_energy_improvement2 = np.empty((0, 3))
 
     for j in tqdm(range(iter)):
         energy_consumption_eval1, missed_deadline_eval1, energy_improvement1 = evaluate_dqn_scenario(
@@ -236,7 +229,7 @@ def compare_dqn_base(eval_itr=10000,iter=5, Train= False):
     #print(std_energy_consumption_eval2)
     #print(std_missed_deadline_eval1)
     #print(std_missed_deadline_eval2)
-    alg_set = ["Random", "Local", "Remote","conference","DQN"]
+    alg_set = ["Random", "Local", "Remote","DQN"]
     plot_res(
         alg_set,
         mean_energy_consumption_eval1,
@@ -268,8 +261,8 @@ def compare_dqn_base(eval_itr=10000,iter=5, Train= False):
             alg_set,
             mean_energy_consumption_improvement1,
             mean_energy_consumption_improvement2,
-            4,
-            4
+            3,
+            3
         )
     )
     print("")
@@ -284,7 +277,7 @@ def compare_dqn_base(eval_itr=10000,iter=5, Train= False):
           #  3
         #)
     #)
-def compare_cpu_load(eval_itr=500, Train=False, mean_iter=3):
+def compare_cpu_load(eval_itr=10000, Train=False, mean_iter=3):
     DQN_STATE_DIM = 4
     train_configs = {
         "task_set": "configs/task_set_train.json",
@@ -311,12 +304,12 @@ def compare_cpu_load(eval_itr=500, Train=False, mean_iter=3):
         #print(dqn_loss.shape)
         plot_loss_function(dqn_loss, "DQN", "iterations", "loss","DQN_Loss_CPU_Load_Scenario")
 
-    cpu_load_val = np.arange(0.15, 1.00, 0.1)
+    cpu_load_val = np.arange(0.05, 1.00, 0.05)
 
 
-    all_energy_eval1 = np.empty((0, 6, len(cpu_load_val)))
-    all_deadline_eval1 = np.empty((0,  6, len(cpu_load_val)))
-    all_improvement_eval1 = np.empty((0,  5, len(cpu_load_val)))
+    all_energy_eval1 = np.empty((0, 5, len(cpu_load_val)))
+    all_deadline_eval1 = np.empty((0,  5, len(cpu_load_val)))
+    all_improvement_eval1 = np.empty((0,  4, len(cpu_load_val)))
 
     for i in tqdm(range(mean_iter)):
         energy_consumption_eval1, missed_deadline_eval1, energy_improvement1 = evaluate_cpu_load_scenario(
@@ -332,7 +325,7 @@ def compare_cpu_load(eval_itr=500, Train=False, mean_iter=3):
 
 
 
-    alg_set = ["Random", "Local", "Remote", "RRLO", "Conference", "DQN"]
+    alg_set = ["Random", "Local", "Remote", "RRLO", "DQN"]
 
     line_plot_res(
         alg_set,
@@ -353,22 +346,103 @@ def compare_cpu_load(eval_itr=500, Train=False, mean_iter=3):
         "Dropped Tasks of Different Algorithms With Respect to Various CPU Load",
         "Missed_Deadline_CPU"
     )
-    alg_set2 = ["Random", "Local", "Remote", "RRLO", "Conference"]
+    alg_set2 = ["Random", "Local", "Remote", "RRLO"]
     
     line_plot_res(
         alg_set2,
-        mean_improvement_eval1,
+        mean_improvement_eval1*-1,
         cpu_load_val,
         "CPU Load (Utilization)",
         "Energy Improvement (%)",
         "Energy Improvement of DQN compared to Different Algorithms With Respect to Various CPU Load",
         "Energy_Improvement_CPU"
     )
+def compare_task_size(eval_itr=10000, Train=False, mean_iter=3):
+    DQN_STATE_DIM = 4
+    train_configs = {
+        "task_set": "configs/task_set_train.json",
+        "cpu_local": "configs/cpu_local.json",
+        "w_inter": "configs/wireless_interface.json",
+        "dqn_state_dim": DQN_STATE_DIM,
+    }
+
+    #eval_configs = {
+     #   "task_set": "configs/task_set_eval.json",
+      #  "cpu_local": "configs/cpu_local.json",
+       # "w_inter": "configs/wireless_interface.json",
+        #"dqn_state_dim": DQN_STATE_DIM,
+    #}
+    #test_configs = {
+     #   "task_set": "configs/task_set_eval2.json",
+      #  "cpu_local": "configs/cpu_local.json",
+       # "w_inter": "configs/wireless_interface.json",
+        #"dqn_state_dim": DQN_STATE_DIM,
+    #}
+
+    if Train:
+        dqn_loss=train_rrlo_scenario(train_configs)
+        #print(dqn_loss.shape)
+        plot_loss_function(dqn_loss, "DQN", "iterations", "loss","DQN_Loss_task_size_Scenario")
+
+    task_size_val = np.round(np.linspace(110, 490, 11))
+
+    #print(task_size_val)
+
+
+    all_energy_eval1 = np.empty((0, 5, len(task_size_val)-1))
+    all_deadline_eval1 = np.empty((0,  5, len(task_size_val)-1))
+    all_improvement_eval1 = np.empty((0,  4, len(task_size_val)-1))
+
+    for i in tqdm(range(mean_iter)):
+        energy_consumption_eval1, missed_deadline_eval1, energy_improvement1 = evaluate_task_size_scenario(
+            train_configs,task_size_val, eval_itr
+        )
+        all_energy_eval1 = np.append(all_energy_eval1, [energy_consumption_eval1], axis=0)
+        all_deadline_eval1 =  np.append(all_deadline_eval1, [missed_deadline_eval1], axis=0)
+        all_improvement_eval1 =  np.append(all_improvement_eval1, [energy_improvement1], axis=0)
+    mean_energy_eval1 = np.mean(all_energy_eval1, axis=0)
+    mean_deadline_eval1 = np.mean(all_deadline_eval1, axis=0)
+    mean_improvement_eval1 = np.mean(all_improvement_eval1, axis=0)
 
 
 
 
+    alg_set = ["Random", "Local", "Remote", "RRLO", "DQN"]
+
+    line_plot_res(
+        alg_set,
+        mean_energy_eval1,
+        task_size_val[:-1],
+        "Task Size (bits)",
+        "Energy Consumption (mJ)",
+        "Energy Consumption of Different Algorithms With Respect to Various Task Size ",
+        "Energy_Consumption_Task",
+        ylog=True
+    )
+    line_plot_res(
+        alg_set,
+        mean_deadline_eval1,
+        task_size_val[:-1],
+        "Task Size (bits)",
+        "Dropped Tasks (%) ",
+        "Dropped Tasks of Different Algorithms With Respect to Various Task Size",
+        "Missed_Deadline_Task"
+    )
+    alg_set2 = ["Random", "Local", "Remote", "RRLO"]
+    
+    line_plot_res(
+        alg_set2,
+        mean_improvement_eval1*-1,
+        task_size_val[:-1],
+        "Task Size (bits)",
+        "Energy Improvement (%)",
+        "Energy Improvement of DQN compared to Different Algorithms With Respect to Various Task Size",
+        "Energy_Improvement_Task"
+    )
+
+ 
 if __name__ == "__main__":
-    #compare_dqn_rrlo()
-    #compare_dqn_base()
+    #compare_dqn_rrlo(Train=True)
+    #compare_dqn_base(Train=True)
     compare_cpu_load(Train=False)
+    compare_task_size(Train=False)
