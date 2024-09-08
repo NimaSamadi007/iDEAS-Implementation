@@ -60,6 +60,10 @@ class WirelessInterface:
         min_energy = (dbm_to_w(min_power) * task.b * 1024 * 8) / rate
         return min_energy
 
+    def get_rate_bounds(self):
+        max_cg = 2*self.cg_sigma
+        return [0, self.bandwidth * np.log2(1 + self.powers[-1]*max_cg/self.cn_power)]
+
     # No. of possible power values
     def __len__(self):
         return len(self.powers)

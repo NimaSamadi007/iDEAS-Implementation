@@ -20,7 +20,7 @@ class BaseDQNEnv:
         self.w_inter = WirelessInterface(confs["w_inter"])
 
         # Initialize environment state
-        self._init_state_bounds(wcet_bound, task_size_bound)
+        self._init_state_bounds(wcet_bound, task_size_bound, self.w_inter.get_rate_bounds())
         self.state_dim = confs["dqn_state_dim"]
         self.curr_tasks = None
         self.curr_state = None
@@ -50,13 +50,13 @@ class BaseDQNEnv:
         }
         return action_space
 
-    def _init_state_bounds(self, wcet_bound, task_size_bound):
+    def _init_state_bounds(self, wcet_bound, task_size_bound, chan_rate_bound):
         # (SU, U_little, U_big, WCET, B)
         self.min_state_vals = np.array(
-            [0, 0, 0, wcet_bound[0], task_size_bound[0]], dtype=float
+            [0, 0, 0, wcet_bound[0], task_size_bound[0], chan_rate_bound[0]], dtype=float
         )
         self.max_state_vals = np.array(
-            [1, 1, 1, wcet_bound[1], task_size_bound[1]], dtype=float
+            [1, 1, 1, wcet_bound[1], task_size_bound[1], chan_rate_bound[1]], dtype=float
         )
 
     def _get_system_state(self):
@@ -69,9 +69,16 @@ class BaseDQNEnv:
             su += task[0].wcet / task[0].p
             states[i, 3] = task[0].wcet
             states[i, 4] = task[0].b
+            states[i, 5] = self.w_inter.get_channel_rate()
         states[:, 0] = su
         states[:, 1] = self.cpu_little.util
         states[:, 2] = self.cpu_big.util
+        # Make sure states are withing ranges:
+        # for i in range(len(self.curr_tasks)):
+        #     is_out_of_range = (states[i, :] < self.min_state_vals) | (states[i, :] > self.max_state_vals)
+        #     if np.any(is_out_of_range):
+        #         print(f"Out of range state value for {i}:\n{self.min_state_vals}\n<\n{states[i]}\n<\n{self.max_state_vals}!")
+        #
         states = (states - self.min_state_vals) / (
             self.max_state_vals - self.min_state_vals
         )
@@ -119,7 +126,7 @@ class DQNEnv:
 
         # Initialize environment state
         self.state_dim = confs["dqn_state_dim"]
-        self._init_state_bounds(wcet_bound, task_size_bound)
+        self._init_state_bounds(wcet_bound, task_size_bound, self.w_inter.get_rate_bounds())
         self.curr_tasks = None
         self.curr_state = None
 
@@ -142,13 +149,13 @@ class DQNEnv:
         action_space = {"offload": self.w_inter.powers, "local": self.cpu.freqs}
         return action_space
 
-    def _init_state_bounds(self, wcet_bound, task_size_bound):
+    def _init_state_bounds(self, wcet_bound, task_size_bound, chan_rate_bound):
         # (SU, U_local, WCET, B)
         self.min_state_vals = np.array(
-            [0, 0, wcet_bound[0], task_size_bound[0]], dtype=float
+            [0, 0, wcet_bound[0], task_size_bound[0], chan_rate_bound[0]], dtype=float
         )
         self.max_state_vals = np.array(
-            [1, 1, wcet_bound[1], task_size_bound[1]], dtype=float
+            [1, 1, wcet_bound[1], task_size_bound[1], chan_rate_bound[1]], dtype=float
         )
 
     def _get_system_state(self):
@@ -161,8 +168,15 @@ class DQNEnv:
             su += task[0].wcet / task[0].p
             states[i, 2] = task[0].wcet
             states[i, 3] = task[0].b
+            states[i, 4] = self.w_inter.get_channel_rate()
         states[:, 0] = su
         states[:, 1] = self.cpu.util
+        # # Make sure states are withing ranges:
+        # for i in range(len(self.curr_tasks)):
+        #     is_out_of_range = (states[i, :] < self.min_state_vals) | (states[i, :] > self.max_state_vals)
+        #     if np.any(is_out_of_range):
+        #         print(f"Out of range state value for {i}:\n{self.min_state_vals}\n<\n{states[i]}\n<\n{self.max_state_vals}!")
+
         states = (states - self.min_state_vals) / (
             self.max_state_vals - self.min_state_vals
         )

@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 
 def compare_dqn_rrlo(eval_itr=500, iter=1,Train=False):
-    DQN_STATE_DIM = 4
+    DQN_STATE_DIM = 5
     train_configs = {
         "task_set": "configs/task_set_train.json",
         "cpu_local": "configs/cpu_local.json",
@@ -133,7 +133,7 @@ def compare_dqn_rrlo(eval_itr=500, iter=1,Train=False):
         #)
     #)
 def compare_dqn_base(eval_itr=500,iter=1, Train= False):
-    DQN_STATE_DIM = 5
+    DQN_STATE_DIM = 6
     train_configs = {
         "task_set": "configs/task_set_train.json",
         "cpu_little": "configs/cpu_little.json",
@@ -265,7 +265,7 @@ def compare_dqn_base(eval_itr=500,iter=1, Train= False):
         #)
     #)
 def compare_cpu_load(eval_itr=500, Train=False, mean_iter=1):
-    DQN_STATE_DIM = 4
+    DQN_STATE_DIM = 5
     train_configs = {
         "task_set": "configs/task_set_train.json",
         "cpu_local": "configs/cpu_local.json",
@@ -346,7 +346,7 @@ def compare_cpu_load(eval_itr=500, Train=False, mean_iter=1):
         "Energy_Improvement_CPU"
     )
 def compare_task_size(eval_itr=500, Train=False, mean_iter=1):
-    DQN_STATE_DIM = 4
+    DQN_STATE_DIM = 5
     train_configs = {
         "task_set": "configs/task_set_train.json",
         "cpu_local": "configs/cpu_local.json",
@@ -433,7 +433,7 @@ def compare_task_size(eval_itr=500, Train=False, mean_iter=1):
 
 
 def big_little_energy_level(eval_itr=500, Train=False, mean_iter=1):
-    DQN_STATE_DIM = 5
+    DQN_STATE_DIM = 6
     train_configs = {
         "task_set": "configs/task_set_train.json",
         "cpu_little": "configs/cpu_little.json",
@@ -494,8 +494,8 @@ def big_little_energy_level(eval_itr=500, Train=False, mean_iter=1):
 
  
 if __name__ == "__main__":
-    #compare_dqn_rrlo(Train=False)
+    compare_dqn_rrlo(Train=True)
     #compare_dqn_base(Train=True)
     #compare_cpu_load(Train=False)
     #compare_task_size(Train=False)
-    big_little_energy_level(Train=False)
+    # big_little_energy_level(Train=False)
