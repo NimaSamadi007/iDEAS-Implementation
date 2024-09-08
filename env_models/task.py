@@ -89,9 +89,9 @@ class RandomTaskGen:
         self.b_min, self.b_max = task_set_conf["b"]
         self.base_freq = task_set_conf["base_freq"]
 
-    def step(self, target_cpu_load):
+    def step(self, target_cpu_load, max_task_load):
         # Generate base tasks
-        self._gen_base_tasks(target_cpu_load)
+        self._gen_base_tasks(target_cpu_load, max_task_load)
         time = math.lcm(*[t.p for t in self.task_set])
         gen_task = dict()
         for task in self.task_set:
@@ -103,7 +103,7 @@ class RandomTaskGen:
         num_tasks = time // task.p
         return [copy.deepcopy(task) for _ in range(num_tasks)]
 
-    def _gen_base_tasks(self, target_cpu_load):
+    def _gen_base_tasks(self, target_cpu_load, max_task_load):
         single_task_load = target_cpu_load / self.num_tasks
         self.task_set = []
         for t_id in range(self.num_tasks):
@@ -117,7 +117,7 @@ class RandomTaskGen:
                 )
             )
         tasks_load = np.sum([t.wcet / t.p for t in self.task_set])
-        if tasks_load >= 1:
+        if tasks_load >= max_task_load:
             raise ValueError(
                 f"Generated tasks are non-schedulable! Task load: {tasks_load}"
             )
@@ -146,9 +146,9 @@ class NormalTaskGen:
         self.b_min, self.b_max = task_set_conf["b"]
         self.base_freq = task_set_conf["base_freq"]
 
-    def step(self, target_cpu_load,mean):
+    def step(self, target_cpu_load,mean, max_task_load):
         # Generate base tasks
-        self._gen_base_tasks(target_cpu_load,mean)
+        self._gen_base_tasks(target_cpu_load,mean, max_task_load)
         time = math.lcm(*[t.p for t in self.task_set])
         gen_task = dict()
         for task in self.task_set:
@@ -160,7 +160,7 @@ class NormalTaskGen:
         num_tasks = time // task.p
         return [copy.deepcopy(task) for _ in range(num_tasks)]
 
-    def _gen_base_tasks(self, target_cpu_load, mean):
+    def _gen_base_tasks(self, target_cpu_load, mean, max_task_load):
         single_task_load = target_cpu_load / self.num_tasks
         std=20/3
         self.task_set = []
@@ -179,7 +179,7 @@ class NormalTaskGen:
                 )
             )
         tasks_load = np.sum([t.wcet / t.p for t in self.task_set])
-        if tasks_load >= 1:
+        if tasks_load >= max_task_load:
             raise ValueError(
                 f"Generated tasks are non-schedulable! Task load: {tasks_load}"
             )

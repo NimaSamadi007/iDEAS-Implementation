@@ -1,12 +1,12 @@
 from train import train_rrlo_scenario, train_dqn_scenario
-from evaluate import evaluate_rrlo_scenario, evaluate_dqn_scenario,evaluate_cpu_load_scenario, evaluate_task_size_scenario
-from utils.utils import plot_res,print_improvement,plot_loss_function,moving_avg,line_plot_res
+from evaluate import evaluate_rrlo_scenario, evaluate_dqn_scenario,evaluate_cpu_load_scenario, evaluate_task_size_scenario, evaluate_big_little
+from utils.utils import plot_res,print_improvement,plot_loss_function,moving_avg,line_plot_res, stack_bar_res,plot_all_rewards
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 
-def compare_dqn_rrlo(eval_itr=10000, iter=3,Train=False):
+def compare_dqn_rrlo(eval_itr=500, iter=1,Train=False):
     DQN_STATE_DIM = 4
     train_configs = {
         "task_set": "configs/task_set_train.json",
@@ -29,10 +29,11 @@ def compare_dqn_rrlo(eval_itr=10000, iter=3,Train=False):
     }
 
     if Train:
-        dqn_loss=train_rrlo_scenario(train_configs)
+        dqn_loss,dqn_rewards=train_rrlo_scenario(train_configs)
         #print(dqn_loss.shape)
 
         plot_loss_function(dqn_loss, "DQN", "iterations", "loss","DQN_Loss_RRLO_Scenario")
+        plot_all_rewards(dqn_rewards,"DQN", "iterations", "rewards","DQN_Rewards_RRLO_Scenario")
 
 
     all_energy_eval1 = np.empty((0, 5))
@@ -81,20 +82,6 @@ def compare_dqn_rrlo(eval_itr=10000, iter=3,Train=False):
 
 
 
-
-
-
-
-    #print("*"*20)
-    #print(mean_energy_consumption_eval1)
-    #print(mean_energy_consumption_eval2)
-    #print(mean_missed_deadline_eval1)
-    #print(mean_missed_deadline_eval2)
-    #print("*"*20)
-    #print(std_energy_consumption_eval1)
-    #print(std_energy_consumption_eval2)
-    #print(std_missed_deadline_eval1)
-    #print(std_missed_deadline_eval2)
     alg_set = ["Random", "Local", "Remote", "RRLO", "DQN"]
     plot_res(
         alg_set,
@@ -145,7 +132,7 @@ def compare_dqn_rrlo(eval_itr=10000, iter=3,Train=False):
           #  4
         #)
     #)
-def compare_dqn_base(eval_itr=10000,iter=3, Train= False):
+def compare_dqn_base(eval_itr=500,iter=1, Train= False):
     DQN_STATE_DIM = 5
     train_configs = {
         "task_set": "configs/task_set_train.json",
@@ -175,10 +162,10 @@ def compare_dqn_base(eval_itr=10000,iter=3, Train= False):
     }
 
     if Train:
-        dqn_loss=train_dqn_scenario(train_configs)
+        dqn_loss, dqn_rewards=train_dqn_scenario(train_configs)
 
         plot_loss_function(dqn_loss, "DQN", "iterations", "loss","DQN_Loss_DQN Scenario")
-
+        plot_all_rewards(dqn_rewards,"DQN", "iterations", "rewards","DQN_Rewards_DQN_Scenario")
 
     all_energy_eval1 = np.empty((0, 4))
     all_energy_eval2 = np.empty((0, 4))
@@ -189,13 +176,13 @@ def compare_dqn_base(eval_itr=10000,iter=3, Train= False):
     all_energy_improvement2 = np.empty((0, 3))
 
     for j in tqdm(range(iter)):
-        energy_consumption_eval1, missed_deadline_eval1, energy_improvement1 = evaluate_dqn_scenario(
+        energy_consumption_eval1, missed_deadline_eval1, energy_improvement1,_= evaluate_dqn_scenario(
         eval_configs, eval_itr
         )
         all_energy_eval1=np.vstack((all_energy_eval1,energy_consumption_eval1))
         all_deadline_eval1=np.vstack((all_deadline_eval1,missed_deadline_eval1))
         all_energy_improvement1=np.vstack((all_energy_improvement1,energy_improvement1))
-        energy_consumption_eval2, missed_deadline_eval2,energy_improvement2= evaluate_dqn_scenario(
+        energy_consumption_eval2, missed_deadline_eval2,energy_improvement2,_= evaluate_dqn_scenario(
         test_configs, eval_itr
         )
         all_energy_eval2=np.vstack((all_energy_eval2,energy_consumption_eval2))
@@ -277,7 +264,7 @@ def compare_dqn_base(eval_itr=10000,iter=3, Train= False):
           #  3
         #)
     #)
-def compare_cpu_load(eval_itr=10000, Train=False, mean_iter=3):
+def compare_cpu_load(eval_itr=500, Train=False, mean_iter=1):
     DQN_STATE_DIM = 4
     train_configs = {
         "task_set": "configs/task_set_train.json",
@@ -300,11 +287,12 @@ def compare_cpu_load(eval_itr=10000, Train=False, mean_iter=3):
     #}
 
     if Train:
-        dqn_loss=train_rrlo_scenario(train_configs)
+        dqn_loss,dqn_rewards=train_rrlo_scenario(train_configs)
         #print(dqn_loss.shape)
         plot_loss_function(dqn_loss, "DQN", "iterations", "loss","DQN_Loss_CPU_Load_Scenario")
+        plot_all_rewards(dqn_rewards,"DQN", "iterations", "rewards","DQN_Rewards_CPU_Load_Scenario")
 
-    cpu_load_val = np.arange(0.05, 1.00, 0.05)
+    cpu_load_val = np.arange(0.05, 1.01, 0.05)
 
 
     all_energy_eval1 = np.empty((0, 5, len(cpu_load_val)))
@@ -357,7 +345,7 @@ def compare_cpu_load(eval_itr=10000, Train=False, mean_iter=3):
         "Energy Improvement of DQN compared to Different Algorithms With Respect to Various CPU Load",
         "Energy_Improvement_CPU"
     )
-def compare_task_size(eval_itr=10000, Train=False, mean_iter=3):
+def compare_task_size(eval_itr=500, Train=False, mean_iter=1):
     DQN_STATE_DIM = 4
     train_configs = {
         "task_set": "configs/task_set_train.json",
@@ -380,9 +368,10 @@ def compare_task_size(eval_itr=10000, Train=False, mean_iter=3):
     #}
 
     if Train:
-        dqn_loss=train_rrlo_scenario(train_configs)
+        dqn_loss,dqn_rewards=train_rrlo_scenario(train_configs)
         #print(dqn_loss.shape)
         plot_loss_function(dqn_loss, "DQN", "iterations", "loss","DQN_Loss_task_size_Scenario")
+        plot_all_rewards(dqn_rewards,"DQN", "iterations", "rewards","DQN_Rewards_task_size_Scenario")
 
     task_size_val = np.round(np.linspace(110, 490, 11))
 
@@ -440,9 +429,73 @@ def compare_task_size(eval_itr=10000, Train=False, mean_iter=3):
         "Energy_Improvement_Task"
     )
 
+
+
+
+def big_little_energy_level(eval_itr=500, Train=False, mean_iter=1):
+    DQN_STATE_DIM = 5
+    train_configs = {
+        "task_set": "configs/task_set_train.json",
+        "cpu_little": "configs/cpu_little.json",
+        "cpu_big": "configs/cpu_big.json",
+        "cpu_local": "configs/cpu_local.json",
+        "w_inter": "configs/wireless_interface.json",
+        "dqn_state_dim": DQN_STATE_DIM,
+    }
+
+    #eval_configs = {
+     #   "task_set": "configs/task_set_eval.json",
+      #  "cpu_local": "configs/cpu_local.json",
+       # "w_inter": "configs/wireless_interface.json",
+        #"dqn_state_dim": DQN_STATE_DIM,
+    #}
+    #test_configs = {
+     #   "task_set": "configs/task_set_eval2.json",
+      #  "cpu_local": "configs/cpu_local.json",
+       # "w_inter": "configs/wireless_interface.json",
+        #"dqn_state_dim": DQN_STATE_DIM,
+    #}
+
+    if Train:
+        dqn_loss,dqn_rewards=train_rrlo_scenario(train_configs)
+        #print(dqn_loss.shape)
+        plot_loss_function(dqn_loss, "DQN", "iterations", "loss","DQN_Loss_big_Little_Scenario")
+        plot_all_rewards(dqn_rewards,"DQN", "iterations", "rewards","DQN_Rewards_big_Little_Scenario")
+
+    cpu_load_val = np.arange(0.1, 2.1, 0.1)
+
+
+    all_energy_eval1 = np.empty((0, 4, len(cpu_load_val)))
+
+    for i in tqdm(range(mean_iter)):
+        energy_levels1 = evaluate_big_little(
+            train_configs,cpu_load_val, eval_itr
+        )
+        all_energy_eval1 = np.append(all_energy_eval1, [energy_levels1], axis=0)
+    mean_energy_eval1 = np.mean(all_energy_eval1, axis=0)
+
+
+
+
+    alg_set = ["LITTLE", "big", "offload", "Total Energy"]
+
+    print(f"mean: {mean_energy_eval1}")
+
+    stack_bar_res(
+        alg_set,
+        mean_energy_eval1,
+        cpu_load_val,
+        "CPU Load (Utilization)",
+        "Energy Consumption (J)",
+        "Energy Consumption level of Different Cores With Respect to Various CPU Load ",
+        "Energy_Levels_CPU",
+        ylog=False
+    )
+
  
 if __name__ == "__main__":
-    #compare_dqn_rrlo(Train=True)
+    #compare_dqn_rrlo(Train=False)
     #compare_dqn_base(Train=True)
-    compare_cpu_load(Train=False)
-    compare_task_size(Train=False)
+    #compare_cpu_load(Train=False)
+    #compare_task_size(Train=False)
+    big_little_energy_level(Train=False)

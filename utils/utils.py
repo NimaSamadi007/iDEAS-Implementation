@@ -20,32 +20,40 @@ def moving_avg(arr, n):
 
 
 def plot_loss_function(losses, alg, xlabel, ylabel,fig_name):
-    plt.rcParams['font.size'] = 20
+    plt.rcParams['font.size'] =25
+    plt.rcParams['text.usetex'] = True
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
-    fig = plt.figure(figsize=(16, 12))
-    plt.title(f"{alg} Loss function values")
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
+    fig = plt.figure(figsize=(20, 12))
+    plt.title(rf"{alg} Loss function values")
+    plt.xlabel(rf"{xlabel}")
+    plt.ylabel(rf"{ylabel}")
     plt.plot(losses)
     plt.tight_layout()
     plt.grid(True)
     fig.savefig(file_path)
 
 
-def plot_all_rewards(all_rewards):
-    fig = plt.figure(figsize=(16, 12))
-    plt.title("Reward value")
-    plt.plot(moving_avg(all_rewards[:, 0], 500))
-    plt.plot(moving_avg(all_rewards[:, 1], 500))
-    plt.plot(moving_avg(all_rewards[:, 2], 500))
-    plt.plot(moving_avg(all_rewards[:, 3], 500))
+def plot_all_rewards(all_rewards, alg, xlabel, ylabel,fig_name):
+    plt.rcParams['font.size'] = 25
+    plt.rcParams['text.usetex'] = True
+    current_directory = os.getcwd()
+    file_path = os.path.join(current_directory, fig_name + ".png")
+    fig = plt.figure(figsize=(20, 12))
+    plt.title(rf"{alg} Reward value")
+    plt.plot(moving_avg(all_rewards[:, 0], 1000))
+    plt.plot(moving_avg(all_rewards[:, 1], 1000))
+    plt.plot(moving_avg(all_rewards[:, 2], 1000))
+    plt.plot(moving_avg(all_rewards[:, 3], 1000))
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.tight_layout()
     plt.grid(True)
-    fig.savefig("figs/all_reward.png")
+    fig.savefig(file_path)
 
 
 def plot_penalty(penalty, min_penalty, t_id):
-    fig = plt.figure(figsize=(16, 12))
+    fig = plt.figure(figsize=(20, 12))
     plt.title(f"Penalties task{t_id}")
     plt.plot(moving_avg(penalty, 100))
     plt.plot(moving_avg(min_penalty, 100))
@@ -59,25 +67,26 @@ def plot_res(alg_set, taskset1, taskset2, std1,std2,  xlabel, ylabel,title, fig_
     #algorithms = ['Local Scheduling', 'RRLO [8]', 'Our Algorithm']
 
     # Positioning of bars on x-axis
-    plt.rcParams['font.size'] = 20
+    plt.rcParams['font.size'] = 25
+    plt.rcParams['text.usetex'] = True
     ind = range(len(alg_set))
     # Plotting both tasksets
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
-    fig = plt.figure(figsize=(16, 12))
-    plt.bar(ind, taskset1, width=0.4, label='Taskset1', color='#17becf',yerr=std1,edgecolor='black', capsize=20)
-    plt.bar([i + 0.4 for i in ind], taskset2, width=0.4, label='Taskset2', color='#ffbb78',yerr=std2,edgecolor='black',capsize=20)
+    fig = plt.figure(figsize=(20, 12))
+    plt.bar(ind, taskset1, width=0.4, label=r'Taskset1', color='#17becf',yerr=std1,edgecolor='black', capsize=20)
+    plt.bar([i + 0.4 for i in ind], taskset2, width=0.4, label=r'Taskset2', color='#ffbb78',yerr=std2,edgecolor='black',capsize=20)
     if ylog:
         plt.yscale('log')
 
     for i, value in enumerate(taskset1):
-        plt.text(i, value, f"{value:.3f}", ha='center', va='bottom', fontweight='bold')
+        plt.text(i, value, rf"{value:.3f}", ha='center', va='bottom', fontweight='bold')
     for i, value in enumerate(taskset2):
-        plt.text(i+0.4, value, f"{value:.3f}", ha='center', va='bottom', fontweight='bold')
+        plt.text(i+0.4, value, rf"{value:.3f}", ha='center', va='bottom', fontweight='bold')
     # Labels and Title
-    plt.xlabel(xlabel,fontweight='bold')
-    plt.ylabel(ylabel,fontweight='bold')
-    plt.title(title,fontweight='bold')
+    plt.xlabel(rf'{xlabel}',fontweight='bold')
+    plt.ylabel(rf'{ylabel}',fontweight='bold')
+    plt.title(rf'{title}',fontweight='bold')
     # X-axis tick labels positioning
     plt.xticks([i + 0.2 for i in ind], alg_set,fontweight='bold')
     # Adding legend to specify which color represents which task set
@@ -94,7 +103,8 @@ def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=Fal
     #algorithms = ['Local Scheduling', 'RRLO [8]', 'Our Algorithm']
 
     # Positioning of bars on x-axis
-    plt.rcParams['font.size'] = 16
+    plt.rcParams['font.size'] = 25
+    plt.rcParams['text.usetex'] = True
     ind = range(len(alg_set))
     colors = ListedColormap(
         [
@@ -118,17 +128,17 @@ def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=Fal
     # Plotting both tasksets
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
-    fig = plt.figure(figsize=(16, 12))
+    fig = plt.figure(figsize=(20, 12))
     if ylog:
         plt.yscale('log')
     for i in range(data1.shape[0]):
-        plt.plot(y_val, data1[i], label=alg_set[i], color=colors[i],linewidth=5, marker=markers[i],markersize=10)
+        plt.plot(y_val, data1[i], label=rf'{alg_set[i]}', color=colors[i],linewidth=5, marker=markers[i],markersize=20)
 
 
     # Labels and Title
-    plt.xlabel(xlabel,fontweight='bold')
-    plt.ylabel(ylabel,fontweight='bold')
-    plt.title(title,fontweight='bold')
+    plt.xlabel(rf'{xlabel}',fontweight='bold')
+    plt.ylabel(rf'{ylabel}',fontweight='bold')
+    plt.title(rf'{title}',fontweight='bold')
     # X-axis tick labels positioning
     #plt.xticks([i + 0.2 for i in ind], alg_set,fontweight='bold')
     # Adding legend to specify which color represents which task set
@@ -139,6 +149,81 @@ def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=Fal
     # Displaying the plot
     plt.grid(True)
     fig.savefig(file_path)
+
+
+
+
+def stack_bar_res(labels,data1,x_val , xlabel, ylabel,title, fig_name, ylog=False ):
+    # Data for plotting
+    #algorithms = ['Local Scheduling', 'RRLO [8]', 'Our Algorithm']
+
+    # Positioning of bars on x-axis
+    plt.rcParams['font.size'] = 25
+    plt.rcParams['text.usetex'] = True
+    colors = ListedColormap(
+        [
+            '#ffbb78',  # Light orange
+            '#17becf',  # Cyan
+            '#2ca02c',  # Green
+            '#d62728',  # Red
+            '#1f77b4',  # Blue
+            '#9467bd',  # Purple
+            '#ff7f0e',  # Orange
+            '#8c564b',  # Brown
+            '#e377c2',  # Pink
+            '#7f7f7f',  # Gray
+            '#bcbd22',  # Yellow-green
+            '#aec7e8'   # Light blue
+        ]
+    ).colors
+
+    #markers = ['o', 's', 'D', '^', 'v', '<', '>', '*', '+', 'x', 'p', 'H']
+    
+    # Plotting both tasksets
+    current_directory = os.getcwd()
+    file_path = os.path.join(current_directory, fig_name + ".png")
+    bar_width=0.05
+    fig, ax = plt.subplots(figsize=(20, 12))
+
+    ax.bar(x_val,data1[-1], width=bar_width+0.025, label=rf'{labels[-1]}', color=colors[-2], alpha=0.5)
+    if ylog:
+        ax.set_yscale('log')
+    #for i in range(data1.shape[0]):
+     #   plt.plot(y_val, data1[i], label=alg_set[i], color=colors[i],linewidth=5, marker=markers[i],markersize=10)
+
+    # Extracting the values
+
+
+    # Plotting the stacked bar chart
+
+    bottom = np.zeros(data1.shape[1])  # Initialize the bottom array to zeros
+
+    for values, color, label in zip([data1[i] for i in range(data1.shape[0]-1)], colors[:data1.shape[0]-1], labels[:-1]):
+        ax.bar(x_val, values,width=bar_width,  bottom=bottom, label=rf'{label}', color=color)
+        bottom += values  # Update the bottom for the next stack
+
+
+    # Labels and Title
+    plt.xlabel(rf'{xlabel}',fontweight='bold')
+    plt.ylabel(rf'{ylabel}',fontweight='bold')
+    plt.title(rf'{title}',fontweight='bold')
+    # X-axis tick labels positioning
+    #plt.xticks([i + 0.2 for i in ind], alg_set,fontweight='bold')
+    # Adding legend to specify which color represents which task set
+    legend=plt.legend()
+    for text in legend.get_texts():
+        text.set_fontweight('bold')  # Set legend text to bold
+    plt.tight_layout()
+    # Displaying the plot
+    plt.grid(True)
+    fig.savefig(file_path)
+
+
+
+
+
+
+
 
 def print_improvement(alg_set,improvements_task1, improvements_task2,num1,num2):
     #algorithms = ['Random', 'Local', 'Remote', 'RRLO']

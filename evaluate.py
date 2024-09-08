@@ -328,6 +328,7 @@ def evaluate_dqn_scenario(configs, eval_itr=10000):
     local_env = BaseDQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
     remote_env = BaseDQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
     random_env = BaseDQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
+
     #conference_env = RRLOEnv(configs)
     rand_littlefreq_list = random_env.cpu_little.freqs
     rand_bigfreq_list = random_env.cpu_big.freqs
@@ -356,6 +357,12 @@ def evaluate_dqn_scenario(configs, eval_itr=10000):
     #print("Evaluating the trained model...")
     dqn_task_energy_cons = np.zeros(4)
     dqn_num_tasks = np.zeros(4)
+    dqn_big_energy_cons = np.zeros(4)
+    dqn_big_num_tasks = np.zeros(4)
+    dqn_little_energy_cons = np.zeros(4)
+    dqn_little_num_tasks = np.zeros(4)
+    dqn_offload_energy_cons = np.zeros(4)
+    dqn_offload_num_tasks = np.zeros(4)
 
     local_task_energy_cons = np.zeros(4)
     local_num_tasks = np.zeros(4)
@@ -405,6 +412,24 @@ def evaluate_dqn_scenario(configs, eval_itr=10000):
         random_env.step(actions_random_str)
         #conference_env.step(actions_conference)
 
+
+        for t_id, _ in actions_dqn_str["little"]:
+            for job in dqn_env.curr_tasks[t_id]:
+                dqn_little_energy_cons[job.t_id]+=job.cons_energy
+            dqn_little_num_tasks[job.t_id] += len(dqn_env.curr_tasks[t_id])
+
+        for t_id, _ in actions_dqn_str["big"]:
+            for job in dqn_env.curr_tasks[t_id]:
+                dqn_big_energy_cons[job.t_id]+=job.cons_energy
+            dqn_big_num_tasks[job.t_id] += len(dqn_env.curr_tasks[t_id])
+        
+        for t_id, _ in actions_dqn_str["offload"]:
+            for job in dqn_env.curr_tasks[t_id]:
+                dqn_offload_energy_cons[job.t_id]+=job.cons_energy
+            dqn_offload_num_tasks[job.t_id] += len(dqn_env.curr_tasks[t_id])
+
+
+                
         # Gather energy consumption values
         for jobs in local_env.curr_tasks.values():
             for j in jobs:
@@ -464,6 +489,9 @@ def evaluate_dqn_scenario(configs, eval_itr=10000):
     #print(random_num_tasks)
     np.set_printoptions(suppress=True)
     dqn_avg_task_energy_cons = dqn_task_energy_cons / dqn_num_tasks
+    dqn_little_avg_task_energy_cons = dqn_little_energy_cons / dqn_little_num_tasks
+    dqn_big_avg_task_energy_cons = dqn_big_energy_cons / dqn_big_num_tasks
+    dqn_offload_avg_task_energy_cons = dqn_offload_energy_cons / dqn_offload_num_tasks
     local_avg_task_energy_cons = local_task_energy_cons / local_num_tasks
     remote_avg_task_energy_cons = remote_task_energy_cons / remote_num_tasks
     random_avg_task_energy_cons = random_task_energy_cons / random_num_tasks
@@ -492,6 +520,9 @@ def evaluate_dqn_scenario(configs, eval_itr=10000):
     #print(f"random deadline missed %: {random_percent_task_missed}")
 
     avg_dqn_energy_cons = np.sum(dqn_task_energy_cons) / np.sum(dqn_num_tasks)
+    avg_dqn_little_energy_cons = np.sum(dqn_little_energy_cons) / np.sum(dqn_little_num_tasks)
+    avg_dqn_big_energy_cons = np.sum(dqn_big_energy_cons) / np.sum(dqn_big_num_tasks)
+    avg_dqn_offload_energy_cons = np.sum(dqn_offload_energy_cons) / np.sum(dqn_offload_num_tasks)
     avg_local_energy_cons = np.sum(local_task_energy_cons) / np.sum(local_num_tasks)
     avg_remote_energy_cons = np.sum(remote_task_energy_cons) / np.sum(remote_num_tasks)
     avg_random_energy_cons = np.sum(random_task_energy_cons) / np.sum(random_num_tasks)
@@ -587,7 +618,16 @@ def evaluate_dqn_scenario(configs, eval_itr=10000):
                 dqn_remote_improvement,
                 #dqn_conference_improvement
             ]
+        ),
+        np.array(
+            [
+                avg_dqn_little_energy_cons,
+                avg_dqn_big_energy_cons,
+                avg_dqn_offload_energy_cons,
+                avg_dqn_energy_cons
+            ]
         )
+
         #np.array(
          #   [
           #      dqn_random_deadline_improvement,
@@ -650,6 +690,7 @@ def evaluate_cpu_load_scenario(configs, cpu_load_val, eval_itr=10000):
     #cpu_load_generator = cycle(cpu_load_val)
     #target_cpu_load = next(cpu_load_generator)
 
+    max_task_load=1
     task_gen = RandomTaskGen(configs["task_set"])
     #task_gen = TaskGen(configs["task_set"])
     dqn_env = DQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
@@ -710,7 +751,7 @@ def evaluate_cpu_load_scenario(configs, cpu_load_val, eval_itr=10000):
     for i in range(len(cpu_load_val)):
 
         target_cpu_load=cpu_load_val[i]
-        tasks = task_gen.step(target_cpu_load)
+        tasks = task_gen.step(target_cpu_load,max_task_load)
         dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
         rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
         #conference_state, _ = conference_env.observe(copy.deepcopy(tasks))
@@ -738,6 +779,8 @@ def evaluate_cpu_load_scenario(configs, cpu_load_val, eval_itr=10000):
             local_env.step(actions_local_str)
             remote_env.step(actions_remote_str)
             random_env.step(actions_random_str)
+
+            
             # Gather energy consumption values
             for jobs in local_env.curr_tasks.values():
                 for j in jobs:
@@ -786,7 +829,7 @@ def evaluate_cpu_load_scenario(configs, cpu_load_val, eval_itr=10000):
                 #        conference_task_deadline_missed[j.t_id,i] += 1
                 #conference_num_tasks[j.t_id,i] += len(jobs)
 
-            tasks = task_gen.step(target_cpu_load)
+            tasks = task_gen.step(target_cpu_load,max_task_load)
             next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
             next_state_rrlo, _ = rrlo_env.observe(copy.deepcopy(tasks))
             #next_state_conference, _ = conference_env.observe(copy.deepcopy(tasks))
@@ -917,6 +960,7 @@ def evaluate_task_size_scenario(configs, task_size_val, eval_itr=10000):
     #cpu_load_generator = cycle(cpu_load_val)
     #target_cpu_load = next(cpu_load_generator)
     target_cpu_load = 0.35
+    max_task_load=1
 
     task_gen = NormalTaskGen(configs["task_set"])
     #task_gen = TaskGen(configs["task_set"])
@@ -974,7 +1018,7 @@ def evaluate_task_size_scenario(configs, task_size_val, eval_itr=10000):
     
     
     
-    tasks = task_gen.step(target_cpu_load,task_size_val[0])
+    tasks = task_gen.step(target_cpu_load,task_size_val[0],max_task_load)
     for i in range(len(task_size_val)-1):
         #if i!=len(task_size_val)-1: 
         #print(f"i: {i}, task: {task_size_val[i]}, next tsak: {task_size_val[i+1]}")
@@ -1056,9 +1100,9 @@ def evaluate_task_size_scenario(configs, task_size_val, eval_itr=10000):
                 #        conference_task_deadline_missed[j.t_id,i] += 1
                 #conference_num_tasks[j.t_id,i] += len(jobs)
             if i ==len(task_size_val)-2:
-                tasks = task_gen.step(target_cpu_load,task_size_val[i])
+                tasks = task_gen.step(target_cpu_load,task_size_val[i],max_task_load)
             else:
-                tasks = task_gen.step(target_cpu_load,task_size_val[i+1])
+                tasks = task_gen.step(target_cpu_load,task_size_val[i+1],max_task_load)
             #print(task_size_val[2*i+1])
             next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
             next_state_rrlo, _ = rrlo_env.observe(copy.deepcopy(tasks))
@@ -1198,6 +1242,128 @@ def evaluate_task_size_scenario(configs, task_size_val, eval_itr=10000):
         )
 
     )
+
+def evaluate_big_little(configs, cpu_load_val , eval_itr=10000):
+    set_random_seed(42)
+
+    max_task_load=2
+
+    task_gen = RandomTaskGen(configs["task_set"])
+    dqn_env = BaseDQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
+
+    dqn_dvfs = DQN_DVFS(state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space())
+
+    dqn_dvfs.load_model("models/dqn_scenario")
+    #conference_dvfs.load_model("models/dqn_scenario")
+
+    # Evaluate the trained model
+    #print("Evaluating the trained model...")
+    dqn_task_energy_cons = np.zeros((4,len(cpu_load_val)))
+    dqn_num_tasks = np.zeros((4,len(cpu_load_val)))
+    dqn_big_energy_cons = np.zeros((4,len(cpu_load_val)))
+    dqn_big_num_tasks = np.zeros((4,len(cpu_load_val)))
+    dqn_little_energy_cons = np.zeros((4,len(cpu_load_val)))
+    dqn_little_num_tasks = np.zeros((4,len(cpu_load_val)))
+    dqn_offload_energy_cons = np.zeros((4,len(cpu_load_val)))
+    dqn_offload_num_tasks = np.zeros((4,len(cpu_load_val)))
+
+    
+    for i in range(len(cpu_load_val)):
+
+        target_cpu_load=cpu_load_val[i]
+        tasks = task_gen.step(target_cpu_load,max_task_load)
+        dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+    
+        for _ in range(eval_itr):
+            actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
+            actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
+
+            dqn_env.step(actions_dqn_str)
+
+
+            for t_id, _ in actions_dqn_str["little"]:
+                for job in dqn_env.curr_tasks[t_id]:
+                    dqn_little_energy_cons[job.t_id,i]+=job.cons_energy
+                dqn_little_num_tasks[job.t_id,i] += len(dqn_env.curr_tasks[t_id])
+
+            for t_id, _ in actions_dqn_str["big"]:
+                for job in dqn_env.curr_tasks[t_id]:
+                    dqn_big_energy_cons[job.t_id,i]+=job.cons_energy
+                dqn_big_num_tasks[job.t_id,i] += len(dqn_env.curr_tasks[t_id])
+        
+            for t_id, _ in actions_dqn_str["offload"]:
+                for job in dqn_env.curr_tasks[t_id]:
+                    dqn_offload_energy_cons[job.t_id,i]+=job.cons_energy
+                dqn_offload_num_tasks[job.t_id,i] += len(dqn_env.curr_tasks[t_id])
+            
+            for jobs in dqn_env.curr_tasks.values():
+                for j in jobs:
+                    # print(j)
+                    dqn_task_energy_cons[j.t_id,i] += j.cons_energy
+                dqn_num_tasks[j.t_id,i] += len(jobs)
+
+      
+
+            tasks = task_gen.step(target_cpu_load,max_task_load)
+            next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
+            # Update current state
+            dqn_state = next_state_dqn
+            #conference_state = next_state_conference
+
+    
+    np.set_printoptions(suppress=True)
+
+    print(f"little num task: {dqn_little_num_tasks}")
+    print(f"big num task: {dqn_big_num_tasks}")
+    print(f"offload num task: {dqn_offload_num_tasks}")
+    print(f"total num task: {dqn_num_tasks}")
+
+    print(f"little per task energy consumption: {dqn_little_energy_cons}")
+    print(f"big per task energy consumption: {dqn_big_energy_cons}")
+    print(f"offload per task energy consumption: {dqn_offload_energy_cons}")
+    print(f"total per task energy consumption: {dqn_task_energy_cons}")
+    
+    #dqn_avg_task_energy_cons = dqn_task_energy_cons / dqn_num_tasks
+    #dqn_little_avg_task_energy_cons = dqn_little_energy_cons / dqn_little_num_tasks
+    #dqn_big_avg_task_energy_cons = dqn_big_energy_cons / dqn_big_num_tasks
+    #dqn_offload_avg_task_energy_cons = dqn_offload_energy_cons / dqn_offload_num_tasks
+
+    #dqn_avg_task_energy_cons[np.isnan(dqn_avg_task_energy_cons)] = 0
+    #dqn_little_avg_task_energy_cons[np.isnan(dqn_little_avg_task_energy_cons)] = 0
+    #dqn_big_avg_task_energy_cons[np.isnan(dqn_big_avg_task_energy_cons)] = 0
+    #dqn_offload_avg_task_energy_cons[np.isnan(dqn_offload_avg_task_energy_cons)] = 0
+
+
+
+
+
+    avg_dqn_energy_cons = np.sum(dqn_task_energy_cons,axis=0) / np.sum(dqn_num_tasks,axis=0)
+    avg_dqn_little_energy_cons = np.sum(dqn_little_energy_cons,axis=0) / np.sum(dqn_num_tasks,axis=0)
+    avg_dqn_big_energy_cons = np.sum(dqn_big_energy_cons,axis=0) / np.sum(dqn_num_tasks,axis=0)
+    avg_dqn_offload_energy_cons = np.sum(dqn_offload_energy_cons,axis=0) / np.sum(dqn_num_tasks,axis=0)
+
+    avg_dqn_energy_cons[np.isnan(avg_dqn_energy_cons)] = 0
+    avg_dqn_little_energy_cons[np.isnan(avg_dqn_little_energy_cons)] = 0
+    avg_dqn_big_energy_cons[np.isnan(avg_dqn_big_energy_cons)] = 0
+    avg_dqn_offload_energy_cons[np.isnan(avg_dqn_offload_energy_cons)] = 0
+
+    print(f"little energy consumption: {avg_dqn_little_energy_cons}")
+    print(f"big energy consumption: {avg_dqn_big_energy_cons}")
+    print(f"offload energy consumption: {avg_dqn_offload_energy_cons}")
+    print(f"total energy consumption: {avg_dqn_energy_cons}")
+   
+    return (
+        np.array(
+            [
+                avg_dqn_little_energy_cons,
+                avg_dqn_big_energy_cons,
+                avg_dqn_offload_energy_cons,
+                avg_dqn_energy_cons
+            ]
+        )
+    )
+
+
 
 if __name__ == "__main__":
     rrlo_scenario_configs = {

@@ -17,8 +17,9 @@ from utils.utils import set_random_seed
 def train_rrlo_scenario(configs):
     # Set random seed
     set_random_seed(42)
+    max_task_load=2
     
-    cpu_load_values=np.arange(0.01, 1, 0.01)
+    cpu_load_values=np.arange(0.01, max_task_load, 0.01)
     cpu_load_generator = cycle(cpu_load_values)
     task_mean_values=np.arange(100, 505, 4)
     task_mean_generator = cycle(task_mean_values)
@@ -32,6 +33,7 @@ def train_rrlo_scenario(configs):
     #conference_env=RRLOEnv(configs)
 
     dqn_loss=[]
+    all_rewards=[]
 
     # Initialize DVFS algorithms
     dqn_dvfs = DQN_DVFS(
@@ -62,18 +64,18 @@ def train_rrlo_scenario(configs):
     # Initial state observation
     if cpu_generate:
         target_cpu_load = next(cpu_load_generator)
-        tasks = task_gen_cpu.step(target_cpu_load)
+        tasks = task_gen_cpu.step(target_cpu_load,max_task_load)
     else:
         target_cpu_load = next(cpu_load_generator)
         target_task_mean=next(task_mean_generator)
-        tasks= task_gen_task.step(target_cpu_load,target_task_mean)
+        tasks= task_gen_task.step(target_cpu_load,target_task_mean,max_task_load)
     dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
     rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
     #conference_state, _ = conference_env.observe(copy.deepcopy(tasks))
 
     for itr in tqdm(range(int(6e5))):
 
-        if (itr + 1) % 100 == 0:
+        if (itr + 1) % 200 == 0:
             cpu_generate= not cpu_generate
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
@@ -89,11 +91,11 @@ def train_rrlo_scenario(configs):
         # Observe next state
         if cpu_generate:
             target_cpu_load = next(cpu_load_generator)
-            tasks = task_gen_cpu.step(target_cpu_load)
+            tasks = task_gen_cpu.step(target_cpu_load,max_task_load)
         else:
             target_cpu_load = next(cpu_load_generator)
             target_task_mean=next(task_mean_generator)
-            tasks= task_gen_task.step(target_cpu_load,target_task_mean)
+            tasks= task_gen_task.step(target_cpu_load,target_task_mean,max_task_load)
         next_state_dqn, is_final_dqn = dqn_env.observe(copy.deepcopy(tasks))
         next_state_rrlo, _ = rrlo_env.observe(copy.deepcopy(tasks))
         #next_state_conference, _ = conference_env.observe(copy.deepcopy(tasks))
@@ -103,6 +105,7 @@ def train_rrlo_scenario(configs):
             dqn_state, actions_dqn, rewards_dqn, next_state_dqn, is_final_dqn
         )
         dqn_loss.append(loss)
+        all_rewards.append(rewards_dqn.tolist())
         rrlo_dvfs.update(rrlo_state, actions_rrlo_col, penalty_rrlo, next_state_rrlo)
         #conference_dvfs.update(conference_state, actions_conference_col, penalty_conference, next_state_conference)
 
@@ -126,11 +129,12 @@ def train_rrlo_scenario(configs):
     dqn_dvfs.save_model("models/rrlo_scenario")
     rrlo_dvfs.save_model("models/rrlo_scenario")
     #conference_dvfs.save_model("models/rrlo_scenario")
-    return np.array(dqn_loss)
+    return np.array(dqn_loss), np.array(all_rewards)
 
 def train_dqn_scenario(configs):
     # Set random seed
-    cpu_load_values=np.arange(0.01, 1.01, 0.01)
+    max_task_load=2
+    cpu_load_values=np.arange(0.01, max_task_load, 0.01)
     cpu_load_generator = cycle(cpu_load_values)
     task_mean_values=np.arange(100, 505, 4)
     task_mean_generator = cycle(task_mean_values)
@@ -143,6 +147,7 @@ def train_dqn_scenario(configs):
     #conference_env=RRLOEnv(configs)
 
     dqn_loss=[]
+    all_rewards=[]
 
     # Initialize DVFS algorithms
     dqn_dvfs = DQN_DVFS(
@@ -168,18 +173,18 @@ def train_dqn_scenario(configs):
     
     if cpu_generate:
         target_cpu_load = next(cpu_load_generator)
-        tasks = task_gen_cpu.step(target_cpu_load)
+        tasks = task_gen_cpu.step(target_cpu_load,max_task_load)
     else:
         target_cpu_load = next(cpu_load_generator)
         target_task_mean=next(task_mean_generator)
-        tasks= task_gen_task.step(target_cpu_load,target_task_mean)
+        tasks= task_gen_task.step(target_cpu_load,target_task_mean,max_task_load)
 
     dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
     #conference_state, _ = conference_env.observe(copy.deepcopy(tasks))
 
     for itr in tqdm(range(int(6e5))):
 
-        if (itr + 1) % 100 == 0:
+        if (itr + 1) % 200 == 0:
             cpu_generate= not cpu_generate
 
         # Run DVFS to assign tasks
@@ -195,11 +200,11 @@ def train_dqn_scenario(configs):
         # Observe next state
         if cpu_generate:
             target_cpu_load = next(cpu_load_generator)
-            tasks = task_gen_cpu.step(target_cpu_load)
+            tasks = task_gen_cpu.step(target_cpu_load,max_task_load)
         else:
             target_cpu_load = next(cpu_load_generator)
             target_task_mean=next(task_mean_generator)
-            tasks= task_gen_task.step(target_cpu_load,target_task_mean)
+            tasks= task_gen_task.step(target_cpu_load,target_task_mean,max_task_load)
         next_state_dqn, is_final_dqn = dqn_env.observe(copy.deepcopy(tasks))
         #next_state_conference, _ = conference_env.observe(copy.deepcopy(tasks))
 
@@ -208,6 +213,7 @@ def train_dqn_scenario(configs):
             dqn_state, actions_dqn, rewards_dqn, next_state_dqn, is_final_dqn
         )
         dqn_loss.append(loss)
+        all_rewards.append(rewards_dqn.tolist())
         #conference_dvfs.update(conference_state, actions_conference_col, penalty_conference, next_state_conference)
 
         # Update current state
@@ -227,7 +233,7 @@ def train_dqn_scenario(configs):
     os.makedirs("models/dqn_scenario", exist_ok=True)
     dqn_dvfs.save_model("models/dqn_scenario")
     #conference_dvfs.save_model("models/dqn_scenario")
-    return np.array(dqn_loss)
+    return np.array(dqn_loss), np.array(all_rewards)
 
 if __name__ == "__main__":
     configs_rrlo_scenario = {
