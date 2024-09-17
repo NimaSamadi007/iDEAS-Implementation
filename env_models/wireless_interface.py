@@ -26,6 +26,11 @@ class WirelessInterface:
         self.update_channel_state()  # channel gain ~ Rayleigh
         self.e_server = EdgeServer()  # Edge server instance
 
+
+    def cn_setter(self,cn):
+        self.cn_power=cn
+
+
     def offload(self, tasks: Dict[int, Task], acts: List[List]):
         for t_id, in_power in acts:
             for job in tasks[t_id]:
