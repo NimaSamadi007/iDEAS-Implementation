@@ -12,6 +12,7 @@ import torch.optim as optim
 import numpy as np
 import os
 
+
 class Network(nn.Module):
     def __init__(self, in_dim: int, out_dim: int):
         super(Network, self).__init__()
@@ -21,7 +22,7 @@ class Network(nn.Module):
             nn.ReLU(),
             nn.Linear(128, 128),
             nn.ReLU(),
-            nn.Linear(128, out_dim)
+            nn.Linear(128, out_dim),
         )
         self.net.apply(self._init_weights)
 
@@ -32,6 +33,7 @@ class Network(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
+
 
 class ReplayBuffer:
     def __init__(self, state_dim: int, size: int, batch_size: int):
@@ -47,45 +49,50 @@ class ReplayBuffer:
     def __len__(self) -> int:
         return self.size
 
-    def store(self,
-              obsv: np.ndarray,
-              action: np.ndarray,
-              reward: float,
-              n_obsv: np.ndarray,
-              is_final: bool):
-
+    def store(
+        self,
+        obsv: np.ndarray,
+        action: np.ndarray,
+        reward: float,
+        n_obsv: np.ndarray,
+        is_final: bool,
+    ):
         self.state_buf[self.end] = obsv
         self.next_state_buf[self.end] = n_obsv
         self.actions_buf[self.end] = action
         self.rewards_buf[self.end] = reward
         self.final_action_buf[self.end] = is_final
         # Increase end element pointer and current size of the buffer
-        self.end = (self.end+1) % self.max_size
-        self.size = min(self.size+1, self.max_size)
+        self.end = (self.end + 1) % self.max_size
+        self.size = min(self.size + 1, self.max_size)
 
     def sample(self) -> Dict[str, np.ndarray]:
         # Uniform sampling
         indices = np.random.choice(self.size, size=self.batch_size, replace=False)
-        return dict(state=self.state_buf[indices],
-                    n_state=self.next_state_buf[indices],
-                    action=self.actions_buf[indices],
-                    reward=self.rewards_buf[indices],
-                    final=self.final_action_buf[indices])
+        return dict(
+            state=self.state_buf[indices],
+            n_state=self.next_state_buf[indices],
+            action=self.actions_buf[indices],
+            reward=self.rewards_buf[indices],
+            final=self.final_action_buf[indices],
+        )
+
 
 class DQN_DVFS:
-    def __init__(self,
-                 state_dim: int,
-                 act_space: Dict[str, List],
-                 mem_size: int = 1000,
-                 batch_size: int = 16,
-                 update_target_net: int = 100,
-                 eps_decay: float = 1.0/2000,
-                 max_eps: float = 1.0,
-                 min_eps: float = 0.1,
-                 eps_update_step: int = 1e3,
-                 gamma: float = 0.9,
-                 weight_decay: float = 1e-5):
-
+    def __init__(
+        self,
+        state_dim: int,
+        act_space: Dict[str, List],
+        mem_size: int = 1000,
+        batch_size: int = 16,
+        update_target_net: int = 100,
+        eps_decay: float = 1.0 / 2000,
+        max_eps: float = 1.0,
+        min_eps: float = 0.1,
+        eps_update_step: int = 1e3,
+        gamma: float = 0.9,
+        weight_decay: float = 1e-5,
+    ):
         # Parameters
         self.state_dim = state_dim
 
@@ -94,7 +101,7 @@ class DQN_DVFS:
         self.target_hard_name = list(self.act_space.keys())
         self.act_length = [len(arr) for _, arr in act_space.items()]
         for i in range(len(self.act_length)):
-            self.act_type_boundry.append(sum(self.act_length[:i+1]))
+            self.act_type_boundry.append(sum(self.act_length[: i + 1]))
         self.act_type_boundry.insert(0, 0)
         self.act_dim = self.act_type_boundry[-1]
 
@@ -125,18 +132,19 @@ class DQN_DVFS:
         # Optimizer
         self.optimizer = optim.Adam(self.net.parameters(), weight_decay=weight_decay)
 
-    def train(self, states: np.ndarray,
-                    actions: np.ndarray,
-                    rewards: np.ndarray,
-                    next_states: np.ndarray,
-                    are_final: List[bool]) -> float:
+    def train(
+        self,
+        states: np.ndarray,
+        actions: np.ndarray,
+        rewards: np.ndarray,
+        next_states: np.ndarray,
+        are_final: List[bool],
+    ) -> float:
         # Store state, action, and rewards to buffer
-        for state, action, reward, next_state, is_final in zip(states, actions, rewards, next_states, are_final):
-            self.repl_buf.store(state,
-                                action,
-                                reward,
-                                next_state,
-                                is_final)
+        for state, action, reward, next_state, is_final in zip(
+            states, actions, rewards, next_states, are_final
+        ):
+            self.repl_buf.store(state, action, reward, next_state, is_final)
 
         if len(self.repl_buf) >= self.batch_size:
             loss = self.update_model()
@@ -147,7 +155,8 @@ class DQN_DVFS:
             if self.eps_update_cnt % self.eps_update_step == 0:
                 self.eps_update_cnt = 0
                 self.eps = max(
-                    self.min_eps, self.eps-self.eps_decay*(self.max_eps-self.min_eps)
+                    self.min_eps,
+                    self.eps - self.eps_decay * (self.max_eps - self.min_eps),
                 )
 
             self.update_cnt += 1
@@ -175,7 +184,7 @@ class DQN_DVFS:
     # Convert id-based actions to string type actions
     # so that they can be used in the environment
     def conv_acts(self, actions: np.ndarray):
-        conv_actions = {key:[] for key in self.target_hard_name}
+        conv_actions = {key: [] for key in self.target_hard_name}
         for i, act in enumerate(actions):
             act = self._conv_act_id_to_type(act)
             conv_actions[act[0]].append([i, act[1]])
@@ -206,8 +215,8 @@ class DQN_DVFS:
 
         curr_q_val = self.net(state).gather(1, action.type(torch.int64))
         next_q_val = self.target_net(next_state).max(dim=1, keepdim=True)[0].detach()
-        mask = 1-final
-        target_val = (reward + self.gamma*next_q_val*mask).to(self.device)
+        mask = 1 - final
+        target_val = (reward + self.gamma * next_q_val * mask).to(self.device)
 
         loss = F.smooth_l1_loss(curr_q_val, target_val)
         return loss
@@ -217,12 +226,11 @@ class DQN_DVFS:
             # First select between 3 possible targets
             target_id = np.random.randint(len(self.act_space))
             # Then select action from the selected target
-            sel_act = np.random.randint(self.act_type_boundry[target_id],
-                                        self.act_type_boundry[target_id+1])
+            sel_act = np.random.randint(
+                self.act_type_boundry[target_id], self.act_type_boundry[target_id + 1]
+            )
         else:
-            sel_act = self.net(
-                torch.FloatTensor(state).to(self.device)
-            ).argmax()
+            sel_act = self.net(torch.FloatTensor(state).to(self.device)).argmax()
             sel_act = sel_act.detach().cpu().numpy()
         return sel_act
 
@@ -236,12 +244,13 @@ class DQN_DVFS:
     def _conv_act_id_to_type(self, act_id):
         target_id = 0
         rel_id = 0
-        for i in range(len(self.act_type_boundry)-1):
-            if act_id >= self.act_type_boundry[i] and \
-               act_id < self.act_type_boundry[i+1]:
-                target_id = i # target id [0..2]
+        for i in range(len(self.act_type_boundry) - 1):
+            if (
+                act_id >= self.act_type_boundry[i]
+                and act_id < self.act_type_boundry[i + 1]
+            ):
+                target_id = i  # target id [0..2]
                 rel_id = act_id - self.act_type_boundry[i]
                 break
         target_name = self.target_hard_name[target_id]
-        return (target_name,
-                self.act_space[target_name][rel_id])
+        return (target_name, self.act_space[target_name][rel_id])

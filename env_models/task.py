@@ -107,10 +107,20 @@ class RandomTaskGen:
         single_task_load = target_cpu_load / self.num_tasks
         self.task_set = []
         for t_id in range(self.num_tasks):
-            p = np.random.randint(self.p_min//20, self.p_max//20) * 50
+            p = np.random.randint(self.p_min // 20, self.p_max // 20) * 50
             # Generate w based on p and task load while considering w ranges
             w = np.min([self.w_max, np.max([self.w_min, p * single_task_load])])
-            b = np.min([self.b_max,np.max([self.b_min,np.random.randint(self.b_min//50, self.b_max//50)*50])])
+            b = np.min(
+                [
+                    self.b_max,
+                    np.max(
+                        [
+                            self.b_min,
+                            np.random.randint(self.b_min // 50, self.b_max // 50) * 50,
+                        ]
+                    ),
+                ]
+            )
             self.task_set.append(
                 Task(
                     {"task": t_id, "p": p, "w": w, "b": b, "base_freq": self.base_freq}
@@ -127,8 +137,6 @@ class RandomTaskGen:
 
     def get_wcet_bound(self):
         return self.w_min, self.w_max
-    
-
 
 
 class NormalTaskGen:
@@ -146,9 +154,9 @@ class NormalTaskGen:
         self.b_min, self.b_max = task_set_conf["b"]
         self.base_freq = task_set_conf["base_freq"]
 
-    def step(self, target_cpu_load,mean, max_task_load):
+    def step(self, target_cpu_load, mean, max_task_load):
         # Generate base tasks
-        self._gen_base_tasks(target_cpu_load,mean, max_task_load)
+        self._gen_base_tasks(target_cpu_load, mean, max_task_load)
         time = math.lcm(*[t.p for t in self.task_set])
         gen_task = dict()
         for task in self.task_set:
@@ -162,17 +170,19 @@ class NormalTaskGen:
 
     def _gen_base_tasks(self, target_cpu_load, mean, max_task_load):
         single_task_load = target_cpu_load / self.num_tasks
-        std=20/3
+        std = 20 / 3
         self.task_set = []
         for t_id in range(self.num_tasks):
-            p = np.random.randint(self.p_min//20, self.p_max//20) * 50
+            p = np.random.randint(self.p_min // 20, self.p_max // 20) * 50
             # Generate w based on p and task load while considering w ranges
             w = np.min([self.w_max, np.max([self.w_min, p * single_task_load])])
-            b = np.min([self.b_max, np.max([self.b_min,np.random.normal(round(mean),std)])])
-            if mean<100:
-                b=100
-            if b>500:
-                b=500
+            b = np.min(
+                [self.b_max, np.max([self.b_min, np.random.normal(round(mean), std)])]
+            )
+            if mean < 100:
+                b = 100
+            if b > 500:
+                b = 500
             self.task_set.append(
                 Task(
                     {"task": t_id, "p": p, "w": w, "b": b, "base_freq": self.base_freq}

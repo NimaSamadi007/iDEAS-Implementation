@@ -20,7 +20,9 @@ class BaseDQNEnv:
         self.w_inter = WirelessInterface(confs["w_inter"])
 
         # Initialize environment state
-        self._init_state_bounds(wcet_bound, task_size_bound, self.w_inter.get_rate_bounds())
+        self._init_state_bounds(
+            wcet_bound, task_size_bound, self.w_inter.get_rate_bounds()
+        )
         self.state_dim = confs["dqn_state_dim"]
         self.curr_tasks = None
         self.curr_state = None
@@ -53,10 +55,12 @@ class BaseDQNEnv:
     def _init_state_bounds(self, wcet_bound, task_size_bound, chan_rate_bound):
         # (SU, U_little, U_big, WCET, B)
         self.min_state_vals = np.array(
-            [0, 0, 0, wcet_bound[0], task_size_bound[0], chan_rate_bound[0]], dtype=float
+            [0, 0, 0, wcet_bound[0], task_size_bound[0], chan_rate_bound[0]],
+            dtype=float,
         )
         self.max_state_vals = np.array(
-            [1, 1, 1, wcet_bound[1], task_size_bound[1], chan_rate_bound[1]], dtype=float
+            [1, 1, 1, wcet_bound[1], task_size_bound[1], chan_rate_bound[1]],
+            dtype=float,
         )
 
     def _get_system_state(self):
@@ -126,7 +130,9 @@ class DQNEnv:
 
         # Initialize environment state
         self.state_dim = confs["dqn_state_dim"]
-        self._init_state_bounds(wcet_bound, task_size_bound, self.w_inter.get_rate_bounds())
+        self._init_state_bounds(
+            wcet_bound, task_size_bound, self.w_inter.get_rate_bounds()
+        )
         self.curr_tasks = None
         self.curr_state = None
 
@@ -307,6 +313,3 @@ class RRLOEnv:
 
     def _descretize_states(self, states: np.ndarray):
         return np.floor((states - self.min_state_vals) / self.state_steps).astype(int)
-    
-
-

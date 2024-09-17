@@ -26,10 +26,8 @@ class WirelessInterface:
         self.update_channel_state()  # channel gain ~ Rayleigh
         self.e_server = EdgeServer()  # Edge server instance
 
-
-    def cn_setter(self,cn):
-        self.cn_power=cn
-
+    def cn_setter(self, cn):
+        self.cn_power = cn
 
     def offload(self, tasks: Dict[int, Task], acts: List[List]):
         for t_id, in_power in acts:
@@ -66,8 +64,11 @@ class WirelessInterface:
         return min_energy
 
     def get_rate_bounds(self):
-        max_cg = 2*self.cg_sigma
-        return [0, self.bandwidth * np.log2(1 + self.powers[-1]*max_cg/self.cn_power)]
+        max_cg = 2 * self.cg_sigma
+        return [
+            0,
+            self.bandwidth * np.log2(1 + self.powers[-1] * max_cg / self.cn_power),
+        ]
 
     # No. of possible power values
     def __len__(self):

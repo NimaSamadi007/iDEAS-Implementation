@@ -25,23 +25,23 @@ class conference_DVFS:
                 2**self.num_tasks * self.num_dvfs_algs * self.num_w_inter_powers,
             )
         )
-        #self.Q_table_b = np.zeros_like(self.Q_table_a)
+        # self.Q_table_b = np.zeros_like(self.Q_table_a)
 
     def execute(self, state: np.ndarray) -> np.ndarray:
         row_idx = self._conv_state_to_row(state)
         act_a = np.argmin(self.Q_table_a[row_idx, :])
-        #act_b = np.argmin(self.Q_table_b[row_idx, :])
-        #if self.Q_table_a[row_idx, act_a] < self.Q_table_b[row_idx, act_b]:
+        # act_b = np.argmin(self.Q_table_b[row_idx, :])
+        # if self.Q_table_a[row_idx, act_a] < self.Q_table_b[row_idx, act_b]:
         return self._conv_col_to_act(act_a), act_a
-        #else:
-         #   return self._conv_col_to_act(act_b), act_b
+        # else:
+        #   return self._conv_col_to_act(act_b), act_b
 
     def update(self, state, actions, penalty, next_state):
         # Update one of the Q-tables
-        #if np.random.random() < 0.5:
-         #   Q_table = self.Q_table_a
-        #else:
-         #   Q_table = self.Q_table_b
+        # if np.random.random() < 0.5:
+        #   Q_table = self.Q_table_a
+        # else:
+        #   Q_table = self.Q_table_b
         Q_table = self.Q_table_a
         state_row_idx = self._conv_state_to_row(state)
         next_state_row_idx = self._conv_state_to_row(next_state)
@@ -58,7 +58,7 @@ class conference_DVFS:
         """
         os.makedirs(path, exist_ok=True)
         np.save(f"{path}/conference_Q_table.npy", self.Q_table_a)
-        #np.save(f"{path}/rrlo_Q_table_b.npy", self.Q_table_b)
+        # np.save(f"{path}/rrlo_Q_table_b.npy", self.Q_table_b)
 
     def load_model(self, path: str):
         """
@@ -66,7 +66,7 @@ class conference_DVFS:
         """
         if os.path.exists(f"{path}/conference_Q_table.npy"):
             self.Q_table_a = np.load(f"{path}/conference_Q_table.npy")
-            #self.Q_table_b = np.load(f"{path}/rrlo_Q_table_b.npy")
+            # self.Q_table_b = np.load(f"{path}/rrlo_Q_table_b.npy")
         else:
             print("Model weights do not exist")
 
