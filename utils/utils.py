@@ -20,33 +20,89 @@ def moving_avg(arr, n):
 
 
 def plot_loss_function(losses, alg, xlabel, ylabel,fig_name):
-    plt.rcParams['font.size'] =25
+    plt.rcParams['font.size'] =30
+    plt.rcParams['font.family'] = "sans-serif"
     plt.rcParams['text.usetex'] = True
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
+
+    colors = ListedColormap(
+        [
+            '#ffbb78',  # Light orange
+            '#17becf',  # Cyan
+            '#2ca02c',  # Green
+            '#d62728',  # Red
+            '#1f77b4',  # Blue
+            '#9467bd',  # Purple
+            '#ff7f0e',  # Orange
+            '#8c564b',  # Brown
+            '#e377c2',  # Pink
+            '#7f7f7f',  # Gray
+            '#bcbd22',  # Yellow-green
+            '#aec7e8'   # Light blue
+        ]
+    ).colors
+
+
+
     fig = plt.figure(figsize=(20, 12))
     plt.title(rf"{alg} Loss function values")
     plt.xlabel(rf"{xlabel}")
     plt.ylabel(rf"{ylabel}")
-    plt.plot(losses)
+    plt.plot(moving_avg(losses,10000), label=rf'Loss', color=colors[4],linewidth=5)
+    x0,x1 = plt.xlim()
+    visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
+    plt.xticks(visible,list(map(str,visible)))
+    y0,y1 = plt.ylim()
+    visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    plt.yticks(visible,list(map(str,visible)))
     plt.tight_layout()
     plt.grid(True)
     fig.savefig(file_path)
 
 
 def plot_all_rewards(all_rewards, alg, xlabel, ylabel,fig_name):
-    plt.rcParams['font.size'] = 25
+    plt.rcParams['font.size'] = 30
+    plt.rcParams['font.family'] = "sans-serif"
     plt.rcParams['text.usetex'] = True
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
+
+    colors = ListedColormap(
+        [
+            '#ffbb78',  # Light orange
+            '#17becf',  # Cyan
+            '#2ca02c',  # Green
+            '#d62728',  # Red
+            '#1f77b4',  # Blue
+            '#9467bd',  # Purple
+            '#ff7f0e',  # Orange
+            '#8c564b',  # Brown
+            '#e377c2',  # Pink
+            '#7f7f7f',  # Gray
+            '#bcbd22',  # Yellow-green
+            '#aec7e8'   # Light blue
+        ]
+    ).colors
+
+
+    mean_all_rewards = np.mean(all_rewards[:,:4],axis=1)
+    
     fig = plt.figure(figsize=(20, 12))
     plt.title(rf"{alg} Reward value")
-    plt.plot(moving_avg(all_rewards[:, 0], 1000))
-    plt.plot(moving_avg(all_rewards[:, 1], 1000))
-    plt.plot(moving_avg(all_rewards[:, 2], 1000))
-    plt.plot(moving_avg(all_rewards[:, 3], 1000))
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
+    plt.plot(moving_avg(mean_all_rewards, 10000), label=rf'Rewards', color=colors[3],linewidth=5)
+    #plt.plot(moving_avg(all_rewards[:, 0], 1000))
+    #plt.plot(moving_avg(all_rewards[:, 1], 1000))
+    #plt.plot(moving_avg(all_rewards[:, 2], 1000))
+    #plt.plot(moving_avg(all_rewards[:, 3], 1000))
+    plt.xlabel(rf'{xlabel}')
+    plt.ylabel(rf'{ylabel}')
+    x0,x1 = plt.xlim()
+    visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
+    plt.xticks(visible,list(map(str,visible)))
+    y0,y1 = plt.ylim()
+    visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    plt.yticks(visible,list(map(str,visible)))
     plt.tight_layout()
     plt.grid(True)
     fig.savefig(file_path)
@@ -62,48 +118,54 @@ def plot_penalty(penalty, min_penalty, t_id):
     fig.savefig(f"figs/pen{t_id}.png")
 
 
-def plot_res(alg_set, taskset1, taskset2, std1,std2,  xlabel, ylabel,title, fig_name, ylog=False ):
+def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel,title, fig_name, ylog=False ):
     # Data for plotting
     #algorithms = ['Local Scheduling', 'RRLO [8]', 'Our Algorithm']
 
     # Positioning of bars on x-axis
-    plt.rcParams['font.size'] = 25
+    plt.rcParams['font.size'] = 30
+    plt.rcParams['font.family'] = "sans-serif"
     plt.rcParams['text.usetex'] = True
     ind = range(len(alg_set))
     # Plotting both tasksets
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
     fig = plt.figure(figsize=(20, 12))
-    plt.bar(ind, taskset1, width=0.4, label=r'Taskset1', color='#17becf',yerr=std1,edgecolor='black', capsize=20)
-    plt.bar([i + 0.4 for i in ind], taskset2, width=0.4, label=r'Taskset2', color='#ffbb78',yerr=std2,edgecolor='black',capsize=20)
+    plt.bar(ind, taskset1, width=0.4, label=r'Taskset1', color='#17becf')
+    plt.bar([i + 0.4 for i in ind], taskset2, width=0.4, label=r'Taskset2', color='#ffbb78')
     if ylog:
         plt.yscale('log')
 
     for i, value in enumerate(taskset1):
-        plt.text(i, value, rf"{value:.3f}", ha='center', va='bottom', fontweight='bold')
+        plt.text(i, value, rf"{value:.3f}", ha='center', va='bottom')
     for i, value in enumerate(taskset2):
-        plt.text(i+0.4, value, rf"{value:.3f}", ha='center', va='bottom', fontweight='bold')
+        plt.text(i+0.4, value, rf"{value:.3f}", ha='center', va='bottom')
     # Labels and Title
-    plt.xlabel(rf'{xlabel}',fontweight='bold')
-    plt.ylabel(rf'{ylabel}',fontweight='bold')
-    plt.title(rf'{title}',fontweight='bold')
+    plt.xlabel(rf'{xlabel}')
+    plt.ylabel(rf'{ylabel}')
+    plt.title(rf'{title}')
     # X-axis tick labels positioning
-    plt.xticks([i + 0.2 for i in ind], alg_set,fontweight='bold')
+    plt.xticks([i + 0.2 for i in ind], alg_set)
+
+    y0,y1 = plt.ylim()
+    visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    plt.yticks(visible,list(map(str,visible)))
     # Adding legend to specify which color represents which task set
     legend=plt.legend()
-    for text in legend.get_texts():
-        text.set_fontweight('bold')  # Set legend text to bold
+    #for text in legend.get_texts():
+     #   text.set_fontweight('bold')  # Set legend text to bold
     plt.tight_layout()
     # Displaying the plot
     plt.grid(True)
     fig.savefig(file_path)
 
-def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=False ):
+def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=False, xlog=False ):
     # Data for plotting
     #algorithms = ['Local Scheduling', 'RRLO [8]', 'Our Algorithm']
 
     # Positioning of bars on x-axis
-    plt.rcParams['font.size'] = 25
+    plt.rcParams['font.size'] = 30
+    plt.rcParams['font.family'] = "sans-serif"
     plt.rcParams['text.usetex'] = True
     ind = range(len(alg_set))
     colors = ListedColormap(
@@ -131,20 +193,29 @@ def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=Fal
     fig = plt.figure(figsize=(20, 12))
     if ylog:
         plt.yscale('log')
+    if xlog:
+        plt.xscale('log')
     for i in range(data1.shape[0]):
         plt.plot(y_val, data1[i], label=rf'{alg_set[i]}', color=colors[i],linewidth=5, marker=markers[i],markersize=20)
 
 
     # Labels and Title
-    plt.xlabel(rf'{xlabel}',fontweight='bold')
-    plt.ylabel(rf'{ylabel}',fontweight='bold')
-    plt.title(rf'{title}',fontweight='bold')
+    plt.xlabel(rf'{xlabel}')
+    plt.ylabel(rf'{ylabel}')
+    plt.title(rf'{title}')
+
+    x0,x1 = plt.xlim()
+    visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
+    plt.xticks(visible,list(map(str,visible)))
+    y0,y1 = plt.ylim()
+    visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    plt.yticks(visible,list(map(str,visible)))
     # X-axis tick labels positioning
     #plt.xticks([i + 0.2 for i in ind], alg_set,fontweight='bold')
     # Adding legend to specify which color represents which task set
     legend=plt.legend()
-    for text in legend.get_texts():
-        text.set_fontweight('bold')  # Set legend text to bold
+    #for text in legend.get_texts():
+     #   text.set_fontweight('bold')  # Set legend text to bold
     plt.tight_layout()
     # Displaying the plot
     plt.grid(True)
@@ -153,13 +224,14 @@ def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=Fal
 
 
 
-def stack_bar_res(labels,data1,x_val , xlabel, ylabel,title, fig_name, ylog=False ):
+def stack_bar_res(labels,data1,x_val , xlabel, ylabel,title, fig_name, ylog=False,xlog=False,numbered=False ):
     # Data for plotting
-    #algorithms = ['Local Scheduling', 'RRLO [8]', 'Our Algorithm']
 
     # Positioning of bars on x-axis
-    plt.rcParams['font.size'] = 25
+    plt.rcParams['font.size'] = 30
+    plt.rcParams['font.family'] = "sans-serif"
     plt.rcParams['text.usetex'] = True
+
     colors = ListedColormap(
         [
             '#ffbb78',  # Light orange
@@ -177,45 +249,78 @@ def stack_bar_res(labels,data1,x_val , xlabel, ylabel,title, fig_name, ylog=Fals
         ]
     ).colors
 
-    #markers = ['o', 's', 'D', '^', 'v', '<', '>', '*', '+', 'x', 'p', 'H']
-    
+    ind = range(len(x_val))
+    if numbered:
+        step_sizes = np.diff(x_val)
+        if xlog:
+            bar_widths=step_sizes*0.4
+        else:
+            bar_widths=step_sizes*0.7
+    else:
+        bar_widths = 0.5
     # Plotting both tasksets
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
-    bar_width=0.05
     fig, ax = plt.subplots(figsize=(20, 12))
 
-    ax.bar(x_val,data1[-1], width=bar_width+0.025, label=rf'{labels[-1]}', color=colors[-2], alpha=0.5)
+    max_hight=np.max(data1[-1])
+
+
     if ylog:
         ax.set_yscale('log')
-    #for i in range(data1.shape[0]):
-     #   plt.plot(y_val, data1[i], label=alg_set[i], color=colors[i],linewidth=5, marker=markers[i],markersize=10)
-
-    # Extracting the values
+    if xlog:
+        ax.set_xscale('log')
 
 
-    # Plotting the stacked bar chart
 
     bottom = np.zeros(data1.shape[1])  # Initialize the bottom array to zeros
 
     for values, color, label in zip([data1[i] for i in range(data1.shape[0]-1)], colors[:data1.shape[0]-1], labels[:-1]):
-        ax.bar(x_val, values,width=bar_width,  bottom=bottom, label=rf'{label}', color=color)
-        bottom += values  # Update the bottom for the next stack
+        if numbered:
+            ax.bar(x_val[:-1], values[:-1],width=bar_widths,  bottom=bottom[:-1], label=rf'{label}', color=color)
+            bottom[:-1] += values[:-1]  # Update the bottom for the next stack
+
+        else:
+            ax.bar(x_val, values,width=bar_widths,  bottom=bottom, label=rf'{label}', color=color)
+            bottom += values  # Update the bottom for the next stack
+
 
 
     # Labels and Title
-    plt.xlabel(rf'{xlabel}',fontweight='bold')
-    plt.ylabel(rf'{ylabel}',fontweight='bold')
-    plt.title(rf'{title}',fontweight='bold')
-    # X-axis tick labels positioning
-    #plt.xticks([i + 0.2 for i in ind], alg_set,fontweight='bold')
-    # Adding legend to specify which color represents which task set
-    legend=plt.legend()
-    for text in legend.get_texts():
-        text.set_fontweight('bold')  # Set legend text to bold
-    plt.tight_layout()
+
+    #ax.margins(y=1)
+    if numbered:
+        for x, value in zip(x_val[:-1],data1[-1][:-1]):
+            ax.text(x, value, rf"{value:.5f}", ha='center', va='bottom')
+    else:
+        for i, value in enumerate(data1[-1]):
+            ax.text(i, value, rf"{value:.5f}", ha='center', va='bottom')
+    ax.set_xlabel(rf'{xlabel}')
+    ax.set_ylabel(rf'{ylabel}')
+    ax.set_title(rf'{title}')
+    if numbered:
+        x0,x1 = ax.get_xlim()
+        visible= [t for t in ax.get_xticks() if t>=x0 and t<= x1]
+        ax.set_xticks(visible,list(map(str,visible)))
+        y0,y1 = ax.get_ylim()
+        visible= [t for t in ax.get_yticks() if t>=y0 and t<= y1]
+        ax.set_yticks(visible,list(map(str,visible)))
+    else:
+        ax.set_xticks(ind, x_val)
+        y0,y1 = ax.get_ylim()
+        visible= [t for t in ax.get_yticks() if t>=y0 and t<= y1]
+        ax.set_yticks(visible,list(map(str,visible)))
+
+    legend=ax.legend()
+    #for text in legend.get_texts():
+     #   text.set_fontweight('bold')  # Set legend text to bold
+
+    #ax.tick_params(axis='x', labelsize=30, labelcolor='black')
+    #ax.tick_params(axis='y', labelsize=30, labelcolor='black')
+    ax.set_ylim(0,max_hight*1.1)
+    #fig.tight_layout()
     # Displaying the plot
-    plt.grid(True)
+    ax.grid(True)
     fig.savefig(file_path)
 
 

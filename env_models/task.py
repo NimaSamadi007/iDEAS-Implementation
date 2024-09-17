@@ -110,7 +110,7 @@ class RandomTaskGen:
             p = np.random.randint(self.p_min//20, self.p_max//20) * 50
             # Generate w based on p and task load while considering w ranges
             w = np.min([self.w_max, np.max([self.w_min, p * single_task_load])])
-            b = np.random.randint(self.b_min//50, self.b_max//50)*50
+            b = np.min([self.b_max,np.max([self.b_min,np.random.randint(self.b_min//50, self.b_max//50)*50])])
             self.task_set.append(
                 Task(
                     {"task": t_id, "p": p, "w": w, "b": b, "base_freq": self.base_freq}
@@ -168,7 +168,7 @@ class NormalTaskGen:
             p = np.random.randint(self.p_min//20, self.p_max//20) * 50
             # Generate w based on p and task load while considering w ranges
             w = np.min([self.w_max, np.max([self.w_min, p * single_task_load])])
-            b = np.random.normal(round(mean),std)
+            b = np.min([self.b_max, np.max([self.b_min,np.random.normal(round(mean),std)])])
             if mean<100:
                 b=100
             if b>500:
