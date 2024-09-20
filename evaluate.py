@@ -104,22 +104,9 @@ def iDEAS_evaluate(
 
                 # Update current state
                 dqn_state = next_state_dqn
-
+            print(f"taskset actions= {actions_dqn_str}")
         np.set_printoptions(suppress=True)
-        dqn_avg_energy = dqn_energy / dqn_num_tasks
-        little_avg_energy = little_energy / dqn_num_tasks
-        big_avg_energy = big_energy / dqn_num_tasks
-        offload_avg_energy = offload_energy / dqn_num_tasks
 
-
-
-
-
-
-        dqn_percent_missed = dqn_deadline_missed / dqn_num_tasks * 100
-        big_percent_missed = big_deadline_missed / dqn_num_tasks * 100
-        little_percent_missed = little_deadline_missed / dqn_num_tasks * 100
-        offload_percent_missed = offload_deadline_missed / dqn_num_tasks * 100
 
         avg_dqn_energy = np.sum(dqn_energy,axis=0) / np.sum(dqn_num_tasks,axis=0)
         avg_dqn_little_energy = np.sum(little_energy,axis=0) / np.sum(dqn_num_tasks,axis=0)
@@ -244,19 +231,9 @@ def iDEAS_evaluate(
                 dqn_state = next_state_dqn
                 #conference_state = next_state_conference
 
-
+            print(f"cpu actions= {actions_dqn_str}")
         np.set_printoptions(suppress=True)
-        dqn_avg_cpu_energy = dqn_cpu_energy / dqn_cpu_num_tasks
-        big_avg_cpu_energy = big_cpu_energy / dqn_cpu_num_tasks
-        little_avg_cpu_energy = little_cpu_energy / dqn_cpu_num_tasks
-        offload_avg_cpu_energy = offload_cpu_energy / dqn_cpu_num_tasks
 
-
-
-        dqn_percent_cpu_missed = dqn_cpu_deadline_missed / dqn_cpu_num_tasks * 100
-        big_percent_cpu_missed = big_cpu_deadline_missed / dqn_cpu_num_tasks * 100
-        little_percent_cpu_missed = little_cpu_deadline_missed / dqn_cpu_num_tasks * 100
-        offload_percent_cpu_missed = offload_cpu_deadline_missed / dqn_cpu_num_tasks * 100
 
 
 
@@ -334,6 +311,7 @@ def iDEAS_evaluate(
     
         tasks = normal_task_gen.step(target_cpu_load,task_sizes[0],max_task_load)
         for i in range(len(task_sizes)-1):
+            
             dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
             for _ in range(eval_itr):
                 actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
@@ -378,23 +356,13 @@ def iDEAS_evaluate(
 
                 # Update current state
                 dqn_state = next_state_dqn
-
+            print(f"task size actions= {actions_dqn_str}")
 
     
     
     
         np.set_printoptions(suppress=True)
-        dqn_avg_task_energy = dqn_task_energy / dqn_task_num_tasks
-        big_avg_task_energy = big_task_energy / dqn_task_num_tasks
-        little_avg_task_energy = little_task_energy / dqn_task_num_tasks
-        offload_avg_task_energy = offload_task_energy / dqn_task_num_tasks
 
-
-
-        dqn_percent_task_missed = dqn_task_deadline_missed / dqn_task_num_tasks * 100
-        big_percent_task_missed = big_task_deadline_missed / dqn_task_num_tasks * 100
-        little_percent_task_missed = little_task_deadline_missed / dqn_task_num_tasks * 100
-        offload_percent_task_missed = offload_task_deadline_missed / dqn_task_num_tasks * 100
 
 
 
@@ -522,20 +490,10 @@ def iDEAS_evaluate(
                 # Update current state
                 dqn_state = next_state_dqn
                 #conference_state = next_state_conference
-
+            print(f"cn actions= {actions_dqn_str}")
 
         np.set_printoptions(suppress=True)
-        dqn_avg_cn_energy = dqn_cn_energy / dqn_cn_num_tasks
-        big_avg_cn_energy = big_cn_energy / dqn_cn_num_tasks
-        little_avg_cn_energy = little_cn_energy / dqn_cn_num_tasks
-        offload_avg_cn_energy = offload_cn_energy / dqn_cn_num_tasks
 
-
-
-        dqn_percent_cn_missed = dqn_cn_deadline_missed / dqn_cn_num_tasks * 100
-        big_percent_cn_missed = big_cn_deadline_missed / dqn_cn_num_tasks * 100
-        little_percent_cn_missed = little_cn_deadline_missed / dqn_cn_num_tasks * 100
-        offload_percent_cn_missed = offload_cn_deadline_missed / dqn_cn_num_tasks * 100
 
 
 
@@ -737,17 +695,7 @@ def RRLO_evaluate(
                 rrlo_state = next_state_rrlo
 
         np.set_printoptions(suppress=True)
-        dqn_avg_energy = dqn_energy / dqn_num_tasks
-        local_avg_energy = local_energy / local_num_tasks
-        remote_avg_energy = remote_energy / remote_num_tasks
-        random_avg_energy = random_energy / random_num_tasks
-        rrlo_avg_energy = rrlo_energy / rrlo_num_tasks
 
-        dqn_percent_missed = dqn_deadline_missed / dqn_num_tasks * 100
-        local_percent_missed = local_deadline_missed / local_num_tasks * 100
-        remote_percent_missed = remote_deadline_missed / remote_num_tasks * 100
-        random_percent_missed = random_deadline_missed / random_num_tasks * 100
-        rrlo_percent_missed = rrlo_deadline_missed / rrlo_num_tasks * 100
 
 
         avg_dqn_energy = np.sum(dqn_energy,axis=0) / np.sum(dqn_num_tasks,axis=0)
@@ -956,19 +904,7 @@ def RRLO_evaluate(
 
 
         np.set_printoptions(suppress=True)
-        dqn_avg_cpu_energy = dqn_cpu_energy / dqn_cpu_num_tasks
-        local_avg_cpu_energy = local_cpu_energy / local_cpu_num_tasks
-        remote_avg_cpu_energy = remote_cpu_energy / remote_cpu_num_tasks
-        random_avg_cpu_energy = random_cpu_energy / random_cpu_num_tasks
-        rrlo_avg_cpu_energy = rrlo_cpu_energy / rrlo_cpu_num_tasks
 
-
-
-        dqn_percent_missed_cpu = dqn_cpu_deadline_missed / dqn_cpu_num_tasks * 100
-        local_percent_missed_cpu = local_cpu_deadline_missed / local_cpu_num_tasks * 100
-        remote_percent_missed_cpu = remote_cpu_deadline_missed / remote_cpu_num_tasks * 100
-        random_percent_missed_cpu = random_cpu_deadline_missed / random_cpu_num_tasks * 100
-        rrlo_percent_missed_cpu = rrlo_cpu_deadline_missed / rrlo_cpu_num_tasks * 100
 
 
 
@@ -1155,20 +1091,7 @@ def RRLO_evaluate(
     
     
         np.set_printoptions(suppress=True)
-        dqn_avg_task_energy_cons = dqn_task_energy / dqn_task_num_tasks
-        local_avg_task_energy_cons = local_task_energy / local_task_num_tasks
-        remote_avg_task_energy_cons = remote_task_energy / remote_task_num_tasks
-        random_avg_task_energy_cons = random_task_energy / random_task_num_tasks
-        rrlo_avg_task_energy_cons = rrlo_task_energy / rrlo_task_num_tasks
 
-
-
-
-        dqn_percent_task_missed = dqn_task_deadline_missed / dqn_task_num_tasks * 100
-        local_percent_task_missed = local_task_deadline_missed / local_task_num_tasks * 100
-        remote_percent_task_missed = remote_task_deadline_missed / remote_task_num_tasks * 100
-        random_percent_task_missed = random_task_deadline_missed / random_task_num_tasks * 100
-        rrlo_percent_task_missed = rrlo_task_deadline_missed / rrlo_task_num_tasks * 100
 
 
 
@@ -1354,20 +1277,7 @@ def RRLO_evaluate(
 
 
         np.set_printoptions(suppress=True)
-        dqn_avg_cn_energy = dqn_cn_energy / dqn_cn_num_tasks
-        rrlo_avg_cn_energy = rrlo_cn_energy / rrlo_cn_num_tasks
-        local_avg_cn_energy = local_cn_energy / local_cn_num_tasks
-        random_avg_cn_energy = random_cn_energy / random_cn_num_tasks
-        remote_avg_cn_energy = remote_cn_energy / remote_cn_num_tasks
 
-
-
-
-        dqn_percent_cn_missed = dqn_cn_deadline_missed / dqn_cn_num_tasks * 100
-        local_percent_cn_missed = local_cn_deadline_missed / local_cn_num_tasks * 100
-        rrlo_percent_cn_missed = rrlo_cn_deadline_missed / rrlo_cn_num_tasks * 100
-        remote_percent_cn_missed = remote_cn_deadline_missed / remote_cn_num_tasks * 100
-        random_percent_cn_missed = random_cn_deadline_missed / dqn_cn_num_tasks * 100
 
 
 
@@ -1556,15 +1466,7 @@ def big_LITTLE_evaluate(
                 dqn_state = next_state_dqn
 
         np.set_printoptions(suppress=True)
-        dqn_avg_energy = dqn_energy / dqn_num_tasks
-        local_avg_energy = local_energy / local_num_tasks
-        remote_avg_energy = remote_energy / remote_num_tasks
-        random_avg_energy = random_energy / random_num_tasks
 
-        dqn_percent_missed = dqn_deadline_missed / dqn_num_tasks * 100
-        local_percent_missed = local_deadline_missed / local_num_tasks * 100
-        remote_percent_missed = remote_deadline_missed / remote_num_tasks * 100
-        random_percent_missed = random_deadline_missed / random_num_tasks * 100
 
 
         avg_dqn_energy = np.sum(dqn_energy,axis=0) / np.sum(dqn_num_tasks,axis=0)
@@ -1743,18 +1645,7 @@ def big_LITTLE_evaluate(
 
 
         np.set_printoptions(suppress=True)
-        dqn_avg_cpu_energy = dqn_cpu_energy / dqn_cpu_num_tasks
-        local_avg_cpu_energy = local_cpu_energy / local_cpu_num_tasks
-        remote_avg_cpu_energy = remote_cpu_energy / remote_cpu_num_tasks
-        random_avg_cpu_energy = random_cpu_energy / random_cpu_num_tasks
-    
 
-
-
-        dqn_percent_missed_cpu = dqn_cpu_deadline_missed / dqn_cpu_num_tasks * 100
-        local_percent_missed_cpu = local_cpu_deadline_missed / local_cpu_num_tasks * 100
-        remote_percent_missed_cpu = remote_cpu_deadline_missed / remote_cpu_num_tasks * 100
-        random_percent_missed_cpu = random_cpu_deadline_missed / random_cpu_num_tasks * 100
 
 
 
@@ -1914,18 +1805,7 @@ def big_LITTLE_evaluate(
     
     
         np.set_printoptions(suppress=True)
-        dqn_avg_task_energy_cons = dqn_task_energy / dqn_task_num_tasks
-        local_avg_task_energy_cons = local_task_energy / local_task_num_tasks
-        remote_avg_task_energy_cons = remote_task_energy / remote_task_num_tasks
-        random_avg_task_energy_cons = random_task_energy / random_task_num_tasks
 
-
-
-
-        dqn_percent_task_missed = dqn_task_deadline_missed / dqn_task_num_tasks * 100
-        local_percent_task_missed = local_task_deadline_missed / local_task_num_tasks * 100
-        remote_percent_task_missed = remote_task_deadline_missed / remote_task_num_tasks * 100
-        random_percent_task_missed = random_task_deadline_missed / random_task_num_tasks * 100
 
 
 
@@ -2083,18 +1963,6 @@ def big_LITTLE_evaluate(
 
 
         np.set_printoptions(suppress=True)
-        dqn_avg_cn_energy = dqn_cn_energy / dqn_cn_num_tasks
-        local_avg_cn_energy = local_cn_energy / local_cn_num_tasks
-        random_avg_cn_energy = random_cn_energy / random_cn_num_tasks
-        remote_avg_cn_energy = remote_cn_energy / remote_cn_num_tasks
-
-
-
-
-        dqn_percent_cn_missed = dqn_cn_deadline_missed / dqn_cn_num_tasks * 100
-        local_percent_cn_missed = local_cn_deadline_missed / local_cn_num_tasks * 100
-        remote_percent_cn_missed = remote_cn_deadline_missed / remote_cn_num_tasks * 100
-        random_percent_cn_missed = random_cn_deadline_missed / dqn_cn_num_tasks * 100
 
 
 
@@ -2150,320 +2018,7 @@ def big_LITTLE_evaluate(
 
 
 
-#def evaluate_dqn_scenario(configs, eval_itr=10000):
-    task_gen = TaskGen(configs["task_set"])
-    dqn_env = BaseDQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
-    local_env = BaseDQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
-    remote_env = BaseDQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
-    random_env = BaseDQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
 
-    #conference_env = RRLOEnv(configs)
-    rand_littlefreq_list = random_env.cpu_little.freqs
-    rand_bigfreq_list = random_env.cpu_big.freqs
-    rand_powers_list = random_env.w_inter.powers
-
-    dqn_dvfs = DQN_DVFS(state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space())
-    #conference_dvfs = conference_DVFS(
-        #state_bounds=conference_env.get_state_bounds(),
-     #   num_w_inter_powers=len(conference_env.w_inter.powers),
-      #  num_dvfs_algs=1,
-       # dvfs_algs=["cc"],
-        #num_tasks=4,
-    #)
-
-    #conference_dvfs = conference_DVFS(
-     #   state_bounds=conference_env.get_state_bounds(),
-      #  num_w_inter_powers=len(conference_env.w_inter.powers),
-       # num_dvfs_algs=1,
-        #dvfs_algs=["cc"],
-        #num_tasks=4,
-    #)
-    dqn_dvfs.load_model("models/dqn_scenario")
-    #conference_dvfs.load_model("models/dqn_scenario")
-
-    # Evaluate the trained model
-    #print("Evaluating the trained model...")
-    dqn_task_energy_cons = np.zeros(4)
-    dqn_num_tasks = np.zeros(4)
-    dqn_big_energy_cons = np.zeros(4)
-    dqn_big_num_tasks = np.zeros(4)
-    dqn_little_energy_cons = np.zeros(4)
-    dqn_little_num_tasks = np.zeros(4)
-    dqn_offload_energy_cons = np.zeros(4)
-    dqn_offload_num_tasks = np.zeros(4)
-
-    local_task_energy_cons = np.zeros(4)
-    local_num_tasks = np.zeros(4)
-
-    remote_task_energy_cons = np.zeros(4)
-    remote_num_tasks = np.zeros(4)
-
-    random_task_energy_cons = np.zeros(4)
-    random_num_tasks = np.zeros(4)
-
-    #conference_task_energy_cons = np.zeros(4)
-    #conference_num_tasks = np.zeros(4)
-
-    dqn_task_deadline_missed = np.zeros(4)
-    local_task_deadline_missed = np.zeros(4)
-    remote_task_deadline_missed = np.zeros(4)
-    random_task_deadline_missed = np.zeros(4)
-    #conference_task_deadline_missed = np.zeros(4)
-
-    tasks = task_gen.step()
-    dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
-    local_env.observe(copy.deepcopy(tasks))
-    remote_env.observe(copy.deepcopy(tasks))
-    random_env.observe(copy.deepcopy(tasks))
-    #conference_state, _ = conference_env.observe(copy.deepcopy(tasks))
-
-    for _ in range(eval_itr):
-        actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
-        actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
-        #FIXME: Check out local actions
-        actions_local_str = {
-            "offload": [],
-            "little": [],
-            "big": [[0, 1820], [1, 1820], [2, 1820], [3, 1820]],
-        }
-        actions_remote_str = {
-            "offload": [[0, 28], [1, 28], [2, 28], [3, 28]],
-            "little": [],
-            "big": [],
-        }
-        actions_random_str = RandomDQNPolicyGen(rand_littlefreq_list,rand_bigfreq_list, rand_powers_list)
-        #actions_conference, _ = conference_dvfs.execute(conference_state)
-
-        dqn_env.step(actions_dqn_str)
-        local_env.step(actions_local_str)
-        remote_env.step(actions_remote_str)
-        random_env.step(actions_random_str)
-        #conference_env.step(actions_conference)
-
-
-        for t_id, _ in actions_dqn_str["little"]:
-            for job in dqn_env.curr_tasks[t_id]:
-                dqn_little_energy_cons[job.t_id]+=job.cons_energy
-            dqn_little_num_tasks[job.t_id] += len(dqn_env.curr_tasks[t_id])
-
-        for t_id, _ in actions_dqn_str["big"]:
-            for job in dqn_env.curr_tasks[t_id]:
-                dqn_big_energy_cons[job.t_id]+=job.cons_energy
-            dqn_big_num_tasks[job.t_id] += len(dqn_env.curr_tasks[t_id])
-        
-        for t_id, _ in actions_dqn_str["offload"]:
-            for job in dqn_env.curr_tasks[t_id]:
-                dqn_offload_energy_cons[job.t_id]+=job.cons_energy
-            dqn_offload_num_tasks[job.t_id] += len(dqn_env.curr_tasks[t_id])
-
-
-                
-        # Gather energy consumption values
-        for jobs in local_env.curr_tasks.values():
-            for j in jobs:
-                # print(j)
-                local_task_energy_cons[j.t_id] += j.cons_energy
-                if j.deadline_missed:
-                    local_task_deadline_missed[j.t_id] += 1
-            local_num_tasks[j.t_id] += len(jobs)
-
-        for jobs in remote_env.curr_tasks.values():
-            for j in jobs:
-                # print(j)
-                remote_task_energy_cons[j.t_id] += j.cons_energy
-                if j.deadline_missed:
-                    remote_task_deadline_missed[j.t_id] += 1
-            remote_num_tasks[j.t_id] += len(jobs)
-
-        for jobs in random_env.curr_tasks.values():
-             for j in jobs:
-                 # print(j)
-                 random_task_energy_cons[j.t_id] += j.cons_energy
-                 if j.deadline_missed:
-                     random_task_deadline_missed[j.t_id] += 1
-             random_num_tasks[j.t_id] += len(jobs)
-
-        for jobs in dqn_env.curr_tasks.values():
-            for j in jobs:
-                # print(j)
-                dqn_task_energy_cons[j.t_id] += j.cons_energy
-                if j.deadline_missed:
-                    dqn_task_deadline_missed[j.t_id] += 1
-            dqn_num_tasks[j.t_id] += len(jobs)
-
-        #for jobs in conference_env.curr_tasks.values():
-         #   for j in jobs:
-          #      # print(j)
-           #     conference_task_energy_cons[j.t_id] += j.cons_energy
-            #    if j.deadline_missed:
-             #       conference_task_deadline_missed[j.t_id] += 1
-            #conference_num_tasks[j.t_id] += len(jobs)
-
-        tasks = task_gen.step()
-        next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
-        local_env.observe(copy.deepcopy(tasks))
-        remote_env.observe(copy.deepcopy(tasks))
-        random_env.observe(copy.deepcopy(tasks))
-        #next_state_conference, _ = conference_env.observe(copy.deepcopy(tasks))
-
-        # Update current state
-        dqn_state = next_state_dqn
-        #conference_state = next_state_conference
-
-    # Average energy consumption:
-    #print(dqn_num_tasks)
-    #print(local_num_tasks)
-    #print(remote_num_tasks)
-    #print(random_num_tasks)
-    np.set_printoptions(suppress=True)
-    dqn_avg_task_energy_cons = dqn_task_energy_cons / dqn_num_tasks
-    dqn_little_avg_task_energy_cons = dqn_little_energy_cons / dqn_little_num_tasks
-    dqn_big_avg_task_energy_cons = dqn_big_energy_cons / dqn_big_num_tasks
-    dqn_offload_avg_task_energy_cons = dqn_offload_energy_cons / dqn_offload_num_tasks
-    local_avg_task_energy_cons = local_task_energy_cons / local_num_tasks
-    remote_avg_task_energy_cons = remote_task_energy_cons / remote_num_tasks
-    random_avg_task_energy_cons = random_task_energy_cons / random_num_tasks
-    #conference_avg_task_energy_cons = conference_task_energy_cons / conference_num_tasks
-
-
-    #print(f"DQN energy consumption: {dqn_avg_task_energy_cons}")
-    #print(f"local energy consumption: {local_avg_task_energy_cons}")
-    #print(f"remote energy consumption: {remote_avg_task_energy_cons}")
-    #print(f"random energy consumption: {random_avg_task_energy_cons}")
-
-    dqn_percent_task_missed = dqn_task_deadline_missed / dqn_num_tasks * 100
-    local_percent_task_missed = local_task_deadline_missed / local_num_tasks * 100
-    remote_percent_task_missed = remote_task_deadline_missed / remote_num_tasks * 100
-    random_percent_task_missed = random_task_deadline_missed / random_num_tasks * 100
-    #conference_percent_task_missed = conference_task_deadline_missed / conference_num_tasks * 100
-
-    #print(f"DQN deadline missed: {dqn_task_deadline_missed}")
-    #print(f"local deadline missed: {local_task_deadline_missed}")
-    #print(f"remote deadline missed: {remote_task_deadline_missed}")
-    #print(f"random deadline missed: {random_task_deadline_missed}")
-
-    #print(f"DQN deadline missed %: {dqn_percent_task_missed}")
-    #print(f"local deadline missed %: {local_percent_task_missed}")
-    #print(f"remote deadline missed %: {remote_percent_task_missed}")
-    #print(f"random deadline missed %: {random_percent_task_missed}")
-
-    avg_dqn_energy_cons = np.sum(dqn_task_energy_cons) / np.sum(dqn_num_tasks)
-    avg_dqn_little_energy_cons = np.sum(dqn_little_energy_cons) / np.sum(dqn_little_num_tasks)
-    avg_dqn_big_energy_cons = np.sum(dqn_big_energy_cons) / np.sum(dqn_big_num_tasks)
-    avg_dqn_offload_energy_cons = np.sum(dqn_offload_energy_cons) / np.sum(dqn_offload_num_tasks)
-    avg_local_energy_cons = np.sum(local_task_energy_cons) / np.sum(local_num_tasks)
-    avg_remote_energy_cons = np.sum(remote_task_energy_cons) / np.sum(remote_num_tasks)
-    avg_random_energy_cons = np.sum(random_task_energy_cons) / np.sum(random_num_tasks)
-    #avg_conference_energy_cons = np.sum(conference_task_energy_cons) / np.sum(conference_num_tasks)
-    #print(f"DQN task set avg energy consumption: {avg_dqn_energy_cons:.3e}")
-    #print(f"local task set avg energy consumption: {avg_local_energy_cons:.3e}")
-    #print(f"remote task set avg energy consumption: {avg_remote_energy_cons:.3e}")
-    #print(f"random task set avg energy consumption: {avg_random_energy_cons:.3e}")
-
-    total_dqn_missed_task = (
-        np.sum(dqn_task_deadline_missed) / np.sum(dqn_num_tasks) * 100
-    )
-    total_local_missed_task = (
-        np.sum(local_task_deadline_missed) / np.sum(local_num_tasks) * 100
-    )
-    total_remote_missed_task = (
-        np.sum(remote_task_deadline_missed) / np.sum(remote_num_tasks) * 100
-    )
-    total_random_missed_task = (
-         np.sum(random_task_deadline_missed) / np.sum(random_num_tasks) * 100
-    )
-    #total_conference_missed_task = (
-     #    np.sum(conference_task_deadline_missed) / np.sum(conference_num_tasks) * 100
-    #)
-
-    #print(f"DQN tasks deadline missed: {total_dqn_missed_task:.3e}%")
-    #print(f"local tasks deadline missed: {total_local_missed_task:.3e}%")
-    #print(f"remote tasks deadline missed: {total_remote_missed_task:.3e}%")
-    #print(f"random tasks deadline missed: {total_random_missed_task:.3e}%")
-
-
-    #FIXME: Fixe DQN improvement
-    #dqn_improvement=0
-    #dqn_random_deadline_improvement = (
-     #   np.sum(dqn_task_deadline_missed-random_task_deadline_missed) / np.sum(random_task_deadline_missed) * 100
-    #)
-
-    #dqn_local_deadline_improvement = (
-     #   np.sum(dqn_task_deadline_missed-local_task_deadline_missed) / np.sum(local_task_deadline_missed) * 100
-    #)
-
-    #dqn_remote_deadline_improvement = (
-     #   np.sum(dqn_task_deadline_missed-remote_task_deadline_missed) / np.sum(remote_task_deadline_missed) * 100
-    #)
-
-
-    dqn_random_improvement = (
-        (avg_dqn_energy_cons - avg_random_energy_cons) / (avg_random_energy_cons) * 100
-    )
-
-    dqn_local_improvement = (
-        (avg_dqn_energy_cons - avg_local_energy_cons) / (avg_local_energy_cons) * 100
-    )
-
-    dqn_remote_improvement = (
-        (avg_dqn_energy_cons - avg_remote_energy_cons) / (avg_remote_energy_cons) * 100
-    )
-
-    #dqn_conference_improvement = (
-     #   (avg_dqn_energy_cons - avg_conference_energy_cons) / (avg_conference_energy_cons) * 100
-    #)
-    #dqn_task_improvement = (
-     #   (dqn_avg_task_energy_cons - rrlo_avg_task_energy_cons)
-      #  / rrlo_avg_task_energy_cons
-       # * 100
-    #)
-    #print(f"DQN per task energy usage: {dqn_task_improvement} %")
-    #print(f"DQN avg energy usage: {dqn_improvement:.3f} %")
-    #print(f"DQN missed deadline improvement: {dqn_deadline_improvement:.3f} %")
-    return (
-        np.array(
-            [
-                avg_random_energy_cons,
-                avg_local_energy_cons,
-                avg_remote_energy_cons,
-                #avg_conference_energy_cons,
-                avg_dqn_energy_cons
-            ]
-        ),
-        np.array(
-            [
-                total_random_missed_task,
-                total_local_missed_task,
-                total_remote_missed_task,
-                #total_conference_missed_task,
-                total_dqn_missed_task
-            ]
-        ),
-        np.array(
-            [
-                dqn_random_improvement,
-                dqn_local_improvement,
-                dqn_remote_improvement,
-                #dqn_conference_improvement
-            ]
-        ),
-        np.array(
-            [
-                avg_dqn_little_energy_cons,
-                avg_dqn_big_energy_cons,
-                avg_dqn_offload_energy_cons,
-                avg_dqn_energy_cons
-            ]
-        )
-
-        #np.array(
-         #   [
-          #      dqn_random_deadline_improvement,
-           #     dqn_local_deadline_improvement,
-            #    dqn_remote_deadline_improvement
-            #]
-        #)
-    )
 
 
 def RandomPolicyGen(freqs, powers):
@@ -2496,434 +2051,11 @@ def RandomDQNPolicyGen(littlefreqs, bigfreqs, powers):
 
 
 
-    #FIXME: Implement random DQN policy
-    # offload = np.random.randint(0, 2)
-    # actions = {"offload": [], "little": [], "big": []}
-    # random_freq_idx = np.random.choice(len(freqs), size=4, replace=True)
-    # random_power_idx = np.random.choice(len(powers), size=4, replace=True)
-    # if offload:
-    #     actions["offload"] = [
-    #         [i, powers[idx]] for i, idx in enumerate(random_power_idx)
-    #     ]
-    # else:
-    #     actions["local"] = [[i, freqs[idx]] for i, idx in enumerate(random_freq_idx)]
-
-    # return actions
 
 
 
 
 
-
-
-#def evaluate_task_size_scenario(configs, task_size_val, eval_itr=10000):
-    
-    set_random_seed(42)
-    #cpu_load_generator = cycle(cpu_load_val)
-    #target_cpu_load = next(cpu_load_generator)
-    target_cpu_load = 0.35
-    max_task_load=1
-
-    task_gen = NormalTaskGen(configs["task_set"])
-    #task_gen = TaskGen(configs["task_set"])
-    dqn_env = DQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
-    local_env = DQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
-    remote_env = DQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
-    random_env = DQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
-    rand_freq_list = random_env.cpu.freqs
-    rand_powers_list = random_env.w_inter.powers
-    rrlo_env = RRLOEnv(configs)
-    #conference_env = RRLOEnv(configs)
-
-    dqn_dvfs = DQN_DVFS(state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space())
-    rrlo_dvfs = RRLO_DVFS(
-        state_bounds=rrlo_env.get_state_bounds(),
-        num_w_inter_powers=len(rrlo_env.w_inter.powers),
-        num_dvfs_algs=2,
-        dvfs_algs=["cc", "la"],
-        num_tasks=4,
-    )
-    #conference_dvfs = conference_DVFS(
-     #   #state_bounds=conference_env.get_state_bounds(),
-        #num_w_inter_powers=len(conference_env.w_inter.powers),
-      #  num_dvfs_algs=1,
-       # dvfs_algs=["cc"],
-        #num_tasks=4,
-    #)
-
-    dqn_dvfs.load_model("models/rrlo_scenario")
-    rrlo_dvfs.load_model("models/rrlo_scenario")
-    #conference_dvfs.load_model("models/rrlo_scenario")
-
-    # Evaluate the trained model
-    #print("Evaluating the trained model...")
-    dqn_task_energy_cons = np.zeros((4,len(task_size_val)-1))
-    dqn_num_tasks = np.zeros((4,len(task_size_val)-1))
-    rrlo_task_energy_cons = np.zeros((4,len(task_size_val)-1))
-    rrlo_num_tasks = np.zeros((4,len(task_size_val)-1))
-    #conference_task_energy_cons = np.zeros((4,len(task_size_val)-1))
-    #conference_num_tasks = np.zeros((4,len(task_size_val)-1))
-
-    local_task_energy_cons = np.zeros((4,len(task_size_val)-1))
-    local_num_tasks = np.zeros((4,len(task_size_val)-1))
-    remote_task_energy_cons = np.zeros((4,len(task_size_val)-1))
-    remote_num_tasks = np.zeros((4,len(task_size_val)-1))
-    random_task_energy_cons = np.zeros((4,len(task_size_val)-1))
-    random_num_tasks = np.zeros((4,len(task_size_val)-1))
-
-    local_task_deadline_missed = np.zeros((4,len(task_size_val)-1))
-    random_task_deadline_missed = np.zeros((4,len(task_size_val)-1))
-    remote_task_deadline_missed = np.zeros((4,len(task_size_val)-1))
-    dqn_task_deadline_missed = np.zeros((4,len(task_size_val)-1))
-    rrlo_task_deadline_missed = np.zeros((4,len(task_size_val)-1))
-    #conference_task_deadline_missed = np.zeros((4,len(task_size_val)-1))
-    
-    
-    
-    tasks = task_gen.step(target_cpu_load,task_size_val[0],max_task_load)
-    for i in range(len(task_size_val)-1):
-        #if i!=len(task_size_val)-1: 
-        #print(f"i: {i}, task: {task_size_val[i]}, next tsak: {task_size_val[i+1]}")
-
-        #tasks = task_gen.step(target_cpu_load,task_size_val[2*i])
-        #print(task_size_val[2*i])
-        dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
-        rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
-        #conference_state, _ = conference_env.observe(copy.deepcopy(tasks))
-        local_env.observe(copy.deepcopy(tasks))
-        remote_env.observe(copy.deepcopy(tasks))
-        random_env.observe(copy.deepcopy(tasks))
-        for _ in range(eval_itr):
-            actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
-            actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
-            actions_local_str = {
-                "offload": [],
-                "local": [[0, 1820], [1, 1820], [2, 1820], [3, 1820]],
-                }
-            actions_remote_str = {
-                "offload": [[0, 28], [1, 28], [2, 28], [3, 28]],
-                "local": [],
-                }
-            actions_random_str = RandomPolicyGen(rand_freq_list, rand_powers_list)
-            actions_rrlo, _ = rrlo_dvfs.execute(rrlo_state)
-            #actions_conference, _ = conference_dvfs.execute(conference_state)
-            
-            dqn_env.step(actions_dqn_str)
-            rrlo_env.step(actions_rrlo)
-            #conference_env.step(actions_conference)
-            local_env.step(actions_local_str)
-            remote_env.step(actions_remote_str)
-            random_env.step(actions_random_str)
-            # Gather energy consumption values
-            for jobs in local_env.curr_tasks.values():
-                for j in jobs:
-                    # print(j)
-                    local_task_energy_cons[j.t_id,i] += j.cons_energy
-                    if j.deadline_missed:
-                        local_task_deadline_missed[j.t_id,i] += 1
-                local_num_tasks[j.t_id,i] += len(jobs)
-
-            for jobs in remote_env.curr_tasks.values():
-                for j in jobs:
-                    # print(j)
-                    remote_task_energy_cons[j.t_id,i] += j.cons_energy
-                    if j.deadline_missed:
-                        remote_task_deadline_missed[j.t_id,i] += 1
-                remote_num_tasks[j.t_id,i] += len(jobs)
-
-            for jobs in random_env.curr_tasks.values():
-                for j in jobs:
-                    # print(j)
-                    random_task_energy_cons[j.t_id,i] += j.cons_energy
-                    if j.deadline_missed:
-                        random_task_deadline_missed[j.t_id,i] += 1
-                random_num_tasks[j.t_id,i] += len(jobs)
-
-            for jobs in dqn_env.curr_tasks.values():
-                for j in jobs:
-                    # print(j)
-                    dqn_task_energy_cons[j.t_id,i] += j.cons_energy
-                    if j.deadline_missed:
-                        dqn_task_deadline_missed[j.t_id,i] += 1
-                dqn_num_tasks[j.t_id,i] += len(jobs)
-
-            for jobs in rrlo_env.curr_tasks.values():
-                for j in jobs:
-                    # print(j)
-                    rrlo_task_energy_cons[j.t_id,i] += j.cons_energy
-                    if j.deadline_missed:
-                        rrlo_task_deadline_missed[j.t_id,i] += 1
-                rrlo_num_tasks[j.t_id,i] += len(jobs)
-            #for jobs in conference_env.curr_tasks.values():
-             #   for j in jobs:
-                    # print(j)
-              #      conference_task_energy_cons[j.t_id,i] += j.cons_energy
-               #     if j.deadline_missed:
-                #        conference_task_deadline_missed[j.t_id,i] += 1
-                #conference_num_tasks[j.t_id,i] += len(jobs)
-            if i ==len(task_size_val)-2:
-                tasks = task_gen.step(target_cpu_load,task_size_val[i],max_task_load)
-            else:
-                tasks = task_gen.step(target_cpu_load,task_size_val[i+1],max_task_load)
-            #print(task_size_val[2*i+1])
-            next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
-            next_state_rrlo, _ = rrlo_env.observe(copy.deepcopy(tasks))
-            #next_state_conference, _ = conference_env.observe(copy.deepcopy(tasks))
-            local_env.observe(copy.deepcopy(tasks))
-            remote_env.observe(copy.deepcopy(tasks))
-            random_env.observe(copy.deepcopy(tasks))
-
-            # Update current state
-            dqn_state = next_state_dqn
-            rrlo_state = next_state_rrlo
-            #conference_state = next_state_conference
-
-    # Average energy consumption:
-    #print(dqn_num_tasks)
-    #print(rrlo_num_tasks)
-    #print(conference_num_tasks)
-    #print(local_num_tasks)
-    #print(remote_num_tasks)
-    #print(random_num_tasks)
-    
-    
-    
-    np.set_printoptions(suppress=True)
-    dqn_avg_task_energy_cons = dqn_task_energy_cons / dqn_num_tasks
-    local_avg_task_energy_cons = local_task_energy_cons / local_num_tasks
-    remote_avg_task_energy_cons = remote_task_energy_cons / remote_num_tasks
-    random_avg_task_energy_cons = random_task_energy_cons / random_num_tasks
-    rrlo_avg_task_energy_cons = rrlo_task_energy_cons / rrlo_num_tasks
-    #conference_avg_task_energy_cons = conference_task_energy_cons / conference_num_tasks
-
-    #print(f"DQN energy consumption: {dqn_avg_task_energy_cons}")
-    #print(f"local energy consumption: {local_avg_task_energy_cons}")
-    #print(f"remote energy consumption: {remote_avg_task_energy_cons}")
-    #print(f"random energy consumption: {random_avg_task_energy_cons}")
-    #print(f"RRLO energy consumption: {rrlo_avg_task_energy_cons}")
-    #print(f"Conference energy consumption: {conference_avg_task_energy_cons}")
-
-
-
-    dqn_percent_task_missed = dqn_task_deadline_missed / dqn_num_tasks * 100
-    local_percent_task_missed = local_task_deadline_missed / local_num_tasks * 100
-    remote_percent_task_missed = remote_task_deadline_missed / remote_num_tasks * 100
-    random_percent_task_missed = random_task_deadline_missed / random_num_tasks * 100
-    rrlo_percent_task_missed = rrlo_task_deadline_missed / rrlo_num_tasks * 100
-    #conference_percent_task_missed = conference_task_deadline_missed / conference_num_tasks * 100
-
-
-
-    avg_dqn_energy_cons = np.sum(dqn_task_energy_cons,axis=0) / np.sum(dqn_num_tasks,axis=0)
-    avg_local_energy_cons = np.sum(local_task_energy_cons,axis=0) / np.sum(local_num_tasks,axis=0)
-    avg_remote_energy_cons = np.sum(remote_task_energy_cons,axis=0) / np.sum(remote_num_tasks,axis=0)
-    avg_random_energy_cons = np.sum(random_task_energy_cons,axis=0) / np.sum(random_num_tasks,axis=0)
-    avg_rrlo_energy_cons = np.sum(rrlo_task_energy_cons,axis=0) / np.sum(rrlo_num_tasks,axis=0)
-    #avg_conference_energy_cons = np.sum(conference_task_energy_cons,axis=0) / np.sum(conference_num_tasks,axis=0)
-
-
-    total_dqn_missed_task = (
-        np.sum(dqn_task_deadline_missed,axis=0) / np.sum(dqn_num_tasks,axis=0) * 100
-    )
-    total_local_missed_task = (
-        np.sum(local_task_deadline_missed,axis=0) / np.sum(local_num_tasks,axis=0) * 100
-    )
-    total_remote_missed_task = (
-        np.sum(remote_task_deadline_missed,axis=0) / np.sum(remote_num_tasks,axis=0) * 100
-    )
-    total_random_missed_task = (
-        np.sum(random_task_deadline_missed,axis=0) / np.sum(random_num_tasks,axis=0) * 100
-    )
-    total_rrlo_missed_task = (
-        np.sum(rrlo_task_deadline_missed,axis=0) / np.sum(rrlo_num_tasks,axis=0) * 100
-    )
-    #total_conference_missed_task = (
-     #   np.sum(conference_task_deadline_missed,axis=0) / np.sum(conference_num_tasks,axis=0) * 100
-    #)
-
-
-    dqn_random_improvement = (
-        (avg_dqn_energy_cons - avg_random_energy_cons) / (avg_random_energy_cons) * 100
-    )
-
-    dqn_local_improvement = (
-        (avg_dqn_energy_cons - avg_local_energy_cons) / (avg_local_energy_cons) * 100
-    )
-
-    dqn_remote_improvement = (
-        (avg_dqn_energy_cons - avg_remote_energy_cons) / (avg_remote_energy_cons) * 100
-    )
-    
-    #dqn_conference_improvement = (
-     #   (avg_dqn_energy_cons - avg_conference_energy_cons) / (avg_conference_energy_cons) * 100
-    #)
-    
-    #dqn_deadline_improvement = (
-        #   np.sum(dqn_task_deadline_missed-rrlo_task_deadline_missed) / np.sum(rrlo_task_deadline_missed) * 100
-    #)
-
-
-    dqn_improvement = (
-        (avg_dqn_energy_cons - avg_rrlo_energy_cons) / (avg_rrlo_energy_cons) * 100
-    )
-    dqn_task_improvement = (
-        (dqn_avg_task_energy_cons - rrlo_avg_task_energy_cons)
-        / rrlo_avg_task_energy_cons
-        * 100
-    )
-
-    return (
-        np.array(
-            [
-                avg_random_energy_cons,
-                avg_local_energy_cons,
-                avg_remote_energy_cons,
-                avg_rrlo_energy_cons,
-                #avg_conference_energy_cons,
-                avg_dqn_energy_cons,
-            ]
-        ),
-        np.array(
-            [
-                total_random_missed_task,
-                total_local_missed_task,
-                total_remote_missed_task,
-                total_rrlo_missed_task,
-                #total_conference_missed_task,
-                total_dqn_missed_task,
-            ]
-        ),
-        np.array(
-            [
-                dqn_random_improvement,
-                dqn_local_improvement,
-                dqn_remote_improvement,
-                dqn_improvement,
-                #dqn_conference_improvement,
-            ]
-        )
-
-    )
-
-#def evaluate_big_little(configs, cpu_load_val , eval_itr=10000):
-    set_random_seed(42)
-
-    max_task_load=2
-
-    task_gen = RandomTaskGen(configs["task_set"])
-    dqn_env = BaseDQNEnv(configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound())
-
-    dqn_dvfs = DQN_DVFS(state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space())
-
-    dqn_dvfs.load_model("models/dqn_scenario")
-    #conference_dvfs.load_model("models/dqn_scenario")
-
-    # Evaluate the trained model
-    #print("Evaluating the trained model...")
-    dqn_task_energy_cons = np.zeros((4,len(cpu_load_val)))
-    dqn_num_tasks = np.zeros((4,len(cpu_load_val)))
-    dqn_big_energy_cons = np.zeros((4,len(cpu_load_val)))
-    dqn_big_num_tasks = np.zeros((4,len(cpu_load_val)))
-    dqn_little_energy_cons = np.zeros((4,len(cpu_load_val)))
-    dqn_little_num_tasks = np.zeros((4,len(cpu_load_val)))
-    dqn_offload_energy_cons = np.zeros((4,len(cpu_load_val)))
-    dqn_offload_num_tasks = np.zeros((4,len(cpu_load_val)))
-
-    
-    for i in range(len(cpu_load_val)):
-
-        target_cpu_load=cpu_load_val[i]
-        tasks = task_gen.step(target_cpu_load,max_task_load)
-        dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
-    
-        for _ in range(eval_itr):
-            actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
-            actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
-
-            dqn_env.step(actions_dqn_str)
-
-
-            for t_id, _ in actions_dqn_str["little"]:
-                for job in dqn_env.curr_tasks[t_id]:
-                    dqn_little_energy_cons[job.t_id,i]+=job.cons_energy
-                dqn_little_num_tasks[job.t_id,i] += len(dqn_env.curr_tasks[t_id])
-
-            for t_id, _ in actions_dqn_str["big"]:
-                for job in dqn_env.curr_tasks[t_id]:
-                    dqn_big_energy_cons[job.t_id,i]+=job.cons_energy
-                dqn_big_num_tasks[job.t_id,i] += len(dqn_env.curr_tasks[t_id])
-        
-            for t_id, _ in actions_dqn_str["offload"]:
-                for job in dqn_env.curr_tasks[t_id]:
-                    dqn_offload_energy_cons[job.t_id,i]+=job.cons_energy
-                dqn_offload_num_tasks[job.t_id,i] += len(dqn_env.curr_tasks[t_id])
-            
-            for jobs in dqn_env.curr_tasks.values():
-                for j in jobs:
-                    # print(j)
-                    dqn_task_energy_cons[j.t_id,i] += j.cons_energy
-                dqn_num_tasks[j.t_id,i] += len(jobs)
-
-      
-
-            tasks = task_gen.step(target_cpu_load,max_task_load)
-            next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
-            # Update current state
-            dqn_state = next_state_dqn
-            #conference_state = next_state_conference
-
-    
-    np.set_printoptions(suppress=True)
-
-    print(f"little num task: {dqn_little_num_tasks}")
-    print(f"big num task: {dqn_big_num_tasks}")
-    print(f"offload num task: {dqn_offload_num_tasks}")
-    print(f"total num task: {dqn_num_tasks}")
-
-    print(f"little per task energy consumption: {dqn_little_energy_cons}")
-    print(f"big per task energy consumption: {dqn_big_energy_cons}")
-    print(f"offload per task energy consumption: {dqn_offload_energy_cons}")
-    print(f"total per task energy consumption: {dqn_task_energy_cons}")
-    
-    #dqn_avg_task_energy_cons = dqn_task_energy_cons / dqn_num_tasks
-    #dqn_little_avg_task_energy_cons = dqn_little_energy_cons / dqn_little_num_tasks
-    #dqn_big_avg_task_energy_cons = dqn_big_energy_cons / dqn_big_num_tasks
-    #dqn_offload_avg_task_energy_cons = dqn_offload_energy_cons / dqn_offload_num_tasks
-
-    #dqn_avg_task_energy_cons[np.isnan(dqn_avg_task_energy_cons)] = 0
-    #dqn_little_avg_task_energy_cons[np.isnan(dqn_little_avg_task_energy_cons)] = 0
-    #dqn_big_avg_task_energy_cons[np.isnan(dqn_big_avg_task_energy_cons)] = 0
-    #dqn_offload_avg_task_energy_cons[np.isnan(dqn_offload_avg_task_energy_cons)] = 0
-
-
-
-
-
-    avg_dqn_energy_cons = np.sum(dqn_task_energy_cons,axis=0) / np.sum(dqn_num_tasks,axis=0)
-    avg_dqn_little_energy_cons = np.sum(dqn_little_energy_cons,axis=0) / np.sum(dqn_num_tasks,axis=0)
-    avg_dqn_big_energy_cons = np.sum(dqn_big_energy_cons,axis=0) / np.sum(dqn_num_tasks,axis=0)
-    avg_dqn_offload_energy_cons = np.sum(dqn_offload_energy_cons,axis=0) / np.sum(dqn_num_tasks,axis=0)
-
-    avg_dqn_energy_cons[np.isnan(avg_dqn_energy_cons)] = 0
-    avg_dqn_little_energy_cons[np.isnan(avg_dqn_little_energy_cons)] = 0
-    avg_dqn_big_energy_cons[np.isnan(avg_dqn_big_energy_cons)] = 0
-    avg_dqn_offload_energy_cons[np.isnan(avg_dqn_offload_energy_cons)] = 0
-
-    print(f"little energy consumption: {avg_dqn_little_energy_cons}")
-    print(f"big energy consumption: {avg_dqn_big_energy_cons}")
-    print(f"offload energy consumption: {avg_dqn_offload_energy_cons}")
-    print(f"total energy consumption: {avg_dqn_energy_cons}")
-   
-    return (
-        np.array(
-            [
-                avg_dqn_little_energy_cons,
-                avg_dqn_big_energy_cons,
-                avg_dqn_offload_energy_cons,
-                avg_dqn_energy_cons
-            ]
-        )
-    )
 
 
 

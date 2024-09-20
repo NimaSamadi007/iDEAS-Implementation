@@ -9,7 +9,7 @@ import os
 
 
 
-def iDEAS_main(eval_itr=10000,iter=10, Train= False):
+def iDEAS_main(eval_itr=10000,iter=1, Train= False):
     DQN_STATE_DIM = 5
     configs = {
         "task_set1": "configs/task_set_eval.json",
@@ -31,7 +31,6 @@ def iDEAS_main(eval_itr=10000,iter=10, Train= False):
     cpuloads= np.linspace(0.05, 3.05,10)
     tasksizes= np.round(np.linspace(110, 490, 11))
     cns = np.logspace(np.log10(2e-11), np.log10(2e-6),num=11,base=10)
-    print(cns)
     all_energy_eval = np.empty((0, 4, 2))
     all_deadline_eval = np.empty((0, 4, 2))
     all_cpu_energy = np.empty((0, 4, len(cpuloads)))
@@ -159,7 +158,7 @@ def iDEAS_main(eval_itr=10000,iter=10, Train= False):
     )
 
 
-def RRLO_main(eval_itr=10000, iter=10,Train=False):
+def RRLO_main(eval_itr=10000, iter=1,Train=False):
     DQN_STATE_DIM = 4
     configs = {
         "task_set1": "configs/task_set_eval.json",
@@ -322,7 +321,7 @@ def RRLO_main(eval_itr=10000, iter=10,Train=False):
     )
 
 
-def big_little_main(eval_itr=10000,iter=10, Train= False):
+def big_little_main(eval_itr=10000,iter=1, Train= False):
     DQN_STATE_DIM=5
     configs = {
         "task_set1": "configs/task_set_eval.json",
@@ -485,10 +484,7 @@ def big_little_main(eval_itr=10000,iter=10, Train= False):
 
  
 if __name__ == "__main__":
-    #compare_dqn_rrlo(Train=False)
-    #compare_dqn_base(Train=True)
-    #compare_cpu_load(Train=False)
-    #compare_task_size(Train=False)
-    iDEAS_main(Train=False)
-    #RRLO_main(Train=False)
+
+    iDEAS_main(Train=True)
+    #RRLO_main(Train=True)
     #big_little_main(Train=False)

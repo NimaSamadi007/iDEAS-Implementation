@@ -15,12 +15,12 @@ from utils.utils import set_random_seed
 
 def iDEAS_train(configs):
     # Set random seed
-    max_task_load=3
+    max_task_load=5
     default_cn=1e-9
-    cpu_load_values=np.arange(0.01, max_task_load, 0.1)
+    cpu_load_values=np.arange(0.01, max_task_load, 0.2)
     cpu_load_generator=cycle(cpu_load_values)
     task_mean_values=np.arange(100, 505, 20)
-    cn_values=np.logspace(np.log10(2e-11), np.log10(2e-6), num=20,base=10)
+    cn_values=np.logspace(np.log10(2e-13), np.log10(2e-4), num=50,base=10)
     generator=cycle(product(cpu_load_values,task_mean_values,cn_values))
 
 
@@ -63,7 +63,7 @@ def iDEAS_train(configs):
 
     for itr in tqdm(range(int(1e6))):
 
-        if (itr % 12030) < 12000:
+        if (itr % 50000) < 25000:
             cpu_generate = False
         else:
             cpu_generate = True
@@ -118,12 +118,12 @@ def rrlo_train(configs):
 
     # Set random seed
     set_random_seed(42)
-    max_task_load=2
+    max_task_load=4
     default_cn=1e-9
-    cpu_load_values=np.arange(0.01, max_task_load, 0.1)
+    cpu_load_values=np.arange(0.01, max_task_load, 0.2)
     cpu_load_generator=cycle(cpu_load_values)
     task_mean_values=np.arange(100, 505, 20)
-    cn_values=np.logspace(np.log10(2e-11), np.log10(2e-6), num=20,base=10)
+    cn_values=np.logspace(np.log10(2e-13), np.log10(2e-4), num=50,base=10)
     generator=cycle(product(cpu_load_values,task_mean_values,cn_values))
 
     cpu_generate=False
@@ -173,7 +173,7 @@ def rrlo_train(configs):
 
     for itr in tqdm(range(int(1e6))):
         
-        if (itr % 12030) < 12000:
+        if (itr % 50000) < 25000:
             cpu_generate = False
         else:
             cpu_generate = True

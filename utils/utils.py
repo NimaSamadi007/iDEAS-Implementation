@@ -50,12 +50,12 @@ def plot_loss_function(losses, alg, xlabel, ylabel,fig_name):
     plt.xlabel(rf"{xlabel}")
     plt.ylabel(rf"{ylabel}")
     plt.plot(moving_avg(losses,10000), label=rf'Loss', color=colors[4],linewidth=5)
-    x0,x1 = plt.xlim()
-    visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
-    plt.xticks(visible,list(map(str,visible)))
-    y0,y1 = plt.ylim()
-    visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
-    plt.yticks(visible,list(map(str,visible)))
+    #x0,x1 = plt.xlim()
+    #visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
+    #plt.xticks(visible,list(map(str,visible)))
+    #y0,y1 = plt.ylim()
+    #visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    #plt.yticks(visible,list(map(str,visible)))
     plt.tight_layout()
     plt.grid(True)
     fig.savefig(file_path)
@@ -97,12 +97,12 @@ def plot_all_rewards(all_rewards, alg, xlabel, ylabel,fig_name):
     #plt.plot(moving_avg(all_rewards[:, 3], 1000))
     plt.xlabel(rf'{xlabel}')
     plt.ylabel(rf'{ylabel}')
-    x0,x1 = plt.xlim()
-    visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
-    plt.xticks(visible,list(map(str,visible)))
-    y0,y1 = plt.ylim()
-    visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
-    plt.yticks(visible,list(map(str,visible)))
+    #x0,x1 = plt.xlim()
+    #visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
+    #plt.xticks(visible,list(map(str,visible)))
+    #y0,y1 = plt.ylim()
+    #visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    #plt.yticks(visible,list(map(str,visible)))
     plt.tight_layout()
     plt.grid(True)
     fig.savefig(file_path)
@@ -147,9 +147,9 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel,title, fig_name, ylog=F
     # X-axis tick labels positioning
     plt.xticks([i + 0.2 for i in ind], alg_set)
 
-    y0,y1 = plt.ylim()
-    visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
-    plt.yticks(visible,list(map(str,visible)))
+    #y0,y1 = plt.ylim()
+    #visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    #plt.yticks(visible,list(map(str,visible)))
     # Adding legend to specify which color represents which task set
     legend=plt.legend()
     #for text in legend.get_texts():
@@ -204,12 +204,12 @@ def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=Fal
     plt.ylabel(rf'{ylabel}')
     plt.title(rf'{title}')
 
-    x0,x1 = plt.xlim()
-    visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
-    plt.xticks(visible,list(map(str,visible)))
-    y0,y1 = plt.ylim()
-    visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
-    plt.yticks(visible,list(map(str,visible)))
+    #x0,x1 = plt.xlim()
+    #visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
+    #plt.xticks(visible,list(map(str,visible)))
+    #y0,y1 = plt.ylim()
+    #visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    #plt.yticks(visible,list(map(str,visible)))
     # X-axis tick labels positioning
     #plt.xticks([i + 0.2 for i in ind], alg_set,fontweight='bold')
     # Adding legend to specify which color represents which task set

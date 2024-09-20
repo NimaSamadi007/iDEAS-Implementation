@@ -72,9 +72,41 @@ class BaseDQNEnv:
         states[:, 0] = su
         states[:, 1] = self.cpu_little.util
         states[:, 2] = self.cpu_big.util
+
+        # Clip the values in states[:, 0] between min_array and  max_array
+        states[:, 0] = np.clip(
+            states[:, 0],
+            np.full(states[:, 0].shape, self.min_state_vals[0]),
+            np.full(states[:, 0].shape, self.min_state_vals[0])
+            )
+        states[:, 1] = np.clip(
+            states[:, 1],
+            np.full(states[:, 1].shape, self.min_state_vals[1]),
+            np.full(states[:, 1].shape, self.min_state_vals[1])
+        )
+        states[:, 2] = np.clip(
+            states[:, 2],
+            np.full(states[:, 2].shape, self.min_state_vals[2]),
+            np.full(states[:, 2].shape, self.min_state_vals[2])
+        )
+
+        states[:, 3] = np.clip(
+            states[:, 3],
+            np.full(states[:, 3].shape, self.min_state_vals[3]),
+            np.full(states[:, 3].shape, self.min_state_vals[3])
+        )
+        states[:, 4] = np.clip(
+            states[:, 4],
+            np.full(states[:, 4].shape, self.min_state_vals[4]),
+            np.full(states[:, 4].shape, self.min_state_vals[4])
+        )
+
+
+
         states = (states - self.min_state_vals) / (
             self.max_state_vals - self.min_state_vals
         )
+        
         return states
 
     def _cal_reward(self):
@@ -163,6 +195,34 @@ class DQNEnv:
             states[i, 3] = task[0].b
         states[:, 0] = su
         states[:, 1] = self.cpu.util
+
+
+        states[:, 0] = np.clip(
+            states[:, 0],
+            np.full(states[:, 0].shape, self.min_state_vals[0]),
+            np.full(states[:, 0].shape, self.min_state_vals[0])
+            )
+        states = (states - self.min_state_vals) / (
+            self.max_state_vals - self.min_state_vals
+        )
+        states[:, 1] = np.clip(
+            states[:, 1],
+            np.full(states[:, 1].shape, self.min_state_vals[1]),
+            np.full(states[:, 1].shape, self.min_state_vals[1])
+        )
+        states[:, 2] = np.clip(
+            states[:, 2],
+            np.full(states[:, 2].shape, self.min_state_vals[2]),
+            np.full(states[:, 2].shape, self.min_state_vals[2])
+        )
+
+        states[:, 3] = np.clip(
+            states[:, 3],
+            np.full(states[:, 3].shape, self.min_state_vals[3]),
+            np.full(states[:, 3].shape, self.min_state_vals[3])
+        )
+
+
         states = (states - self.min_state_vals) / (
             self.max_state_vals - self.min_state_vals
         )
@@ -289,6 +349,27 @@ class RRLOEnv:
         states[0] = su
         states[1] = ds
         states[2] = self.w_inter.update_channel_state()
+
+        states[0] = np.clip(
+            states[0],
+            np.full(states[0].shape, self.min_state_vals[0]),
+            np.full(states[0].shape, self.min_state_vals[0])
+            )
+        states = (states - self.min_state_vals) / (
+            self.max_state_vals - self.min_state_vals
+        )
+        states[1] = np.clip(
+            states[1],
+            np.full(states[1].shape, self.min_state_vals[1]),
+            np.full(states[1].shape, self.min_state_vals[1])
+        )
+        states[2] = np.clip(
+            states[2],
+            np.full(states[2].shape, self.min_state_vals[2]),
+            np.full(states[2].shape, self.min_state_vals[2])
+        )
+
+
         return states
 
     def _descretize_states(self, states: np.ndarray):
