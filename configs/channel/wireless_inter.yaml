@@ -1,0 +1,5 @@
+---
+cg_sigma: 0.001
+bandwidth: 5
+cn_power: 1.0e-09
+powers: [0, 4, 8, 12, 16, 20, 24, 28]

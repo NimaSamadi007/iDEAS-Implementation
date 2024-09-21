@@ -1,0 +1,33 @@
+---
+params:
+  train_itr: 3.0e+3                         # Number of training iterations
+  eval_itr: 1000                            # Number of evaluation iterations
+  eval_cycle: 1                             # Evaluation cycle at each the algorithm is evaluated eval_itr times
+  do_train: true                            # Train or not
+  do_taskset_eval: true                     # Taskset evaluation
+  do_cpu_load_eval: true
+  do_task_size_eval: true
+  do_channel_eval: true
+  dqn_state_dim: 6
+  rrlo_state_dim: 3
+  num_tasks: 4
+  batch_size: 128
+  gamma: 0.95
+  mem_size: 10000
+  update_target_net: 1000
+  eps_decay: 0.005
+  min_eps: 0
+  max_task_load_train: 3
+  max_task_load_eval: 3
+  target_cpu_load: 0.35
+  reward_coeff: 10
+  deadline_missed_penalty: 1.0e+4
+  latency_energy_coeff: 0.0002
+tasks:
+  eval_1: configs/tasks/eval_1.yaml
+  eval_2: configs/tasks/eval_2.yaml
+  train: configs/tasks/train.yaml
+cpus:
+  little: configs/cpus/little.yaml
+  big: configs/cpus/big.yaml
+w_inter: configs/channel/wireless_inter.yaml

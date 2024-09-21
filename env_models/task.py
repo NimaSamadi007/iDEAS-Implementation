@@ -1,9 +1,9 @@
-import json
 import copy
 import numpy as np
 import math
 from typing import Dict, Any
 
+from utils.utils import load_yaml
 
 class Task:
     def __init__(self, specs: Dict[str, Any]):
@@ -42,13 +42,7 @@ class Task:
 class TaskGen:
     def __init__(self, task_conf_path):
         self.task_set = []
-        try:
-            with open(task_conf_path, "r") as f:
-                task_set_conf = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Task configuration file not found at {task_conf_path}"
-            )
+        task_set_conf = load_yaml(task_conf_path)
         for i in range(len(task_set_conf)):
             self.task_set.append(Task(task_set_conf[i]))
 
@@ -76,13 +70,8 @@ class TaskGen:
 
 class RandomTaskGen:
     def __init__(self, task_conf_path):
-        try:
-            with open(task_conf_path, "r") as f:
-                task_set_conf = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Task configuration file not found at {task_conf_path}"
-            )
+        task_set_conf = load_yaml(task_conf_path)
+
         self.num_tasks = task_set_conf["num_tasks"]
         self.p_min, self.p_max = task_set_conf["p"]
         self.w_min, self.w_max = task_set_conf["w"]
@@ -141,13 +130,8 @@ class RandomTaskGen:
 
 class NormalTaskGen:
     def __init__(self, task_conf_path):
-        try:
-            with open(task_conf_path, "r") as f:
-                task_set_conf = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Task configuration file not found at {task_conf_path}"
-            )
+        task_set_conf = load_yaml(task_conf_path)
+
         self.num_tasks = task_set_conf["num_tasks"]
         self.p_min, self.p_max = task_set_conf["p"]
         self.w_min, self.w_max = task_set_conf["w"]

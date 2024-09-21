@@ -1,20 +1,13 @@
 import numpy as np
-import json
 from typing import List, Dict
 
 from env_models.remote import EdgeServer
 from env_models.task import Task
-
+from utils.utils import load_yaml
 
 class WirelessInterface:
     def __init__(self, w_inter_conf_path):
-        try:
-            with open(w_inter_conf_path, "r") as f:
-                specs = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Wireless interface configuration file not found at {w_inter_conf_path}"
-            )
+        specs = load_yaml(w_inter_conf_path)
 
         # Power levels are represented in dbm and must be converted accordingly
         self.powers = specs["powers"]  # must be sorted incrementally
@@ -26,7 +19,7 @@ class WirelessInterface:
         self.update_channel_state()  # channel gain ~ Rayleigh
         self.e_server = EdgeServer()  # Edge server instance
 
-    def cn_setter(self, cn):
+    def set_cn(self, cn):
         self.cn_power = cn
 
     def offload(self, tasks: Dict[int, Task], acts: List[List]):

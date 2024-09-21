@@ -1,21 +1,14 @@
 import numpy as np
-import json
 import math
 import copy
 
 from typing import List, Dict
 from env_models.task import Task
-
+from utils.utils import load_yaml
 
 class CPU:
     def __init__(self, cpu_conf_path):
-        try:
-            with open(cpu_conf_path, "r") as f:
-                specs = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"CPU configuration file not found at {cpu_conf_path}"
-            )
+        specs = load_yaml(cpu_conf_path)
 
         if sorted(specs["freqs"]) != specs["freqs"]:
             raise ValueError("CPU frequencies must be sorted incrementally")

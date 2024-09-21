@@ -8,6 +8,7 @@ from utils.utils import (
     line_plot_res,
     stack_bar_res,
     plot_all_rewards,
+    load_yaml
 )
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,28 +16,18 @@ from tqdm import tqdm
 import os
 
 
-def iDEAS_main(eval_itr=5000, iter=1, Train= False):
-    DQN_STATE_DIM = 5
-    configs = {
-        "task_set1": "configs/task_set_eval.json",
-        "task_set2": "configs/task_set_eval2.json",
-        "task_set3": "configs/task_set_train.json",
-        "cpu_little": "configs/cpu_little.json",
-        "cpu_big": "configs/cpu_big.json",
-        "cpu_local": "configs/cpu_local.json",
-        "w_inter": "configs/wireless_interface.json",
-        "dqn_state_dim": DQN_STATE_DIM,
-    }
+def iDEAS_main(configs):
+    params = configs["params"]
 
-    if Train:
+    if params["do_train"]:
         dqn_loss, dqn_rewards = iDEAS_train(configs)
 
         plot_loss_function(dqn_loss, "iDEAS", "iterations", "loss", "iDEAS_Loss")
         plot_all_rewards(dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_Rewards")
 
-    cpuloads= np.linspace(0.05, 3, 10)
-    tasksizes= np.round(np.linspace(110, 490, 11))
-    cns = np.logspace(np.log10(2e-11), np.log10(2e-6),num=11,base=10)
+    cpuloads = np.linspace(0.05, 3, 10)
+    tasksizes = np.round(np.linspace(110, 490, 11))
+    cns = np.logspace(np.log10(2e-11), np.log10(2e-6), num=11, base=10)
     all_energy_eval = np.empty((0, 4, 2))
     all_deadline_eval = np.empty((0, 4, 2))
     all_cpu_energy = np.empty((0, 4, len(cpuloads)))
@@ -46,8 +37,9 @@ def iDEAS_main(eval_itr=5000, iter=1, Train= False):
     all_cns_energy = np.empty((0, 4, len(cns)))
     all_cns_deadline = np.empty((0, 4, len(cns)))
 
-    for j in tqdm(range(iter)):
-        result = iDEAS_evaluate(configs, cpuloads, tasksizes, cns, eval_itr)
+    for _ in tqdm(range(params["eval_cycle"])):
+        result = iDEAS_evaluate(configs, cpuloads, tasksizes, cns)
+
         all_energy_eval = np.vstack((all_energy_eval, [result["taskset_energy"]]))
         all_deadline_eval = np.vstack((all_deadline_eval, [result["taskset_drop"]]))
         all_cpu_energy = np.vstack((all_cpu_energy, [result["cpu_energy"]]))
@@ -56,6 +48,7 @@ def iDEAS_main(eval_itr=5000, iter=1, Train= False):
         all_task_deadline = np.vstack((all_task_deadline, [result["task_drop"]]))
         all_cns_energy = np.vstack((all_cns_energy, [result["cn_energy"]]))
         all_cns_deadline = np.vstack((all_cns_deadline, [result["cn_drop"]]))
+
     mean_energy_eval = np.mean(all_energy_eval, axis=0)
     mean_drop_eval = np.mean(all_deadline_eval, axis=0)
     mean_cpu_energy = np.mean(all_cpu_energy, axis=0)
@@ -126,12 +119,6 @@ def iDEAS_main(eval_itr=5000, iter=1, Train= False):
         "iDEAS_task_drop",
         numbered=True,
     )
-    # current_directory = os.getcwd()
-    # file_path1 = os.path.join(current_directory, "mean_cns.npy")
-    # file_path2 = os.path.join(current_directory, "cns.npy")
-    # np.save(file_path1,mean_cns_energy)
-    # np.save(file_path2,cns)
-
     stack_bar_res(
         alg_set,
         mean_cns_energy,
@@ -156,7 +143,7 @@ def iDEAS_main(eval_itr=5000, iter=1, Train= False):
     )
 
 
-def RRLO_main(eval_itr=10000, iter=1,Train=False):
+def RRLO_main(eval_itr=10000, iter=1, Train=False):
     DQN_STATE_DIM = 4
     configs = {
         "task_set1": "configs/task_set_eval.json",
@@ -305,8 +292,8 @@ def RRLO_main(eval_itr=10000, iter=1,Train=False):
     )
 
 
-def big_little_main(eval_itr=10000,iter=1, Train= False):
-    DQN_STATE_DIM=5
+def big_little_main(eval_itr=10000, iter=1, Train=False):
+    DQN_STATE_DIM = 5
     configs = {
         "task_set1": "configs/task_set_eval.json",
         "task_set2": "configs/task_set_eval2.json",
@@ -453,11 +440,10 @@ def big_little_main(eval_itr=10000,iter=1, Train= False):
         xlog=True,
     )
 
+
 if __name__ == "__main__":
-    # compare_dqn_rrlo(Train=True)
-    # compare_dqn_base(Train=True)
-    # compare_cpu_load(Train=False)
-    # compare_task_size(Train=False)
-    iDEAS_main(Train=False)
+    configs_ideas = load_yaml("./configs/iDEAS.yaml")
+    iDEAS_main(configs_ideas)
+
     # RRLO_main(Train=False)
     # big_little_main(Train=False)

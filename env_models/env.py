@@ -5,25 +5,22 @@ import math
 from env_models.cpu import CPU, CPU_CC, CPU_LA
 from env_models.task import Task
 from env_models.wireless_interface import WirelessInterface, RRLOWirelessInterface
-from configs import (
-    LATENCY_ENERGY_COEFF,
-    DEADLINE_MISSED_PENALTY,
-    RRLO_STATE_DIM,
-    REWARD_COEFF,
-)
-
 
 class BaseDQNEnv:
     def __init__(self, confs, wcet_bound, task_size_bound):
-        self.cpu_little = CPU(confs["cpu_little"])
-        self.cpu_big = CPU(confs["cpu_big"])
+        self.cpu_little = CPU(confs["cpus"]["little"])
+        self.cpu_big = CPU(confs["cpus"]["big"])
         self.w_inter = WirelessInterface(confs["w_inter"])
+
+        self.latency_energy_coeff = confs["params"]["latency_energy_coeff"]
+        self.deadline_missed_penalty = confs["params"]["deadline_missed_penalty"]
+        self.reward_coeff = confs["params"]["reward_coeff"]
 
         # Initialize environment state
         self._init_state_bounds(
             wcet_bound, task_size_bound, self.w_inter.get_rate_bounds()
         )
-        self.state_dim = confs["dqn_state_dim"]
+        self.state_dim = confs["params"]["dqn_state_dim"]
         self.curr_tasks = None
         self.curr_state = None
 
@@ -53,7 +50,7 @@ class BaseDQNEnv:
         return action_space
 
     def _init_state_bounds(self, wcet_bound, task_size_bound, chan_rate_bound):
-        # (SU, U_little, U_big, WCET, B)
+        # (SU, U_little, U_big, WCET, B, chan_rate)
         self.min_state_vals = np.array(
             [0, 0, 0, wcet_bound[0], task_size_bound[0], chan_rate_bound[0]],
             dtype=float,
@@ -105,7 +102,7 @@ class BaseDQNEnv:
                     is_deadline_missed = True
                     break
                 else:
-                    penalty += job.cons_energy + LATENCY_ENERGY_COEFF * job.aet
+                    penalty += job.cons_energy + self.latency_energy_coeff * job.aet
 
             min_penalty = np.min(
                 [
@@ -118,22 +115,26 @@ class BaseDQNEnv:
             if not is_deadline_missed:
                 penalties.append(penalty / len(task))
             else:
-                penalties.append(DEADLINE_MISSED_PENALTY)
+                penalties.append(self.deadline_missed_penalty)
 
         # Calculate reward
         min_penalties = np.asarray(min_penalties, dtype=float)
         penalties = np.asarray(penalties, dtype=float)
-        rewards = np.exp(-REWARD_COEFF * (penalties - min_penalties))
+        rewards = np.exp(-self.reward_coeff * (penalties - min_penalties))
         return rewards, penalties, min_penalties
 
 
 class DQNEnv:
     def __init__(self, confs: Dict[str, str], wcet_bound, task_size_bound):
-        self.cpu = CPU(confs["cpu_local"])
+        self.cpu = CPU(confs["cpus"]["local"])
         self.w_inter = WirelessInterface(confs["w_inter"])
 
+        self.latency_energy_coeff = confs["params"]["latency_energy_coeff"]
+        self.deadline_missed_penalty = confs["params"]["deadline_missed_penalty"]
+        self.reward_coeff = confs["params"]["reward_coeff"]
+
         # Initialize environment state
-        self.state_dim = confs["dqn_state_dim"]
+        self.state_dim = confs["params"]["dqn_state_dim"]
         self._init_state_bounds(
             wcet_bound, task_size_bound, self.w_inter.get_rate_bounds()
         )
@@ -208,7 +209,7 @@ class DQNEnv:
                     is_deadline_missed = True
                     break
                 else:
-                    penalty += job.cons_energy + LATENCY_ENERGY_COEFF * job.aet
+                    penalty += job.cons_energy + self.latency_energy_coeff * job.aet
 
             min_penalty = np.min(
                 [self.cpu.get_min_energy(task[0]), self.w_inter.get_min_energy(task[0])]
@@ -217,19 +218,23 @@ class DQNEnv:
             if not is_deadline_missed:
                 penalties.append(penalty / len(task))
             else:
-                penalties.append(DEADLINE_MISSED_PENALTY)
+                penalties.append(self.deadline_missed_penalty)
 
         # Calculate reward
         min_penalties = np.asarray(min_penalties, dtype=float)
         penalties = np.asarray(penalties, dtype=float)
-        rewards = np.exp(-REWARD_COEFF * (penalties - min_penalties))
+        rewards = np.exp(-self.reward_coeff * (penalties - min_penalties))
         return rewards, penalties, min_penalties
 
 
 class RRLOEnv:
     def __init__(self, confs: Dict[str, str]):
-        self.cpu_cc = CPU_CC(confs["cpu_local"])
-        self.cpu_la = CPU_LA(confs["cpu_local"])
+        self.cpu_cc = CPU_CC(confs["cpus"]["local"])
+        self.cpu_la = CPU_LA(confs["cpus"]["local"])
+
+        self.deadline_missed_penalty = confs["params"]["deadline_missed_penalty"]
+        self.rrlo_state_dim = confs["params"]["rrlo_state_dim"]
+
         # Pass CPU frequency to RRLO task generator
         self.w_inter = RRLOWirelessInterface(confs["w_inter"])
 
@@ -273,13 +278,13 @@ class RRLOEnv:
         penalty = 0
         for t in local_tasks:
             if t.deadline_missed:
-                penalty += DEADLINE_MISSED_PENALTY
+                penalty += self.deadline_missed_penalty
             else:
                 penalty += t.cons_energy
         for tasks in offload_tasks.values():
             for job in tasks:
                 if job.deadline_missed:
-                    penalty += DEADLINE_MISSED_PENALTY
+                    penalty += self.deadline_missed_penalty
                 else:
                     penalty += job.cons_energy
         return penalty
@@ -301,7 +306,7 @@ class RRLOEnv:
                 job.gen_aet()
 
     def _get_system_state(self):
-        states = np.zeros(RRLO_STATE_DIM, dtype=np.float32)
+        states = np.zeros(self.rrlo_state_dim, dtype=np.float32)
         h_p = math.lcm(*[t[0].p for t in self.curr_tasks.values()])
         eth_p = 0.0
         ds_deonm = 0.0

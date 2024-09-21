@@ -2,8 +2,18 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import os
+import yaml
 from tabulate import tabulate
 from matplotlib.colors import ListedColormap
+
+
+def load_yaml(path):
+    try:
+        with open(path, "r") as f:
+            data = yaml.safe_load(f)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"YAML file not found at {path}")
+    return data
 
 
 def set_random_seed(seed):
@@ -19,10 +29,10 @@ def moving_avg(arr, n):
     return np.convolve(arr, np.ones(n) / n, "same")
 
 
-def plot_loss_function(losses, alg, xlabel, ylabel,fig_name):
-    plt.rcParams['font.size'] =30
-    plt.rcParams['font.family'] = "sans-serif"
-    plt.rcParams['text.usetex'] = False
+def plot_loss_function(losses, alg, xlabel, ylabel, fig_name):
+    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["text.usetex"] = False
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
 
@@ -47,22 +57,22 @@ def plot_loss_function(losses, alg, xlabel, ylabel,fig_name):
     plt.title(rf"{alg} Loss function values")
     plt.xlabel(rf"{xlabel}")
     plt.ylabel(rf"{ylabel}")
-    plt.plot(moving_avg(losses,10000), label=rf'Loss', color=colors[4],linewidth=5)
-    #x0,x1 = plt.xlim()
-    #visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
-    #plt.xticks(visible,list(map(str,visible)))
-    #y0,y1 = plt.ylim()
-    #visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
-    #plt.yticks(visible,list(map(str,visible)))
+    plt.plot(moving_avg(losses, 10000), label=rf"Loss", color=colors[4], linewidth=5)
+    # x0,x1 = plt.xlim()
+    # visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
+    # plt.xticks(visible,list(map(str,visible)))
+    # y0,y1 = plt.ylim()
+    # visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    # plt.yticks(visible,list(map(str,visible)))
     plt.tight_layout()
     plt.grid(True)
     fig.savefig(file_path)
 
 
-def plot_all_rewards(all_rewards, alg, xlabel, ylabel,fig_name):
-    plt.rcParams['font.size'] = 30
-    plt.rcParams['font.family'] = "sans-serif"
-    plt.rcParams['text.usetex'] = False
+def plot_all_rewards(all_rewards, alg, xlabel, ylabel, fig_name):
+    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["text.usetex"] = False
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
 
@@ -87,19 +97,24 @@ def plot_all_rewards(all_rewards, alg, xlabel, ylabel,fig_name):
 
     fig = plt.figure(figsize=(20, 12))
     plt.title(rf"{alg} Reward value")
-    plt.plot(moving_avg(mean_all_rewards, 10000), label=rf'Rewards', color=colors[3],linewidth=5)
-    #plt.plot(moving_avg(all_rewards[:, 0], 1000))
-    #plt.plot(moving_avg(all_rewards[:, 1], 1000))
-    #plt.plot(moving_avg(all_rewards[:, 2], 1000))
-    #plt.plot(moving_avg(all_rewards[:, 3], 1000))
-    plt.xlabel(rf'{xlabel}')
-    plt.ylabel(rf'{ylabel}')
-    #x0,x1 = plt.xlim()
-    #visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
-    #plt.xticks(visible,list(map(str,visible)))
-    #y0,y1 = plt.ylim()
-    #visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
-    #plt.yticks(visible,list(map(str,visible)))
+    plt.plot(
+        moving_avg(mean_all_rewards, 10000),
+        label=rf"Rewards",
+        color=colors[3],
+        linewidth=5,
+    )
+    # plt.plot(moving_avg(all_rewards[:, 0], 1000))
+    # plt.plot(moving_avg(all_rewards[:, 1], 1000))
+    # plt.plot(moving_avg(all_rewards[:, 2], 1000))
+    # plt.plot(moving_avg(all_rewards[:, 3], 1000))
+    plt.xlabel(rf"{xlabel}")
+    plt.ylabel(rf"{ylabel}")
+    # x0,x1 = plt.xlim()
+    # visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
+    # plt.xticks(visible,list(map(str,visible)))
+    # y0,y1 = plt.ylim()
+    # visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    # plt.yticks(visible,list(map(str,visible)))
     plt.tight_layout()
     plt.grid(True)
     fig.savefig(file_path)
@@ -120,9 +135,9 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel, title, fig_name, ylog=
     # algorithms = ['Local Scheduling', 'RRLO [8]', 'Our Algorithm']
 
     # Positioning of bars on x-axis
-    plt.rcParams['font.size'] = 30
-    plt.rcParams['font.family'] = "sans-serif"
-    plt.rcParams['text.usetex'] = False
+    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["text.usetex"] = False
     ind = range(len(alg_set))
     # Plotting both tasksets
     current_directory = os.getcwd()
@@ -146,9 +161,9 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel, title, fig_name, ylog=
     # X-axis tick labels positioning
     plt.xticks([i + 0.2 for i in ind], alg_set)
 
-    #y0,y1 = plt.ylim()
-    #visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
-    #plt.yticks(visible,list(map(str,visible)))
+    # y0,y1 = plt.ylim()
+    # visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    # plt.yticks(visible,list(map(str,visible)))
     # Adding legend to specify which color represents which task set
     legend = plt.legend()
     # for text in legend.get_texts():
@@ -166,9 +181,9 @@ def line_plot_res(
     # algorithms = ['Local Scheduling', 'RRLO [8]', 'Our Algorithm']
 
     # Positioning of bars on x-axis
-    plt.rcParams['font.size'] = 30
-    plt.rcParams['font.family'] = "sans-serif"
-    plt.rcParams['text.usetex'] = False
+    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["text.usetex"] = False
     ind = range(len(alg_set))
     colors = ListedColormap(
         [
@@ -213,12 +228,12 @@ def line_plot_res(
     plt.ylabel(rf"{ylabel}")
     plt.title(rf"{title}")
 
-    #x0,x1 = plt.xlim()
-    #visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
-    #plt.xticks(visible,list(map(str,visible)))
-    #y0,y1 = plt.ylim()
-    #visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
-    #plt.yticks(visible,list(map(str,visible)))
+    # x0,x1 = plt.xlim()
+    # visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
+    # plt.xticks(visible,list(map(str,visible)))
+    # y0,y1 = plt.ylim()
+    # visible= [t for t in plt.yticks() if t>=y0 and t<= y1]
+    # plt.yticks(visible,list(map(str,visible)))
     # X-axis tick labels positioning
     # plt.xticks([i + 0.2 for i in ind], alg_set,fontweight='bold')
     # Adding legend to specify which color represents which task set
@@ -246,9 +261,9 @@ def stack_bar_res(
     # Data for plotting
 
     # Positioning of bars on x-axis
-    plt.rcParams['font.size'] = 30
-    plt.rcParams['font.family'] = "sans-serif"
-    plt.rcParams['text.usetex'] = False
+    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["text.usetex"] = False
 
     colors = ListedColormap(
         [
