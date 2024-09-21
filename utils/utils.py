@@ -254,9 +254,9 @@ def stack_bar_res(
     ylabel,
     title,
     fig_name,
-    ylog=False,
-    xlog=False,
     numbered=False,
+    xlog=False,
+    ylog=False,
 ):
     # Data for plotting
 
