@@ -38,7 +38,7 @@ class BaseDQNEnv:
     def observe(self, tasks):
         self.curr_tasks = tasks
         self.curr_state = self._get_system_state()
-        is_final = len(self.curr_tasks) * [True]
+        is_final = len(self.curr_tasks) * [False]
 
         return self.curr_state, is_final
 
@@ -73,40 +73,18 @@ class BaseDQNEnv:
         states[:, 1] = self.cpu_little.util
         states[:, 2] = self.cpu_big.util
 
-        # Clip the values in states[:, 0] between min_array and  max_array
-        states[:, 0] = np.clip(
-            states[:, 0],
-            np.full(states[:, 0].shape, self.min_state_vals[0]),
-            np.full(states[:, 0].shape, self.min_state_vals[0])
-            )
-        states[:, 1] = np.clip(
-            states[:, 1],
-            np.full(states[:, 1].shape, self.min_state_vals[1]),
-            np.full(states[:, 1].shape, self.min_state_vals[1])
-        )
-        states[:, 2] = np.clip(
-            states[:, 2],
-            np.full(states[:, 2].shape, self.min_state_vals[2]),
-            np.full(states[:, 2].shape, self.min_state_vals[2])
-        )
-
-        states[:, 3] = np.clip(
-            states[:, 3],
-            np.full(states[:, 3].shape, self.min_state_vals[3]),
-            np.full(states[:, 3].shape, self.min_state_vals[3])
-        )
-        states[:, 4] = np.clip(
-            states[:, 4],
-            np.full(states[:, 4].shape, self.min_state_vals[4]),
-            np.full(states[:, 4].shape, self.min_state_vals[4])
-        )
-
-
+        # Clip the state values
+        for i in range(states.shape[1]):
+            states[:, i] = np.clip(
+                states[:, i],
+                np.full(states[:, i].shape, self.min_state_vals[i]),
+                np.full(states[:, i].shape, self.max_state_vals[i])
+                )
 
         states = (states - self.min_state_vals) / (
             self.max_state_vals - self.min_state_vals
         )
-        
+
         return states
 
     def _cal_reward(self):
@@ -166,7 +144,7 @@ class DQNEnv:
     def observe(self, tasks):
         self.curr_tasks = tasks
         self.curr_state = self._get_system_state()
-        is_final = len(self.curr_tasks) * [True]
+        is_final = len(self.curr_tasks) * [False]
 
         return self.curr_state, is_final
 
@@ -196,32 +174,13 @@ class DQNEnv:
         states[:, 0] = su
         states[:, 1] = self.cpu.util
 
-
-        states[:, 0] = np.clip(
-            states[:, 0],
-            np.full(states[:, 0].shape, self.min_state_vals[0]),
-            np.full(states[:, 0].shape, self.min_state_vals[0])
-            )
-        states = (states - self.min_state_vals) / (
-            self.max_state_vals - self.min_state_vals
-        )
-        states[:, 1] = np.clip(
-            states[:, 1],
-            np.full(states[:, 1].shape, self.min_state_vals[1]),
-            np.full(states[:, 1].shape, self.min_state_vals[1])
-        )
-        states[:, 2] = np.clip(
-            states[:, 2],
-            np.full(states[:, 2].shape, self.min_state_vals[2]),
-            np.full(states[:, 2].shape, self.min_state_vals[2])
-        )
-
-        states[:, 3] = np.clip(
-            states[:, 3],
-            np.full(states[:, 3].shape, self.min_state_vals[3]),
-            np.full(states[:, 3].shape, self.min_state_vals[3])
-        )
-
+        # Clip the state values
+        for i in range(states.shape[1]):
+            states[:, i] = np.clip(
+                states[:, i],
+                np.full(states[:, i].shape, self.min_state_vals[i]),
+                np.full(states[:, i].shape, self.max_state_vals[i])
+                )
 
         states = (states - self.min_state_vals) / (
             self.max_state_vals - self.min_state_vals
@@ -350,25 +309,13 @@ class RRLOEnv:
         states[1] = ds
         states[2] = self.w_inter.update_channel_state()
 
-        states[0] = np.clip(
-            states[0],
-            np.full(states[0].shape, self.min_state_vals[0]),
-            np.full(states[0].shape, self.min_state_vals[0])
-            )
-        states = (states - self.min_state_vals) / (
-            self.max_state_vals - self.min_state_vals
-        )
-        states[1] = np.clip(
-            states[1],
-            np.full(states[1].shape, self.min_state_vals[1]),
-            np.full(states[1].shape, self.min_state_vals[1])
-        )
-        states[2] = np.clip(
-            states[2],
-            np.full(states[2].shape, self.min_state_vals[2]),
-            np.full(states[2].shape, self.min_state_vals[2])
-        )
-
+        # Clip the state values
+        for i in range(states.shape[1]):
+            states[:, i] = np.clip(
+                states[:, i],
+                np.full(states[:, i].shape, self.min_state_vals[i]),
+                np.full(states[:, i].shape, self.max_state_vals[i])
+                )
 
         return states
 

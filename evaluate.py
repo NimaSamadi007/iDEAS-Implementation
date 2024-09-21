@@ -15,17 +15,17 @@ from utils.utils import set_random_seed
 def iDEAS_evaluate(
         configs,
         cpu_loads,
-        task_sizes, 
-        CNs, 
+        task_sizes,
+        CNs,
         eval_itr=10000,
         taskset_eval=True,
-        CPU_load_eval=True, 
-        task_size_eval=True, 
+        CPU_load_eval=True,
+        task_size_eval=True,
         CN_eval= True
     ):
 
 
-    results={ 
+    results={
         "taskset_energy":[], "taskset_drop":[],
         "cpu_energy":[], "cpu_drop":[],
         "task_energy":[], "task_drop":[],
@@ -58,7 +58,6 @@ def iDEAS_evaluate(
             tasks = task_gen.step()
             dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
 
-
             for _ in range(eval_itr):
                 actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
                 actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
@@ -79,15 +78,13 @@ def iDEAS_evaluate(
                         if job.deadline_missed:
                             big_deadline_missed[job.t_id,i] += 1
                     big_num_tasks[job.t_id,i] += len(dqn_env.curr_tasks[t_id])
-        
+
                 for t_id, _ in actions_dqn_str["offload"]:
                     for job in dqn_env.curr_tasks[t_id]:
                         offload_energy[job.t_id,i]+=job.cons_energy
                         if job.deadline_missed:
                             offload_deadline_missed[job.t_id,i] += 1
                     offload_num_tasks[job.t_id,i] += len(dqn_env.curr_tasks[t_id])
-
-
 
                 for jobs in dqn_env.curr_tasks.values():
                     for j in jobs:
@@ -100,7 +97,6 @@ def iDEAS_evaluate(
 
                 tasks = task_gen.step()
                 next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
-        
 
                 # Update current state
                 dqn_state = next_state_dqn
@@ -156,13 +152,12 @@ def iDEAS_evaluate(
 
 
     if CPU_load_eval:
-        
         set_random_seed(42)
         max_task_load=3
-        
+
         random_task_gen = RandomTaskGen(configs["task_set3"])
         dqn_env = BaseDQNEnv(configs, random_task_gen.get_wcet_bound(), random_task_gen.get_task_size_bound())
-    
+
         dqn_dvfs = DQN_DVFS(state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space())
         dqn_dvfs.load_model("models/iDEAS_train")
 
@@ -179,20 +174,19 @@ def iDEAS_evaluate(
         big_cpu_deadline_missed =np.zeros((4,len(cpu_loads)))
         little_cpu_deadline_missed =np.zeros((4,len(cpu_loads)))
         offload_cpu_deadline_missed =np.zeros((4,len(cpu_loads)))
-    
-    
-        for i in range(len(cpu_loads)):
 
+
+        for i in range(len(cpu_loads)):
             target_cpu_load=cpu_loads[i]
-            tasks = random_task_gen.step(target_cpu_load,max_task_load)
+            tasks = random_task_gen.step(target_cpu_load, max_task_load)
             dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
             for _ in range(eval_itr):
                 actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
                 actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
-            
+
                 dqn_env.step(actions_dqn_str)
 
-            
+
                 for t_id, _ in actions_dqn_str["little"]:
                     for job in dqn_env.curr_tasks[t_id]:
                         little_cpu_energy[job.t_id,i]+=job.cons_energy

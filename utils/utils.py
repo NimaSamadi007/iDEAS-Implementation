@@ -22,7 +22,7 @@ def moving_avg(arr, n):
 def plot_loss_function(losses, alg, xlabel, ylabel,fig_name):
     plt.rcParams['font.size'] =30
     plt.rcParams['font.family'] = "sans-serif"
-    plt.rcParams['text.usetex'] = True
+    plt.rcParams['text.usetex'] = False
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
 
@@ -64,7 +64,7 @@ def plot_loss_function(losses, alg, xlabel, ylabel,fig_name):
 def plot_all_rewards(all_rewards, alg, xlabel, ylabel,fig_name):
     plt.rcParams['font.size'] = 30
     plt.rcParams['font.family'] = "sans-serif"
-    plt.rcParams['text.usetex'] = True
+    plt.rcParams['text.usetex'] = False
     current_directory = os.getcwd()
     file_path = os.path.join(current_directory, fig_name + ".png")
 
@@ -125,7 +125,7 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel,title, fig_name, ylog=F
     # Positioning of bars on x-axis
     plt.rcParams['font.size'] = 30
     plt.rcParams['font.family'] = "sans-serif"
-    plt.rcParams['text.usetex'] = True
+    plt.rcParams['text.usetex'] = False
     ind = range(len(alg_set))
     # Plotting both tasksets
     current_directory = os.getcwd()
@@ -166,7 +166,7 @@ def line_plot_res(alg_set,data1,y_val , xlabel, ylabel,title, fig_name, ylog=Fal
     # Positioning of bars on x-axis
     plt.rcParams['font.size'] = 30
     plt.rcParams['font.family'] = "sans-serif"
-    plt.rcParams['text.usetex'] = True
+    plt.rcParams['text.usetex'] = False
     ind = range(len(alg_set))
     colors = ListedColormap(
         [
@@ -230,7 +230,7 @@ def stack_bar_res(labels,data1,x_val , xlabel, ylabel,title, fig_name, ylog=Fals
     # Positioning of bars on x-axis
     plt.rcParams['font.size'] = 30
     plt.rcParams['font.family'] = "sans-serif"
-    plt.rcParams['text.usetex'] = True
+    plt.rcParams['text.usetex'] = False
 
     colors = ListedColormap(
         [
