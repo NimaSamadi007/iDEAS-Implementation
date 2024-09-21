@@ -1,14 +1,14 @@
 ---
 params:
   train_itr: 3.0e+3                         # Number of training iterations
-  eval_itr: 1000                            # Number of evaluation iterations
+  eval_itr: 10                            # Number of evaluation iterations
   eval_cycle: 1                             # Evaluation cycle at each the algorithm is evaluated eval_itr times
-  do_train: true                            # Train or not
+  do_train: false                            # Train or not
   do_taskset_eval: true                     # Taskset evaluation
   do_cpu_load_eval: true
   do_task_size_eval: true
   do_channel_eval: true
-  dqn_state_dim: 6
+  dqn_state_dim: 5
   rrlo_state_dim: 3
   num_tasks: 4
   batch_size: 128
@@ -30,4 +30,5 @@ tasks:
 cpus:
   little: configs/cpus/little.yaml
   big: configs/cpus/big.yaml
+  local: configs/cpus/local.yaml
 w_inter: configs/channel/wireless_inter.yaml

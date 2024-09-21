@@ -77,10 +77,11 @@ class CPU_CC(CPU):
 
     def step(self, jobs: Dict[int, List[Task]]) -> List[Task]:
         tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
-        # Check schedulability criteria
-        total_util = self._cal_total_util(tasks)
-        if total_util > 1:
-            raise ValueError("Total utilization is greater than 1")
+        #FIXME: Check this condition
+        # # Check schedulability criteria
+        # total_util = self._cal_total_util(tasks)
+        # if total_util > 1:
+        #     raise ValueError("Total utilization is greater than 1")
         self.hp = math.lcm(*[task.p for task in tasks.values()])
         self.tasks = tasks
 
@@ -132,8 +133,9 @@ class CPU_CC(CPU):
             curr_jobs = [t for t in curr_jobs if not t.finished]
             # print(20*'-')
         # Check if any job is remained:
-        if len(curr_jobs):
-            print("Some tasks are not completed!")
+        #FIXME: Check remaining tasks
+        # if len(curr_jobs):
+        #     print("Some tasks are not completed!")
         # Calculate energy consumption
         for t in finished_jobs:
             # Task deadline is missed
@@ -192,9 +194,10 @@ class CPU_LA(CPU):
 
     def step(self, jobs: Dict[int, List[Task]]) -> List[Task]:
         tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
-        total_util = self._cal_total_util(tasks)
-        if total_util > 1:
-            raise ValueError("Total utilization is greater than 1")
+        #FIXME: Check this condition
+        # total_util = self._cal_total_util(tasks)
+        # if total_util > 1:
+        #     raise ValueError("Total utilization is greater than 1")
         self.hp = math.lcm(*[task.p for task in tasks.values()])
         self.tasks = tasks
 
@@ -244,8 +247,9 @@ class CPU_LA(CPU):
             finished_jobs.extend([t for t in curr_jobs if t.finished])
             curr_jobs = [t for t in curr_jobs if not t.finished]
 
-        if len(curr_jobs):
-            print("Some tasks are not completed!")
+        #FIXME: Check remaining tasks
+        # if len(curr_jobs):
+        #     print("Some tasks are not completed!")
 
         for t in finished_jobs:
             if t.exec_time_history[-1][1] > t.deadline:

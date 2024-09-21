@@ -545,17 +545,19 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
     return results
 
 
-def RRLO_evaluate(
-    configs,
-    cpu_loads,
-    task_sizes,
-    CNs,
-    eval_itr=10000,
-    taskset_eval=True,
-    CPU_load_eval=True,
-    task_size_eval=True,
-    CN_eval=True,
-):
+def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
+    params = configs["params"]
+    tasks_conf = configs["tasks"]
+
+    do_taskset_eval = params["do_taskset_eval"]
+    do_cpu_load_eval = params["do_cpu_load_eval"]
+    do_task_size_eval = params["do_task_size_eval"]
+    do_channel_eval = params["do_channel_eval"]
+    dqn_state_dim = params["dqn_state_dim"]
+    # rrlo_state_dim = params["rrlo_state_dim"]
+    eval_itr = params["eval_itr"]
+    num_tasks = params["num_tasks"]
+
     results = {
         "taskset_energy": [],
         "taskset_drop": [],
@@ -568,29 +570,27 @@ def RRLO_evaluate(
         "cn_drop": [],
     }
 
-    dqn_energy = np.zeros((4, 2))
-    dqn_num_tasks = np.zeros((4, 2))
-    rrlo_energy = np.zeros((4, 2))
-    rrlo_num_tasks = np.zeros((4, 2))
-    local_energy = np.zeros((4, 2))
-    local_num_tasks = np.zeros((4, 2))
-    remote_energy = np.zeros((4, 2))
-    remote_num_tasks = np.zeros((4, 2))
-    random_energy = np.zeros((4, 2))
-    random_num_tasks = np.zeros((4, 2))
+    dqn_energy = np.zeros((num_tasks, 2))
+    dqn_num_tasks = np.zeros((num_tasks, 2))
+    rrlo_energy = np.zeros((num_tasks, 2))
+    rrlo_num_tasks = np.zeros((num_tasks, 2))
+    local_energy = np.zeros((num_tasks, 2))
+    local_num_tasks = np.zeros((num_tasks, 2))
+    remote_energy = np.zeros((num_tasks, 2))
+    remote_num_tasks = np.zeros((num_tasks, 2))
+    random_energy = np.zeros((num_tasks, 2))
+    random_num_tasks = np.zeros((num_tasks, 2))
 
-    dqn_deadline_missed = np.zeros((4, 2))
-    rrlo_deadline_missed = np.zeros((4, 2))
-    local_deadline_missed = np.zeros((4, 2))
-    remote_deadline_missed = np.zeros((4, 2))
-    random_deadline_missed = np.zeros((4, 2))
+    dqn_deadline_missed = np.zeros((num_tasks, 2))
+    rrlo_deadline_missed = np.zeros((num_tasks, 2))
+    local_deadline_missed = np.zeros((num_tasks, 2))
+    remote_deadline_missed = np.zeros((num_tasks, 2))
+    random_deadline_missed = np.zeros((num_tasks, 2))
 
-    if taskset_eval:
+    if do_taskset_eval:
         for i in range(2):
-            if i == 0:
-                task_gen = TaskGen(configs["task_set1"])
-            if i == 1:
-                task_gen = TaskGen(configs["task_set2"])
+            task_gen = TaskGen(tasks_conf[f"eval_{i+1}"])
+
             dqn_env = DQNEnv(
                 configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound()
             )
@@ -608,18 +608,18 @@ def RRLO_evaluate(
             rrlo_env = RRLOEnv(configs)
 
             dqn_dvfs = DQN_DVFS(
-                state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
+                state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
             )
             rrlo_dvfs = RRLO_DVFS(
                 state_bounds=rrlo_env.get_state_bounds(),
                 num_w_inter_powers=len(rrlo_env.w_inter.powers),
                 num_dvfs_algs=2,
                 dvfs_algs=["cc", "la"],
-                num_tasks=4,
+                num_tasks=num_tasks,
             )
 
-            dqn_dvfs.load_model("models/RRLO_train")
-            rrlo_dvfs.load_model("models/RRLO_train")
+            dqn_dvfs.load_model("models/iDEAS_RRLO")
+            rrlo_dvfs.load_model("models/iDEAS_RRLO")
 
             tasks = task_gen.step()
             dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
@@ -781,10 +781,10 @@ def RRLO_evaluate(
             ]
         )
 
-    if CPU_load_eval:
-        max_task_load = 2
+    if do_cpu_load_eval:
+        max_task_load = params["max_task_load_eval"]
 
-        random_task_gen = RandomTaskGen(configs["train"])
+        random_task_gen = RandomTaskGen(tasks_conf["train"])
         dqn_env = DQNEnv(
             configs,
             random_task_gen.get_wcet_bound(),
@@ -810,18 +810,18 @@ def RRLO_evaluate(
         rrlo_env = RRLOEnv(configs)
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
+            state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
         )
         rrlo_dvfs = RRLO_DVFS(
             state_bounds=rrlo_env.get_state_bounds(),
             num_w_inter_powers=len(rrlo_env.w_inter.powers),
             num_dvfs_algs=2,
             dvfs_algs=["cc", "la"],
-            num_tasks=4,
+            num_tasks=num_tasks,
         )
 
-        dqn_dvfs.load_model("models/RRLO_train")
-        rrlo_dvfs.load_model("models/RRLO_train")
+        dqn_dvfs.load_model("models/iDEAS_RRLO")
+        rrlo_dvfs.load_model("models/iDEAS_RRLO")
 
         dqn_cpu_energy = np.zeros((4, len(cpu_loads)))
         dqn_cpu_num_tasks = np.zeros((4, len(cpu_loads)))
@@ -988,11 +988,10 @@ def RRLO_evaluate(
             ]
         )
 
-    if task_size_eval:
+    if do_task_size_eval:
         target_cpu_load = 0.35
-        max_task_load = 2
 
-        normal_task_gen = NormalTaskGen(configs["train"])
+        normal_task_gen = NormalTaskGen(tasks_conf["train"])
         dqn_env = DQNEnv(
             configs,
             normal_task_gen.get_wcet_bound(),
@@ -1018,36 +1017,36 @@ def RRLO_evaluate(
         rrlo_env = RRLOEnv(configs)
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
+            state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
         )
         rrlo_dvfs = RRLO_DVFS(
             state_bounds=rrlo_env.get_state_bounds(),
             num_w_inter_powers=len(rrlo_env.w_inter.powers),
             num_dvfs_algs=2,
             dvfs_algs=["cc", "la"],
-            num_tasks=4,
+            num_tasks=num_tasks,
         )
 
-        dqn_dvfs.load_model("models/RRLO_train")
-        rrlo_dvfs.load_model("models/RRLO_train")
+        dqn_dvfs.load_model("models/iDEAS_RRLO")
+        rrlo_dvfs.load_model("models/iDEAS_RRLO")
 
-        dqn_task_energy = np.zeros((4, len(task_sizes) - 1))
-        dqn_task_num_tasks = np.zeros((4, len(task_sizes) - 1))
-        rrlo_task_energy = np.zeros((4, len(task_sizes) - 1))
-        rrlo_task_num_tasks = np.zeros((4, len(task_sizes) - 1))
+        dqn_task_energy = np.zeros((num_tasks, len(task_sizes) - 1))
+        dqn_task_num_tasks = np.zeros((num_tasks, len(task_sizes) - 1))
+        rrlo_task_energy = np.zeros((num_tasks, len(task_sizes) - 1))
+        rrlo_task_num_tasks = np.zeros((num_tasks, len(task_sizes) - 1))
 
-        local_task_energy = np.zeros((4, len(task_sizes) - 1))
-        local_task_num_tasks = np.zeros((4, len(task_sizes) - 1))
-        remote_task_energy = np.zeros((4, len(task_sizes) - 1))
-        remote_task_num_tasks = np.zeros((4, len(task_sizes) - 1))
-        random_task_energy = np.zeros((4, len(task_sizes) - 1))
-        random_task_num_tasks = np.zeros((4, len(task_sizes) - 1))
+        local_task_energy = np.zeros((num_tasks, len(task_sizes) - 1))
+        local_task_num_tasks = np.zeros((num_tasks, len(task_sizes) - 1))
+        remote_task_energy = np.zeros((num_tasks, len(task_sizes) - 1))
+        remote_task_num_tasks = np.zeros((num_tasks, len(task_sizes) - 1))
+        random_task_energy = np.zeros((num_tasks, len(task_sizes) - 1))
+        random_task_num_tasks = np.zeros((num_tasks, len(task_sizes) - 1))
 
-        local_task_deadline_missed = np.zeros((4, len(task_sizes) - 1))
-        random_task_deadline_missed = np.zeros((4, len(task_sizes) - 1))
-        remote_task_deadline_missed = np.zeros((4, len(task_sizes) - 1))
-        dqn_task_deadline_missed = np.zeros((4, len(task_sizes) - 1))
-        rrlo_task_deadline_missed = np.zeros((4, len(task_sizes) - 1))
+        local_task_deadline_missed = np.zeros((num_tasks, len(task_sizes) - 1))
+        random_task_deadline_missed = np.zeros((num_tasks, len(task_sizes) - 1))
+        remote_task_deadline_missed = np.zeros((num_tasks, len(task_sizes) - 1))
+        dqn_task_deadline_missed = np.zeros((num_tasks, len(task_sizes) - 1))
+        rrlo_task_deadline_missed = np.zeros((num_tasks, len(task_sizes) - 1))
 
         tasks = normal_task_gen.step(target_cpu_load, task_sizes[0], max_task_load)
         for i in range(len(task_sizes) - 1):
@@ -1199,11 +1198,11 @@ def RRLO_evaluate(
             ]
         )
 
-    if CN_eval:
+    if do_channel_eval:
         max_task_load = 2
         target_cpu_load = 0.35
 
-        random_task_gen = RandomTaskGen(configs["train"])
+        random_task_gen = RandomTaskGen(tasks_conf["train"])
         dqn_env = DQNEnv(
             configs,
             random_task_gen.get_wcet_bound(),
@@ -1229,35 +1228,35 @@ def RRLO_evaluate(
         rrlo_env = RRLOEnv(configs)
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
+            state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
         )
         rrlo_dvfs = RRLO_DVFS(
             state_bounds=rrlo_env.get_state_bounds(),
             num_w_inter_powers=len(rrlo_env.w_inter.powers),
             num_dvfs_algs=2,
             dvfs_algs=["cc", "la"],
-            num_tasks=4,
+            num_tasks=num_tasks,
         )
 
-        dqn_dvfs.load_model("models/RRLO_train")
-        rrlo_dvfs.load_model("models/RRLO_train")
+        dqn_dvfs.load_model("models/iDEAS_RRLO")
+        rrlo_dvfs.load_model("models/iDEAS_RRLO")
 
-        dqn_cn_energy = np.zeros((4, len(CNs)))
-        dqn_cn_num_tasks = np.zeros((4, len(CNs)))
-        rrlo_cn_energy = np.zeros((4, len(CNs)))
-        rrlo_cn_num_tasks = np.zeros((4, len(CNs)))
-        local_cn_energy = np.zeros((4, len(CNs)))
-        local_cn_num_tasks = np.zeros((4, len(CNs)))
-        remote_cn_energy = np.zeros((4, len(CNs)))
-        remote_cn_num_tasks = np.zeros((4, len(CNs)))
-        random_cn_energy = np.zeros((4, len(CNs)))
-        random_cn_num_tasks = np.zeros((4, len(CNs)))
+        dqn_cn_energy = np.zeros((num_tasks, len(CNs)))
+        dqn_cn_num_tasks = np.zeros((num_tasks, len(CNs)))
+        rrlo_cn_energy = np.zeros((num_tasks, len(CNs)))
+        rrlo_cn_num_tasks = np.zeros((num_tasks, len(CNs)))
+        local_cn_energy = np.zeros((num_tasks, len(CNs)))
+        local_cn_num_tasks = np.zeros((num_tasks, len(CNs)))
+        remote_cn_energy = np.zeros((num_tasks, len(CNs)))
+        remote_cn_num_tasks = np.zeros((num_tasks, len(CNs)))
+        random_cn_energy = np.zeros((num_tasks, len(CNs)))
+        random_cn_num_tasks = np.zeros((num_tasks, len(CNs)))
 
-        dqn_cn_deadline_missed = np.zeros((4, len(CNs)))
-        rrlo_cn_deadline_missed = np.zeros((4, len(CNs)))
-        local_cn_deadline_missed = np.zeros((4, len(CNs)))
-        remote_cn_deadline_missed = np.zeros((4, len(CNs)))
-        random_cn_deadline_missed = np.zeros((4, len(CNs)))
+        dqn_cn_deadline_missed = np.zeros((num_tasks, len(CNs)))
+        rrlo_cn_deadline_missed = np.zeros((num_tasks, len(CNs)))
+        local_cn_deadline_missed = np.zeros((num_tasks, len(CNs)))
+        remote_cn_deadline_missed = np.zeros((num_tasks, len(CNs)))
+        random_cn_deadline_missed = np.zeros((num_tasks, len(CNs)))
 
         for i in range(len(CNs)):
             dqn_env.w_inter.set_cn(CNs[i])
@@ -1432,19 +1431,19 @@ def big_LITTLE_evaluate(
         "cn_drop": [],
     }
 
-    dqn_energy = np.zeros((4, 2))
-    dqn_num_tasks = np.zeros((4, 2))
-    local_energy = np.zeros((4, 2))
-    local_num_tasks = np.zeros((4, 2))
-    remote_energy = np.zeros((4, 2))
-    remote_num_tasks = np.zeros((4, 2))
-    random_energy = np.zeros((4, 2))
-    random_num_tasks = np.zeros((4, 2))
+    dqn_energy = np.zeros((num_tasks, 2))
+    dqn_num_tasks = np.zeros((num_tasks, 2))
+    local_energy = np.zeros((num_tasks, 2))
+    local_num_tasks = np.zeros((num_tasks, 2))
+    remote_energy = np.zeros((num_tasks, 2))
+    remote_num_tasks = np.zeros((num_tasks, 2))
+    random_energy = np.zeros((num_tasks, 2))
+    random_num_tasks = np.zeros((num_tasks, 2))
 
-    dqn_deadline_missed = np.zeros((4, 2))
-    local_deadline_missed = np.zeros((4, 2))
-    remote_deadline_missed = np.zeros((4, 2))
-    random_deadline_missed = np.zeros((4, 2))
+    dqn_deadline_missed = np.zeros((num_tasks, 2))
+    local_deadline_missed = np.zeros((num_tasks, 2))
+    remote_deadline_missed = np.zeros((num_tasks, 2))
+    random_deadline_missed = np.zeros((num_tasks, 2))
 
     if taskset_eval:
         for i in range(2):
@@ -1469,7 +1468,7 @@ def big_LITTLE_evaluate(
             rand_powers_list = random_env.w_inter.powers
 
             dqn_dvfs = DQN_DVFS(
-                state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
+                state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
             )
 
             dqn_dvfs.load_model("models/iDEAS_Base")
@@ -1608,7 +1607,7 @@ def big_LITTLE_evaluate(
     if CPU_load_eval:
         max_task_load = 3
 
-        random_task_gen = RandomTaskGen(configs["train"])
+        random_task_gen = RandomTaskGen(tasks_conf["train"])
         dqn_env = BaseDQNEnv(
             configs,
             random_task_gen.get_wcet_bound(),
@@ -1634,25 +1633,25 @@ def big_LITTLE_evaluate(
         rand_powers_list = random_env.w_inter.powers
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
+            state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
         )
 
         dqn_dvfs.load_model("models/iDEAS_Base")
 
-        dqn_cpu_energy = np.zeros((4, len(cpu_loads)))
-        dqn_cpu_num_tasks = np.zeros((4, len(cpu_loads)))
+        dqn_cpu_energy = np.zeros((num_tasks, len(cpu_loads)))
+        dqn_cpu_num_tasks = np.zeros((num_tasks, len(cpu_loads)))
 
-        local_cpu_energy = np.zeros((4, len(cpu_loads)))
-        local_cpu_num_tasks = np.zeros((4, len(cpu_loads)))
-        remote_cpu_energy = np.zeros((4, len(cpu_loads)))
-        remote_cpu_num_tasks = np.zeros((4, len(cpu_loads)))
-        random_cpu_energy = np.zeros((4, len(cpu_loads)))
-        random_cpu_num_tasks = np.zeros((4, len(cpu_loads)))
+        local_cpu_energy = np.zeros((num_tasks, len(cpu_loads)))
+        local_cpu_num_tasks = np.zeros((num_tasks, len(cpu_loads)))
+        remote_cpu_energy = np.zeros((num_tasks, len(cpu_loads)))
+        remote_cpu_num_tasks = np.zeros((num_tasks, len(cpu_loads)))
+        random_cpu_energy = np.zeros((num_tasks, len(cpu_loads)))
+        random_cpu_num_tasks = np.zeros((num_tasks, len(cpu_loads)))
 
-        local_cpu_deadline_missed = np.zeros((4, len(cpu_loads)))
-        random_cpu_deadline_missed = np.zeros((4, len(cpu_loads)))
-        remote_cpu_deadline_missed = np.zeros((4, len(cpu_loads)))
-        dqn_cpu_deadline_missed = np.zeros((4, len(cpu_loads)))
+        local_cpu_deadline_missed = np.zeros((num_tasks, len(cpu_loads)))
+        random_cpu_deadline_missed = np.zeros((num_tasks, len(cpu_loads)))
+        remote_cpu_deadline_missed = np.zeros((num_tasks, len(cpu_loads)))
+        dqn_cpu_deadline_missed = np.zeros((num_tasks, len(cpu_loads)))
 
         for i in range(len(cpu_loads)):
             target_cpu_load = cpu_loads[i]
@@ -1785,7 +1784,7 @@ def big_LITTLE_evaluate(
         target_cpu_load = 0.35
         max_task_load = 3
 
-        normal_task_gen = NormalTaskGen(configs["train"])
+        normal_task_gen = NormalTaskGen(tasks_conf["train"])
         dqn_env = BaseDQNEnv(
             configs,
             normal_task_gen.get_wcet_bound(),
@@ -1811,25 +1810,25 @@ def big_LITTLE_evaluate(
         rand_powers_list = random_env.w_inter.powers
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
+            state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
         )
 
         dqn_dvfs.load_model("models/iDEAS_Base")
 
-        dqn_task_energy = np.zeros((4, len(task_sizes) - 1))
-        dqn_task_num_tasks = np.zeros((4, len(task_sizes) - 1))
+        dqn_task_energy = np.zeros((num_tasks, len(task_sizes) - 1))
+        dqn_task_num_tasks = np.zeros((num_tasks, len(task_sizes) - 1))
 
-        local_task_energy = np.zeros((4, len(task_sizes) - 1))
-        local_task_num_tasks = np.zeros((4, len(task_sizes) - 1))
-        remote_task_energy = np.zeros((4, len(task_sizes) - 1))
-        remote_task_num_tasks = np.zeros((4, len(task_sizes) - 1))
-        random_task_energy = np.zeros((4, len(task_sizes) - 1))
-        random_task_num_tasks = np.zeros((4, len(task_sizes) - 1))
+        local_task_energy = np.zeros((num_tasks, len(task_sizes) - 1))
+        local_task_num_tasks = np.zeros((num_tasks, len(task_sizes) - 1))
+        remote_task_energy = np.zeros((num_tasks, len(task_sizes) - 1))
+        remote_task_num_tasks = np.zeros((num_tasks, len(task_sizes) - 1))
+        random_task_energy = np.zeros((num_tasks, len(task_sizes) - 1))
+        random_task_num_tasks = np.zeros((num_tasks, len(task_sizes) - 1))
 
-        local_task_deadline_missed = np.zeros((4, len(task_sizes) - 1))
-        random_task_deadline_missed = np.zeros((4, len(task_sizes) - 1))
-        remote_task_deadline_missed = np.zeros((4, len(task_sizes) - 1))
-        dqn_task_deadline_missed = np.zeros((4, len(task_sizes) - 1))
+        local_task_deadline_missed = np.zeros((num_tasks, len(task_sizes) - 1))
+        random_task_deadline_missed = np.zeros((num_tasks, len(task_sizes) - 1))
+        remote_task_deadline_missed = np.zeros((num_tasks, len(task_sizes) - 1))
+        dqn_task_deadline_missed = np.zeros((num_tasks, len(task_sizes) - 1))
 
         tasks = normal_task_gen.step(target_cpu_load, task_sizes[0], max_task_load)
         for i in range(len(task_sizes) - 1):
@@ -1966,7 +1965,7 @@ def big_LITTLE_evaluate(
         max_task_load = 3
         target_cpu_load = 0.35
 
-        random_task_gen = RandomTaskGen(configs["train"])
+        random_task_gen = RandomTaskGen(tasks_conf["train"])
         dqn_env = BaseDQNEnv(
             configs,
             random_task_gen.get_wcet_bound(),
@@ -1992,24 +1991,24 @@ def big_LITTLE_evaluate(
         rand_powers_list = random_env.w_inter.powers
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
+            state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
         )
 
         dqn_dvfs.load_model("models/iDEAS_Base")
 
-        dqn_cn_energy = np.zeros((4, len(CNs)))
-        dqn_cn_num_tasks = np.zeros((4, len(CNs)))
-        local_cn_energy = np.zeros((4, len(CNs)))
-        local_cn_num_tasks = np.zeros((4, len(CNs)))
-        remote_cn_energy = np.zeros((4, len(CNs)))
-        remote_cn_num_tasks = np.zeros((4, len(CNs)))
-        random_cn_energy = np.zeros((4, len(CNs)))
-        random_cn_num_tasks = np.zeros((4, len(CNs)))
+        dqn_cn_energy = np.zeros((num_tasks, len(CNs)))
+        dqn_cn_num_tasks = np.zeros((num_tasks, len(CNs)))
+        local_cn_energy = np.zeros((num_tasks, len(CNs)))
+        local_cn_num_tasks = np.zeros((num_tasks, len(CNs)))
+        remote_cn_energy = np.zeros((num_tasks, len(CNs)))
+        remote_cn_num_tasks = np.zeros((num_tasks, len(CNs)))
+        random_cn_energy = np.zeros((num_tasks, len(CNs)))
+        random_cn_num_tasks = np.zeros((num_tasks, len(CNs)))
 
-        dqn_cn_deadline_missed = np.zeros((4, len(CNs)))
-        local_cn_deadline_missed = np.zeros((4, len(CNs)))
-        remote_cn_deadline_missed = np.zeros((4, len(CNs)))
-        random_cn_deadline_missed = np.zeros((4, len(CNs)))
+        dqn_cn_deadline_missed = np.zeros((num_tasks, len(CNs)))
+        local_cn_deadline_missed = np.zeros((num_tasks, len(CNs)))
+        remote_cn_deadline_missed = np.zeros((num_tasks, len(CNs)))
+        random_cn_deadline_missed = np.zeros((num_tasks, len(CNs)))
 
         for i in range(len(CNs)):
             dqn_env.w_inter.set_cn(CNs[i])

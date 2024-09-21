@@ -6,6 +6,7 @@ from env_models.cpu import CPU, CPU_CC, CPU_LA
 from env_models.task import Task
 from env_models.wireless_interface import WirelessInterface, RRLOWirelessInterface
 
+
 class BaseDQNEnv:
     def __init__(self, confs, wcet_bound, task_size_bound):
         self.cpu_little = CPU(confs["cpus"]["little"])
@@ -80,8 +81,8 @@ class BaseDQNEnv:
             states[:, i] = np.clip(
                 states[:, i],
                 np.full(states[:, i].shape, self.min_state_vals[i]),
-                np.full(states[:, i].shape, self.max_state_vals[i])
-                )
+                np.full(states[:, i].shape, self.max_state_vals[i]),
+            )
 
         states = (states - self.min_state_vals) / (
             self.max_state_vals - self.min_state_vals
@@ -188,8 +189,8 @@ class DQNEnv:
             states[:, i] = np.clip(
                 states[:, i],
                 np.full(states[:, i].shape, self.min_state_vals[i]),
-                np.full(states[:, i].shape, self.max_state_vals[i])
-                )
+                np.full(states[:, i].shape, self.max_state_vals[i]),
+            )
 
         states = (states - self.min_state_vals) / (
             self.max_state_vals - self.min_state_vals
@@ -323,12 +324,10 @@ class RRLOEnv:
         states[2] = self.w_inter.update_channel_state()
 
         # Clip the state values
-        for i in range(states.shape[1]):
-            states[:, i] = np.clip(
-                states[:, i],
-                np.full(states[:, i].shape, self.min_state_vals[i]),
-                np.full(states[:, i].shape, self.max_state_vals[i])
-                )
+        for i in range(states.shape[0]):
+            states[i] = np.clip(
+                states[i], self.min_state_vals[i], self.max_state_vals[i]
+            )
 
         return states
 
