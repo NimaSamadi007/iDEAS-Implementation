@@ -12,25 +12,22 @@ from utils.utils import set_random_seed
 
 
 def iDEAS_evaluate(
-    configs,
-    cpu_loads,
-    task_sizes,
-    CNs,
-    eval_itr=10000,
-    taskset_eval=True,
-    CPU_load_eval=True,
-    task_size_eval=True,
-    CN_eval=True,
-):
-    results = {
-        "taskset_energy": [],
-        "taskset_drop": [],
-        "cpu_energy": [],
-        "cpu_drop": [],
-        "task_energy": [],
-        "task_drop": [],
-        "cn_energy": [],
-        "cn_drop": [],
+        configs,
+        cpu_loads,
+        task_sizes,
+        CNs,
+        eval_itr=10000,
+        taskset_eval=True,
+        CPU_load_eval=True,
+        task_size_eval=True,
+        CN_eval= True
+    ):
+
+    results={
+        "taskset_energy":[], "taskset_drop":[],
+        "cpu_energy":[], "cpu_drop":[],
+        "task_energy":[], "task_drop":[],
+        "cn_energy":[], "cn_drop":[]
     }
     dqn_energy = np.zeros((4, 2))
     dqn_num_tasks = np.zeros((4, 2))
@@ -103,7 +100,7 @@ def iDEAS_evaluate(
 
                 # Update current state
                 dqn_state = next_state_dqn
-
+            print(f"taskset actions= {actions_dqn_str}")
         np.set_printoptions(suppress=True)
         dqn_avg_energy = dqn_energy / dqn_num_tasks
         little_avg_energy = little_energy / dqn_num_tasks
@@ -195,6 +192,7 @@ def iDEAS_evaluate(
             for _ in range(eval_itr):
                 actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
                 actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
+
 
                 dqn_env.step(actions_dqn_str)
 
@@ -526,7 +524,8 @@ def iDEAS_evaluate(
 
                 # Update current state
                 dqn_state = next_state_dqn
-                # conference_state = next_state_conference
+                #conference_state = next_state_conference
+            print(f"cn actions= {actions_dqn_str}")
 
         np.set_printoptions(suppress=True)
         dqn_avg_cn_energy = dqn_cn_energy / dqn_cn_num_tasks

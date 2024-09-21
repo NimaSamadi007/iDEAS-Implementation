@@ -15,7 +15,7 @@ from tqdm import tqdm
 import os
 
 
-def iDEAS_main(eval_itr=10000, iter=10, Train=False):
+def iDEAS_main(eval_itr=5000, iter=1, Train= False):
     DQN_STATE_DIM = 5
     configs = {
         "task_set1": "configs/task_set_eval.json",
@@ -34,10 +34,9 @@ def iDEAS_main(eval_itr=10000, iter=10, Train=False):
         plot_loss_function(dqn_loss, "iDEAS", "iterations", "loss", "iDEAS_Loss")
         plot_all_rewards(dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_Rewards")
 
-    cpuloads = np.linspace(0.05, 3.05, 10)
-    tasksizes = np.round(np.linspace(110, 490, 11))
-    cns = np.logspace(np.log10(2e-11), np.log10(2e-6), num=11, base=10)
-    print(cns)
+    cpuloads= np.linspace(0.05, 3, 10)
+    tasksizes= np.round(np.linspace(110, 490, 11))
+    cns = np.logspace(np.log10(2e-11), np.log10(2e-6),num=11,base=10)
     all_energy_eval = np.empty((0, 4, 2))
     all_deadline_eval = np.empty((0, 4, 2))
     all_cpu_energy = np.empty((0, 4, len(cpuloads)))
@@ -157,7 +156,7 @@ def iDEAS_main(eval_itr=10000, iter=10, Train=False):
     )
 
 
-def RRLO_main(eval_itr=10000, iter=10, Train=False):
+def RRLO_main(eval_itr=10000, iter=1,Train=False):
     DQN_STATE_DIM = 4
     configs = {
         "task_set1": "configs/task_set_eval.json",
@@ -306,8 +305,8 @@ def RRLO_main(eval_itr=10000, iter=10, Train=False):
     )
 
 
-def big_little_main(eval_itr=10000, iter=10, Train=False):
-    DQN_STATE_DIM = 6
+def big_little_main(eval_itr=10000,iter=1, Train= False):
+    DQN_STATE_DIM=5
     configs = {
         "task_set1": "configs/task_set_eval.json",
         "task_set2": "configs/task_set_eval2.json",
@@ -453,7 +452,6 @@ def big_little_main(eval_itr=10000, iter=10, Train=False):
         "BL_cns_drop",
         xlog=True,
     )
-
 
 if __name__ == "__main__":
     # compare_dqn_rrlo(Train=True)

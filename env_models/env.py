@@ -40,7 +40,7 @@ class BaseDQNEnv:
     def observe(self, tasks):
         self.curr_tasks = tasks
         self.curr_state = self._get_system_state()
-        is_final = len(self.curr_tasks) * [True]
+        is_final = len(self.curr_tasks) * [False]
 
         return self.curr_state, is_final
 
@@ -77,15 +77,19 @@ class BaseDQNEnv:
         states[:, 0] = su
         states[:, 1] = self.cpu_little.util
         states[:, 2] = self.cpu_big.util
-        # Make sure states are withing ranges:
-        # for i in range(len(self.curr_tasks)):
-        #     is_out_of_range = (states[i, :] < self.min_state_vals) | (states[i, :] > self.max_state_vals)
-        #     if np.any(is_out_of_range):
-        #         print(f"Out of range state value for {i}:\n{self.min_state_vals}\n<\n{states[i]}\n<\n{self.max_state_vals}!")
-        #
+
+        # Clip the state values
+        for i in range(states.shape[1]):
+            states[:, i] = np.clip(
+                states[:, i],
+                np.full(states[:, i].shape, self.min_state_vals[i]),
+                np.full(states[:, i].shape, self.max_state_vals[i])
+                )
+
         states = (states - self.min_state_vals) / (
             self.max_state_vals - self.min_state_vals
         )
+
         return states
 
     def _cal_reward(self):
@@ -147,7 +151,7 @@ class DQNEnv:
     def observe(self, tasks):
         self.curr_tasks = tasks
         self.curr_state = self._get_system_state()
-        is_final = len(self.curr_tasks) * [True]
+        is_final = len(self.curr_tasks) * [False]
 
         return self.curr_state, is_final
 
@@ -177,11 +181,14 @@ class DQNEnv:
             states[i, 4] = self.w_inter.get_channel_rate()
         states[:, 0] = su
         states[:, 1] = self.cpu.util
-        # # Make sure states are withing ranges:
-        # for i in range(len(self.curr_tasks)):
-        #     is_out_of_range = (states[i, :] < self.min_state_vals) | (states[i, :] > self.max_state_vals)
-        #     if np.any(is_out_of_range):
-        #         print(f"Out of range state value for {i}:\n{self.min_state_vals}\n<\n{states[i]}\n<\n{self.max_state_vals}!")
+
+        # Clip the state values
+        for i in range(states.shape[1]):
+            states[:, i] = np.clip(
+                states[:, i],
+                np.full(states[:, i].shape, self.min_state_vals[i]),
+                np.full(states[:, i].shape, self.max_state_vals[i])
+                )
 
         states = (states - self.min_state_vals) / (
             self.max_state_vals - self.min_state_vals
@@ -309,6 +316,15 @@ class RRLOEnv:
         states[0] = su
         states[1] = ds
         states[2] = self.w_inter.update_channel_state()
+
+        # Clip the state values
+        for i in range(states.shape[1]):
+            states[:, i] = np.clip(
+                states[:, i],
+                np.full(states[:, i].shape, self.min_state_vals[i]),
+                np.full(states[:, i].shape, self.max_state_vals[i])
+                )
+
         return states
 
     def _descretize_states(self, states: np.ndarray):

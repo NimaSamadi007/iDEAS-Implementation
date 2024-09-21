@@ -37,9 +37,9 @@ def iDEAS_train(configs):
     dqn_dvfs = DQN_DVFS(
         state_dim=configs["dqn_state_dim"],
         act_space=dqn_env.get_action_space(),
-        batch_size=64,
+        batch_size=128,
         gamma=0.95,
-        mem_size=1000,
+        mem_size=10000,
         update_target_net=1000,
         eps_decay=1 / 200,
         min_eps=0,
@@ -52,20 +52,22 @@ def iDEAS_train(configs):
 
     else:
         target_cpu_load, target_task_mean, cn = next(generator)
+        target_cpu_load = np.random.choice(cpu_load_values)
+        target_task_mean = np.random.choice(task_mean_values)
+        cn = np.random.choice(cn_values)
+        # target_cpu_load,target_task_mean,cn=next(generator)
         dqn_env.w_inter.cn_setter(cn)
         tasks = task_gen_task.step(target_cpu_load, target_task_mean, max_task_load)
 
     dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
 
-    for itr in tqdm(range(int(1e6))):
-        if (itr % 12030) < 12000:
-            cpu_generate = False
-        else:
-            cpu_generate = True
-
+    for itr in tqdm(range(int(4e5))):
         # Run DVFS to assign tasks
         actions_dqn = dqn_dvfs.execute(dqn_state)
         actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
+        if itr % 100 == 0:
+            print(dqn_state)
+            print(actions_dqn_str)
 
         # Execute tasks and get reward
         rewards_dqn, penalties_dqn, _ = dqn_env.step(actions_dqn_str)
@@ -74,12 +76,14 @@ def iDEAS_train(configs):
         if cpu_generate:
             target_cpu_load = next(cpu_load_generator)
             dqn_env.w_inter.cn_setter(default_cn)
-            tasks = task_gen_cpu.step(target_cpu_load, max_task_load)
-
+            tasks = task_gen_cpu.step(target_cpu_load,max_task_load)
         else:
-            target_cpu_load, target_task_mean, cn = next(generator)
+            target_cpu_load = np.random.choice(cpu_load_values)
+            target_task_mean = np.random.choice(task_mean_values)
+            cn = np.random.choice(cn_values)
             dqn_env.w_inter.cn_setter(cn)
-            tasks = task_gen_task.step(target_cpu_load, target_task_mean, max_task_load)
+            tasks=task_gen_task.step(target_cpu_load, target_task_mean, max_task_load)
+
         next_state_dqn, is_final_dqn = dqn_env.observe(copy.deepcopy(tasks))
 
         # Update RL network
@@ -92,15 +96,15 @@ def iDEAS_train(configs):
         # Update current state
         dqn_state = next_state_dqn
 
-        # Print results
-    # if (itr + 1) % 1000 == 0:
-    #    tqdm.write(f"At {itr+1}, DQN loss={loss:.5f}")
-    #   tqdm.write(
-    #      f"Penalties DQN sum: {np.sum(penalties_dqn):.3e}, all: {penalties_dqn}"
-    # )
-    # tqdm.write(f"Penalties conference: {penalty_conference:.3e}")
-    # tqdm.write(10 * "-")
-    lossloss = dqn_dvfs.losses
+       # Print results
+       # if (itr + 1) % 1000 == 0:
+        #    tqdm.write(f"At {itr+1}, DQN loss={loss:.5f}")
+         #   tqdm.write(
+          #      f"Penalties DQN sum: {np.sum(penalties_dqn):.3e}, all: {penalties_dqn}"
+           # )
+            #tqdm.write(f"Penalties conference: {penalty_conference:.3e}")
+            #tqdm.write(10 * "-")
+    lossloss=dqn_dvfs.losses
     print("Saving trained model...")
     os.makedirs("models/iDEAS_train", exist_ok=True)
     dqn_dvfs.save_model("models/iDEAS_train")
@@ -110,13 +114,13 @@ def iDEAS_train(configs):
 def rrlo_train(configs):
     # Set random seed
     set_random_seed(42)
-    max_task_load = 2
-    default_cn = 1e-9
-    cpu_load_values = np.arange(0.01, max_task_load, 0.1)
-    cpu_load_generator = cycle(cpu_load_values)
-    task_mean_values = np.arange(100, 505, 20)
-    cn_values = np.logspace(np.log10(2e-11), np.log10(2e-6), num=20, base=10)
-    generator = cycle(product(cpu_load_values, task_mean_values, cn_values))
+    max_task_load=4
+    default_cn=1e-9
+    cpu_load_values=np.arange(0.01, max_task_load, 0.2)
+    cpu_load_generator=cycle(cpu_load_values)
+    task_mean_values=np.arange(100, 505, 20)
+    cn_values=np.logspace(np.log10(2e-13), np.log10(2e-4), num=50,base=10)
+    generator=cycle(product(cpu_load_values,task_mean_values,cn_values))
 
     cpu_generate = False
 
@@ -166,7 +170,8 @@ def rrlo_train(configs):
     rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
 
     for itr in tqdm(range(int(1e6))):
-        if (itr % 12030) < 12000:
+        
+        if (itr % 50000) < 25000:
             cpu_generate = False
         else:
             cpu_generate = True
