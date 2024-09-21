@@ -1,26 +1,27 @@
-from train import iDEAS_train, rrlo_train
-from evaluate import iDEAS_evaluate, RRLO_evaluate, big_LITTLE_evaluate
-from utils.utils import (
-    plot_res,
-    print_improvement,
-    plot_loss_function,
-    moving_avg,
-    line_plot_res,
-    stack_bar_res,
-    plot_all_rewards,
-    load_yaml
-)
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
 
+from evaluate import iDEAS_evaluate, RRLO_evaluate, big_LITTLE_evaluate
+from utils.utils import (
+    plot_res,
+    print_improvement,
+    plot_loss_function,
+    line_plot_res,
+    stack_bar_res,
+    plot_all_rewards,
+    load_yaml
+)
+
+from train.trainer import iDEAS_BaseTrainer
 
 def iDEAS_main(configs):
     params = configs["params"]
 
     if params["do_train"]:
-        dqn_loss, dqn_rewards = iDEAS_train(configs)
+        trainer = iDEAS_BaseTrainer(configs)
+        dqn_loss, dqn_rewards = trainer.run()
 
         plot_loss_function(dqn_loss, "iDEAS", "iterations", "loss", "iDEAS_Loss")
         plot_all_rewards(dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_Rewards")

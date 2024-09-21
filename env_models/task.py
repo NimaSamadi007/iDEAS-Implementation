@@ -5,6 +5,7 @@ from typing import Dict, Any
 
 from utils.utils import load_yaml
 
+
 class Task:
     def __init__(self, specs: Dict[str, Any]):
         self.p = specs["p"]  # period time, (ms)
@@ -96,19 +97,13 @@ class RandomTaskGen:
         single_task_load = target_cpu_load / self.num_tasks
         self.task_set = []
         for t_id in range(self.num_tasks):
-            p = np.random.randint(self.p_min//20, self.p_max//20) * 20
+            p = np.random.randint(self.p_min // 20, self.p_max // 20) * 20
             # Generate w based on p and task load while considering w ranges
-            w = np.min([self.w_max, np.max([self.w_min, p * single_task_load])])
-            b = np.min(
-                [
-                    self.b_max,
-                    np.max(
-                        [
-                            self.b_min,
-                            np.random.randint(self.b_min // 50, self.b_max // 50) * 50,
-                        ]
-                    ),
-                ]
+            w = np.clip(p * single_task_load, self.w_min, self.w_max)
+            b = np.clip(
+                np.random.randint(self.b_min // 20, self.b_max // 20) * 20,
+                self.b_min,
+                self.b_max,
             )
             self.task_set.append(
                 Task(
@@ -154,10 +149,10 @@ class NormalTaskGen:
 
     def _gen_base_tasks(self, target_cpu_load, mean, max_task_load):
         single_task_load = target_cpu_load / self.num_tasks
-        std = 20/3
+        std = 20 / 3
         self.task_set = []
         for t_id in range(self.num_tasks):
-            p = np.random.randint(self.p_min//20, self.p_max//20) * 20
+            p = np.random.randint(self.p_min // 20, self.p_max // 20) * 20
             # Generate w based on p and task load while considering w ranges
             w = np.min([self.w_max, np.max([self.w_min, p * single_task_load])])
             b = np.min(

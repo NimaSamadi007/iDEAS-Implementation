@@ -55,7 +55,7 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
             dqn_dvfs = DQN_DVFS(
                 state_dim=params["dqn_state_dim"], act_space=dqn_env.get_action_space()
             )
-            dqn_dvfs.load_model("models/iDEAS_train")
+            dqn_dvfs.load_model("models/iDEAS_Base")
 
             tasks = task_gen.step()
             dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
@@ -158,7 +158,7 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
         dqn_dvfs = DQN_DVFS(
             state_dim=params["dqn_state_dim"], act_space=dqn_env.get_action_space()
         )
-        dqn_dvfs.load_model("models/iDEAS_train")
+        dqn_dvfs.load_model("models/iDEAS_Base")
 
         dqn_cpu_energy = np.zeros((num_tasks, len(cpu_loads)))
         dqn_cpu_num_tasks = np.zeros((num_tasks, len(cpu_loads)))
@@ -287,7 +287,7 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
         dqn_dvfs = DQN_DVFS(
             state_dim=params["dqn_state_dim"], act_space=dqn_env.get_action_space()
         )
-        dqn_dvfs.load_model("models/iDEAS_train")
+        dqn_dvfs.load_model("models/iDEAS_Base")
 
         dqn_task_energy = np.zeros((num_tasks, len(task_sizes) - 1))
         dqn_task_num_tasks = np.zeros((num_tasks, len(task_sizes) - 1))
@@ -425,7 +425,7 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
         dqn_dvfs = DQN_DVFS(
             state_dim=params["dqn_state_dim"], act_space=dqn_env.get_action_space()
         )
-        dqn_dvfs.load_model("models/iDEAS_train")
+        dqn_dvfs.load_model("models/iDEAS_Base")
 
         dqn_cn_energy = np.zeros((num_tasks, len(CNs)))
         dqn_cn_num_tasks = np.zeros((num_tasks, len(CNs)))
@@ -1472,7 +1472,7 @@ def big_LITTLE_evaluate(
                 state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
             )
 
-            dqn_dvfs.load_model("models/iDEAS_train")
+            dqn_dvfs.load_model("models/iDEAS_Base")
 
             tasks = task_gen.step()
             dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
@@ -1637,7 +1637,7 @@ def big_LITTLE_evaluate(
             state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
         )
 
-        dqn_dvfs.load_model("models/iDEAS_train")
+        dqn_dvfs.load_model("models/iDEAS_Base")
 
         dqn_cpu_energy = np.zeros((4, len(cpu_loads)))
         dqn_cpu_num_tasks = np.zeros((4, len(cpu_loads)))
@@ -1814,7 +1814,7 @@ def big_LITTLE_evaluate(
             state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
         )
 
-        dqn_dvfs.load_model("models/iDEAS_train")
+        dqn_dvfs.load_model("models/iDEAS_Base")
 
         dqn_task_energy = np.zeros((4, len(task_sizes) - 1))
         dqn_task_num_tasks = np.zeros((4, len(task_sizes) - 1))
@@ -1995,7 +1995,7 @@ def big_LITTLE_evaluate(
             state_dim=configs["dqn_state_dim"], act_space=dqn_env.get_action_space()
         )
 
-        dqn_dvfs.load_model("models/iDEAS_train")
+        dqn_dvfs.load_model("models/iDEAS_Base")
 
         dqn_cn_energy = np.zeros((4, len(CNs)))
         dqn_cn_num_tasks = np.zeros((4, len(CNs)))
