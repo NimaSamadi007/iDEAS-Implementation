@@ -5,7 +5,7 @@ import copy
 import os
 from itertools import cycle, product
 
-from env_models.env import BaseDQNEnv, DQNEnv, RRLOEnv
+from env_models.env import HetrogenEnv, HomogenEnv, RRLOEnv
 from env_models.task import RandomTaskGen, NormalTaskGen
 from dvfs.dqn_dvfs import DQN_DVFS
 from dvfs.rrlo_dvfs import RRLO_DVFS
@@ -44,9 +44,10 @@ class Trainer(abc.ABC):
             # Run DVFS algorithm
             actions = self._run_algs(states)
 
-            if itr % 100 == 0:
-                print(states)
-                print(actions)
+            if itr % 500 == 0:
+                tqdm.write(f"States:\n{str(states)}")
+                tqdm.write(f"Actions:\n{str(actions)}")
+                tqdm.write(20 * "=")
 
             # Step environment
             rewards = self._step_envs(actions)
@@ -111,7 +112,7 @@ class Trainer(abc.ABC):
 
 class iDEAS_BaseTrainer(Trainer):
     def _init_envs(self):
-        self.env = BaseDQNEnv(
+        self.env = HetrogenEnv(
             self.configs,
             self.task_gen.get_wcet_bound(),
             self.task_gen.get_task_size_bound(),
@@ -161,7 +162,7 @@ class iDEAS_BaseTrainer(Trainer):
 
 class iDEAS_RRLOTrainer(Trainer):
     def _init_envs(self):
-        self.ideas_env = DQNEnv(
+        self.ideas_env = HomogenEnv(
             self.configs,
             self.task_gen.get_wcet_bound(),
             self.task_gen.get_task_size_bound(),
@@ -275,7 +276,7 @@ def rrlo_train(configs):
 
     task_gen_cpu = RandomTaskGen(configs["train"])
     task_gen_task = NormalTaskGen(configs["train"])
-    dqn_env = DQNEnv(
+    dqn_env = HomogenEnv(
         configs, task_gen_cpu.get_wcet_bound(), task_gen_cpu.get_task_size_bound()
     )
     rrlo_env = RRLOEnv(configs)

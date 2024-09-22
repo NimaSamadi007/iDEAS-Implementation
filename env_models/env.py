@@ -7,7 +7,7 @@ from env_models.task import Task
 from env_models.wireless_interface import WirelessInterface, RRLOWirelessInterface
 
 
-class BaseDQNEnv:
+class HetrogenEnv:
     def __init__(self, confs, wcet_bound, task_size_bound):
         self.cpu_little = CPU(confs["cpus"]["little"])
         self.cpu_big = CPU(confs["cpus"]["big"])
@@ -125,7 +125,7 @@ class BaseDQNEnv:
         return rewards, penalties, min_penalties
 
 
-class DQNEnv:
+class HomogenEnv:
     def __init__(self, confs: Dict[str, str], wcet_bound, task_size_bound):
         self.cpu = CPU(confs["cpus"]["local"])
         self.w_inter = WirelessInterface(confs["w_inter"])

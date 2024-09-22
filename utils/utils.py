@@ -33,8 +33,8 @@ def plot_loss_function(losses, alg, xlabel, ylabel, fig_name):
     plt.rcParams["font.size"] = 30
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["text.usetex"] = False
-    current_directory = os.getcwd()
-    file_path = os.path.join(current_directory, fig_name + ".png")
+    os.makedirs("results", exist_ok=True)
+    file_path = f"results/{fig_name}.png"
 
     colors = ListedColormap(
         [
@@ -73,8 +73,8 @@ def plot_all_rewards(all_rewards, alg, xlabel, ylabel, fig_name):
     plt.rcParams["font.size"] = 30
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["text.usetex"] = False
-    current_directory = os.getcwd()
-    file_path = os.path.join(current_directory, fig_name + ".png")
+    os.makedirs("results", exist_ok=True)
+    file_path = f"results/{fig_name}.png"
 
     colors = ListedColormap(
         [
@@ -140,8 +140,8 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel, title, fig_name, ylog=
     plt.rcParams["text.usetex"] = False
     ind = range(len(alg_set))
     # Plotting both tasksets
-    current_directory = os.getcwd()
-    file_path = os.path.join(current_directory, fig_name + ".png")
+    os.makedirs("results", exist_ok=True)
+    file_path = f"results/{fig_name}.png"
     fig = plt.figure(figsize=(20, 12))
     plt.bar(ind, taskset1, width=0.4, label=r"Taskset1", color="#17becf")
     plt.bar(
@@ -205,8 +205,8 @@ def line_plot_res(
     markers = ["o", "s", "D", "^", "v", "<", ">", "*", "+", "x", "p", "H"]
 
     # Plotting both tasksets
-    current_directory = os.getcwd()
-    file_path = os.path.join(current_directory, fig_name + ".png")
+    os.makedirs("results", exist_ok=True)
+    file_path = f"results/{fig_name}.png"
     fig = plt.figure(figsize=(20, 12))
     if ylog:
         plt.yscale("log")
@@ -292,8 +292,8 @@ def stack_bar_res(
     else:
         bar_widths = 0.5
     # Plotting both tasksets
-    current_directory = os.getcwd()
-    file_path = os.path.join(current_directory, fig_name + ".png")
+    os.makedirs("results", exist_ok=True)
+    file_path = f"results/{fig_name}.png"
     fig, ax = plt.subplots(figsize=(20, 12))
 
     max_hight = np.max(data1[-1])

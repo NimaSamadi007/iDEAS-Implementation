@@ -1,14 +1,11 @@
 import numpy as np
 from tqdm import tqdm
 import copy
-from itertools import cycle
 
-from env_models.env import BaseDQNEnv, DQNEnv, RRLOEnv
+from env_models.env import HetrogenEnv, HomogenEnv, RRLOEnv
 from dvfs.dqn_dvfs import DQN_DVFS
 from env_models.task import TaskGen, RandomTaskGen, NormalTaskGen
 from dvfs.rrlo_dvfs import RRLO_DVFS
-from dvfs.conference_dvfs import conference_DVFS
-from utils.utils import set_random_seed
 
 
 def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
@@ -34,60 +31,63 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
     }
     dqn_energy = np.zeros((num_tasks, 2))
     dqn_num_tasks = np.zeros((num_tasks, 2))
+    dqn_deadline_missed = np.zeros((num_tasks, 2))
+
     big_energy = np.zeros((num_tasks, 2))
     big_num_tasks = np.zeros((num_tasks, 2))
+    big_deadline_missed = np.zeros((num_tasks, 2))
+
     little_energy = np.zeros((num_tasks, 2))
     little_num_tasks = np.zeros((num_tasks, 2))
+    little_deadline_missed = np.zeros((num_tasks, 2))
+
     offload_energy = np.zeros((num_tasks, 2))
     offload_num_tasks = np.zeros((num_tasks, 2))
-
-    dqn_deadline_missed = np.zeros((num_tasks, 2))
-    big_deadline_missed = np.zeros((num_tasks, 2))
-    little_deadline_missed = np.zeros((num_tasks, 2))
     offload_deadline_missed = np.zeros((num_tasks, 2))
+
     if do_taskset_eval:
         for i in range(2):
             task_gen = TaskGen(tasks_conf[f"eval_{i+1}"])
 
-            dqn_env = BaseDQNEnv(
+            hetro_env = HetrogenEnv(
                 configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound()
             )
             dqn_dvfs = DQN_DVFS(
-                state_dim=params["dqn_state_dim"], act_space=dqn_env.get_action_space()
+                state_dim=params["dqn_state_dim"], act_space=hetro_env.get_action_space()
             )
             dqn_dvfs.load_model("models/iDEAS_Base")
 
             tasks = task_gen.step()
-            dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+            dqn_state, _ = hetro_env.observe(copy.deepcopy(tasks))
 
             for _ in range(eval_itr):
                 actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
                 actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
 
-                dqn_env.step(actions_dqn_str)
+                hetro_env.step(actions_dqn_str)
 
                 for t_id, _ in actions_dqn_str["little"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         little_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             little_deadline_missed[job.t_id, i] += 1
-                    little_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    little_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
                 for t_id, _ in actions_dqn_str["big"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         big_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             big_deadline_missed[job.t_id, i] += 1
-                    big_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    big_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
                 for t_id, _ in actions_dqn_str["offload"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         offload_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             offload_deadline_missed[job.t_id, i] += 1
-                    offload_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    offload_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
-                for jobs in dqn_env.curr_tasks.values():
+                for jobs in hetro_env.curr_tasks.values():
                     for j in jobs:
                         dqn_energy[j.t_id, i] += j.cons_energy
                         if j.deadline_missed:
@@ -95,7 +95,7 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
                     dqn_num_tasks[j.t_id, i] += len(jobs)
 
                 tasks = task_gen.step()
-                next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
+                next_state_dqn, _ = hetro_env.observe(copy.deepcopy(tasks))
 
                 # Update current state
                 dqn_state = next_state_dqn
@@ -124,7 +124,7 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
         )
 
         total_offload_missed = (
-            np.sum(dqn_deadline_missed, axis=0) / np.sum(dqn_num_tasks, axis=0) * 100
+            np.sum(offload_deadline_missed, axis=0) / np.sum(dqn_num_tasks, axis=0) * 100
         )
 
         results["taskset_energy"] = np.array(
@@ -149,63 +149,65 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
         max_task_load = params["max_task_load_eval"]
 
         random_task_gen = RandomTaskGen(tasks_conf["train"])
-        dqn_env = BaseDQNEnv(
+        hetro_env = HetrogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=params["dqn_state_dim"], act_space=dqn_env.get_action_space()
+            state_dim=params["dqn_state_dim"], act_space=hetro_env.get_action_space()
         )
         dqn_dvfs.load_model("models/iDEAS_Base")
 
         dqn_cpu_energy = np.zeros((num_tasks, len(cpu_loads)))
         dqn_cpu_num_tasks = np.zeros((num_tasks, len(cpu_loads)))
+        dqn_cpu_deadline_missed = np.zeros((num_tasks, len(cpu_loads)))
+
         big_cpu_energy = np.zeros((num_tasks, len(cpu_loads)))
         big_cpu_num_tasks = np.zeros((num_tasks, len(cpu_loads)))
+        big_cpu_deadline_missed = np.zeros((num_tasks, len(cpu_loads)))
+
         little_cpu_energy = np.zeros((num_tasks, len(cpu_loads)))
         little_cpu_num_tasks = np.zeros((num_tasks, len(cpu_loads)))
+        little_cpu_deadline_missed = np.zeros((num_tasks, len(cpu_loads)))
+
         offload_cpu_energy = np.zeros((num_tasks, len(cpu_loads)))
         offload_cpu_num_tasks = np.zeros((num_tasks, len(cpu_loads)))
-
-        dqn_cpu_deadline_missed = np.zeros((num_tasks, len(cpu_loads)))
-        big_cpu_deadline_missed = np.zeros((num_tasks, len(cpu_loads)))
-        little_cpu_deadline_missed = np.zeros((num_tasks, len(cpu_loads)))
         offload_cpu_deadline_missed = np.zeros((num_tasks, len(cpu_loads)))
 
         for i in range(len(cpu_loads)):
             target_cpu_load = cpu_loads[i]
             tasks = random_task_gen.step(target_cpu_load, max_task_load)
-            dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+            dqn_state, _ = hetro_env.observe(copy.deepcopy(tasks))
             for _ in range(eval_itr):
                 actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
                 actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
 
-                dqn_env.step(actions_dqn_str)
+                hetro_env.step(actions_dqn_str)
 
                 for t_id, _ in actions_dqn_str["little"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         little_cpu_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             little_cpu_deadline_missed[job.t_id, i] += 1
-                    little_cpu_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    little_cpu_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
                 for t_id, _ in actions_dqn_str["big"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         big_cpu_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             big_cpu_deadline_missed[job.t_id, i] += 1
-                    big_cpu_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    big_cpu_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
                 for t_id, _ in actions_dqn_str["offload"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         offload_cpu_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             offload_cpu_deadline_missed[job.t_id, i] += 1
-                    offload_cpu_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    offload_cpu_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
-                for jobs in dqn_env.curr_tasks.values():
+                for jobs in hetro_env.curr_tasks.values():
                     for j in jobs:
                         dqn_cpu_energy[j.t_id, i] += j.cons_energy
                         if j.deadline_missed:
@@ -213,7 +215,7 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
                     dqn_cpu_num_tasks[j.t_id, i] += len(jobs)
 
                 tasks = random_task_gen.step(target_cpu_load, max_task_load)
-                next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
+                next_state_dqn, _ = hetro_env.observe(copy.deepcopy(tasks))
 
                 # Update current state
                 dqn_state = next_state_dqn
@@ -278,14 +280,14 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
         max_task_load = params["max_task_load_eval"]
         normal_task_gen = NormalTaskGen(tasks_conf["train"])
 
-        dqn_env = BaseDQNEnv(
+        hetro_env = HetrogenEnv(
             configs,
             normal_task_gen.get_wcet_bound(),
             normal_task_gen.get_task_size_bound(),
         )
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=params["dqn_state_dim"], act_space=dqn_env.get_action_space()
+            state_dim=params["dqn_state_dim"], act_space=hetro_env.get_action_space()
         )
         dqn_dvfs.load_model("models/iDEAS_Base")
 
@@ -305,34 +307,34 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
 
         tasks = normal_task_gen.step(target_cpu_load, task_sizes[0], max_task_load)
         for i in range(len(task_sizes) - 1):
-            dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+            dqn_state, _ = hetro_env.observe(copy.deepcopy(tasks))
             for _ in range(eval_itr):
                 actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
                 actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
-                dqn_env.step(actions_dqn_str)
+                hetro_env.step(actions_dqn_str)
                 # Gather energy consumption values
                 for t_id, _ in actions_dqn_str["little"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         little_task_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             little_task_deadline_missed[job.t_id, i] += 1
-                    little_task_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    little_task_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
                 for t_id, _ in actions_dqn_str["big"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         big_task_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             big_task_deadline_missed[job.t_id, i] += 1
-                    big_task_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    big_task_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
                 for t_id, _ in actions_dqn_str["offload"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         offload_task_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             offload_task_deadline_missed[job.t_id, i] += 1
-                    offload_task_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    offload_task_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
-                for jobs in dqn_env.curr_tasks.values():
+                for jobs in hetro_env.curr_tasks.values():
                     for j in jobs:
                         # print(j)
                         dqn_task_energy[j.t_id, i] += j.cons_energy
@@ -349,7 +351,7 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
                         target_cpu_load, task_sizes[i + 1], max_task_load
                     )
                 # print(task_size_val[2*i+1])
-                next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
+                next_state_dqn, _ = hetro_env.observe(copy.deepcopy(tasks))
 
                 # Update current state
                 dqn_state = next_state_dqn
@@ -416,14 +418,14 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
         max_task_load = params["max_task_load_eval"]
         random_task_gen = RandomTaskGen(tasks_conf["train"])
 
-        dqn_env = BaseDQNEnv(
+        hetro_env = HetrogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=params["dqn_state_dim"], act_space=dqn_env.get_action_space()
+            state_dim=params["dqn_state_dim"], act_space=hetro_env.get_action_space()
         )
         dqn_dvfs.load_model("models/iDEAS_Base")
 
@@ -442,37 +444,37 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
         offload_cn_deadline_missed = np.zeros((num_tasks, len(CNs)))
 
         for i in range(len(CNs)):
-            dqn_env.w_inter.set_cn(CNs[i])
+            hetro_env.w_inter.set_cn(CNs[i])
             tasks = random_task_gen.step(target_cpu_load, max_task_load)
-            dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+            dqn_state, _ = hetro_env.observe(copy.deepcopy(tasks))
             for _ in range(eval_itr):
                 actions_dqn = dqn_dvfs.execute(dqn_state, eval_mode=True)
                 actions_dqn_str = dqn_dvfs.conv_acts(actions_dqn)
 
-                dqn_env.step(actions_dqn_str)
+                hetro_env.step(actions_dqn_str)
 
                 for t_id, _ in actions_dqn_str["little"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         little_cn_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             little_cn_deadline_missed[job.t_id, i] += 1
-                    little_cn_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    little_cn_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
                 for t_id, _ in actions_dqn_str["big"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         big_cn_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             big_cn_deadline_missed[job.t_id, i] += 1
-                    big_cn_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    big_cn_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
                 for t_id, _ in actions_dqn_str["offload"]:
-                    for job in dqn_env.curr_tasks[t_id]:
+                    for job in hetro_env.curr_tasks[t_id]:
                         offload_cn_energy[job.t_id, i] += job.cons_energy
                         if job.deadline_missed:
                             offload_cn_deadline_missed[job.t_id, i] += 1
-                    offload_cn_num_tasks[job.t_id, i] += len(dqn_env.curr_tasks[t_id])
+                    offload_cn_num_tasks[job.t_id, i] += len(hetro_env.curr_tasks[t_id])
 
-                for jobs in dqn_env.curr_tasks.values():
+                for jobs in hetro_env.curr_tasks.values():
                     for j in jobs:
                         # print(j)
                         dqn_cn_energy[j.t_id, i] += j.cons_energy
@@ -481,7 +483,7 @@ def iDEAS_evaluate(configs, cpu_loads, task_sizes, CNs):
                     dqn_cn_num_tasks[j.t_id, i] += len(jobs)
 
                 tasks = random_task_gen.step(target_cpu_load, max_task_load)
-                next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
+                next_state_dqn, _ = hetro_env.observe(copy.deepcopy(tasks))
 
                 # Update current state
                 dqn_state = next_state_dqn
@@ -572,35 +574,38 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
 
     dqn_energy = np.zeros((num_tasks, 2))
     dqn_num_tasks = np.zeros((num_tasks, 2))
+    dqn_deadline_missed = np.zeros((num_tasks, 2))
+
     rrlo_energy = np.zeros((num_tasks, 2))
     rrlo_num_tasks = np.zeros((num_tasks, 2))
+    rrlo_deadline_missed = np.zeros((num_tasks, 2))
+
     local_energy = np.zeros((num_tasks, 2))
     local_num_tasks = np.zeros((num_tasks, 2))
+    local_deadline_missed = np.zeros((num_tasks, 2))
+
     remote_energy = np.zeros((num_tasks, 2))
     remote_num_tasks = np.zeros((num_tasks, 2))
+    remote_deadline_missed = np.zeros((num_tasks, 2))
+
     random_energy = np.zeros((num_tasks, 2))
     random_num_tasks = np.zeros((num_tasks, 2))
-
-    dqn_deadline_missed = np.zeros((num_tasks, 2))
-    rrlo_deadline_missed = np.zeros((num_tasks, 2))
-    local_deadline_missed = np.zeros((num_tasks, 2))
-    remote_deadline_missed = np.zeros((num_tasks, 2))
     random_deadline_missed = np.zeros((num_tasks, 2))
 
     if do_taskset_eval:
         for i in range(2):
             task_gen = TaskGen(tasks_conf[f"eval_{i+1}"])
 
-            dqn_env = DQNEnv(
+            ideas_env = HomogenEnv(
                 configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound()
             )
-            local_env = DQNEnv(
+            local_env = HomogenEnv(
                 configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound()
             )
-            remote_env = DQNEnv(
+            remote_env = HomogenEnv(
                 configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound()
             )
-            random_env = DQNEnv(
+            random_env = HomogenEnv(
                 configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound()
             )
             rand_freq_list = random_env.cpu.freqs
@@ -608,7 +613,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
             rrlo_env = RRLOEnv(configs)
 
             dqn_dvfs = DQN_DVFS(
-                state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
+                state_dim=dqn_state_dim, act_space=ideas_env.get_action_space()
             )
             rrlo_dvfs = RRLO_DVFS(
                 state_bounds=rrlo_env.get_state_bounds(),
@@ -622,7 +627,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
             rrlo_dvfs.load_model("models/iDEAS_RRLO")
 
             tasks = task_gen.step()
-            dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+            dqn_state, _ = ideas_env.observe(copy.deepcopy(tasks))
             rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
             local_env.observe(copy.deepcopy(tasks))
             remote_env.observe(copy.deepcopy(tasks))
@@ -642,7 +647,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                 actions_random_str = RandomPolicyGen(rand_freq_list, rand_powers_list)
                 actions_rrlo, _ = rrlo_dvfs.execute(rrlo_state)
 
-                dqn_env.step(actions_dqn_str)
+                ideas_env.step(actions_dqn_str)
                 rrlo_env.step(actions_rrlo)
                 local_env.step(actions_local_str)
                 remote_env.step(actions_remote_str)
@@ -673,7 +678,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                             random_deadline_missed[j.t_id, i] += 1
                     random_num_tasks[j.t_id, i] += len(jobs)
 
-                for jobs in dqn_env.curr_tasks.values():
+                for jobs in ideas_env.curr_tasks.values():
                     for j in jobs:
                         # print(j)
                         dqn_energy[j.t_id, i] += j.cons_energy
@@ -690,7 +695,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                     rrlo_num_tasks[j.t_id, i] += len(jobs)
 
                 tasks = task_gen.step()
-                next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
+                next_state_dqn, _ = ideas_env.observe(copy.deepcopy(tasks))
                 next_state_rrlo, _ = rrlo_env.observe(copy.deepcopy(tasks))
                 local_env.observe(copy.deepcopy(tasks))
                 remote_env.observe(copy.deepcopy(tasks))
@@ -785,22 +790,22 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
         max_task_load = params["max_task_load_eval"]
 
         random_task_gen = RandomTaskGen(tasks_conf["train"])
-        dqn_env = DQNEnv(
+        ideas_env = HomogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        local_env = DQNEnv(
+        local_env = HomogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        remote_env = DQNEnv(
+        remote_env = HomogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        random_env = DQNEnv(
+        random_env = HomogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
@@ -810,7 +815,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
         rrlo_env = RRLOEnv(configs)
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
+            state_dim=dqn_state_dim, act_space=ideas_env.get_action_space()
         )
         rrlo_dvfs = RRLO_DVFS(
             state_bounds=rrlo_env.get_state_bounds(),
@@ -844,7 +849,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
         for i in range(len(cpu_loads)):
             target_cpu_load = cpu_loads[i]
             tasks = random_task_gen.step(target_cpu_load, max_task_load)
-            dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+            dqn_state, _ = ideas_env.observe(copy.deepcopy(tasks))
             rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
             local_env.observe(copy.deepcopy(tasks))
             remote_env.observe(copy.deepcopy(tasks))
@@ -863,7 +868,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                 actions_random_str = RandomPolicyGen(rand_freq_list, rand_powers_list)
                 actions_rrlo, _ = rrlo_dvfs.execute(rrlo_state)
 
-                dqn_env.step(actions_dqn_str)
+                ideas_env.step(actions_dqn_str)
                 rrlo_env.step(actions_rrlo)
 
                 local_env.step(actions_local_str)
@@ -895,7 +900,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                             random_cpu_deadline_missed[j.t_id, i] += 1
                     random_cpu_num_tasks[j.t_id, i] += len(jobs)
 
-                for jobs in dqn_env.curr_tasks.values():
+                for jobs in ideas_env.curr_tasks.values():
                     for j in jobs:
                         # print(j)
                         dqn_cpu_energy[j.t_id, i] += j.cons_energy
@@ -912,7 +917,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                     rrlo_cpu_num_tasks[j.t_id, i] += len(jobs)
 
                 tasks = random_task_gen.step(target_cpu_load, max_task_load)
-                next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
+                next_state_dqn, _ = ideas_env.observe(copy.deepcopy(tasks))
                 next_state_rrlo, _ = rrlo_env.observe(copy.deepcopy(tasks))
                 # next_state_conference, _ = conference_env.observe(copy.deepcopy(tasks))
                 local_env.observe(copy.deepcopy(tasks))
@@ -992,22 +997,22 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
         target_cpu_load = 0.35
 
         normal_task_gen = NormalTaskGen(tasks_conf["train"])
-        dqn_env = DQNEnv(
+        ideas_env = HomogenEnv(
             configs,
             normal_task_gen.get_wcet_bound(),
             normal_task_gen.get_task_size_bound(),
         )
-        local_env = DQNEnv(
+        local_env = HomogenEnv(
             configs,
             normal_task_gen.get_wcet_bound(),
             normal_task_gen.get_task_size_bound(),
         )
-        remote_env = DQNEnv(
+        remote_env = HomogenEnv(
             configs,
             normal_task_gen.get_wcet_bound(),
             normal_task_gen.get_task_size_bound(),
         )
-        random_env = DQNEnv(
+        random_env = HomogenEnv(
             configs,
             normal_task_gen.get_wcet_bound(),
             normal_task_gen.get_task_size_bound(),
@@ -1017,7 +1022,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
         rrlo_env = RRLOEnv(configs)
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
+            state_dim=dqn_state_dim, act_space=ideas_env.get_action_space()
         )
         rrlo_dvfs = RRLO_DVFS(
             state_bounds=rrlo_env.get_state_bounds(),
@@ -1050,7 +1055,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
 
         tasks = normal_task_gen.step(target_cpu_load, task_sizes[0], max_task_load)
         for i in range(len(task_sizes) - 1):
-            dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+            dqn_state, _ = ideas_env.observe(copy.deepcopy(tasks))
             rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
             # conference_state, _ = conference_env.observe(copy.deepcopy(tasks))
             local_env.observe(copy.deepcopy(tasks))
@@ -1070,7 +1075,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                 actions_random_str = RandomPolicyGen(rand_freq_list, rand_powers_list)
                 actions_rrlo, _ = rrlo_dvfs.execute(rrlo_state)
 
-                dqn_env.step(actions_dqn_str)
+                ideas_env.step(actions_dqn_str)
                 rrlo_env.step(actions_rrlo)
 
                 local_env.step(actions_local_str)
@@ -1100,7 +1105,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                             random_task_deadline_missed[j.t_id, i] += 1
                     random_task_num_tasks[j.t_id, i] += len(jobs)
 
-                for jobs in dqn_env.curr_tasks.values():
+                for jobs in ideas_env.curr_tasks.values():
                     for j in jobs:
                         # print(j)
                         dqn_task_energy[j.t_id, i] += j.cons_energy
@@ -1125,7 +1130,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                         target_cpu_load, task_sizes[i + 1], max_task_load
                     )
 
-                next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
+                next_state_dqn, _ = ideas_env.observe(copy.deepcopy(tasks))
                 next_state_rrlo, _ = rrlo_env.observe(copy.deepcopy(tasks))
                 local_env.observe(copy.deepcopy(tasks))
                 remote_env.observe(copy.deepcopy(tasks))
@@ -1203,22 +1208,22 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
         target_cpu_load = 0.35
 
         random_task_gen = RandomTaskGen(tasks_conf["train"])
-        dqn_env = DQNEnv(
+        ideas_env = HomogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        local_env = DQNEnv(
+        local_env = HomogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        remote_env = DQNEnv(
+        remote_env = HomogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        random_env = DQNEnv(
+        random_env = HomogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
@@ -1228,7 +1233,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
         rrlo_env = RRLOEnv(configs)
 
         dqn_dvfs = DQN_DVFS(
-            state_dim=dqn_state_dim, act_space=dqn_env.get_action_space()
+            state_dim=dqn_state_dim, act_space=ideas_env.get_action_space()
         )
         rrlo_dvfs = RRLO_DVFS(
             state_bounds=rrlo_env.get_state_bounds(),
@@ -1259,14 +1264,14 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
         random_cn_deadline_missed = np.zeros((num_tasks, len(CNs)))
 
         for i in range(len(CNs)):
-            dqn_env.w_inter.set_cn(CNs[i])
+            ideas_env.w_inter.set_cn(CNs[i])
             rrlo_env.w_inter.set_cn(CNs[i])
             local_env.w_inter.set_cn(CNs[i])
             remote_env.w_inter.set_cn(CNs[i])
             random_env.w_inter.set_cn(CNs[i])
 
             tasks = random_task_gen.step(target_cpu_load, max_task_load)
-            dqn_state, _ = dqn_env.observe(copy.deepcopy(tasks))
+            dqn_state, _ = ideas_env.observe(copy.deepcopy(tasks))
             rrlo_state, _ = rrlo_env.observe(copy.deepcopy(tasks))
             local_env.observe(copy.deepcopy(tasks))
             remote_env.observe(copy.deepcopy(tasks))
@@ -1286,7 +1291,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                 actions_random_str = RandomPolicyGen(rand_freq_list, rand_powers_list)
                 actions_rrlo, _ = rrlo_dvfs.execute(rrlo_state)
 
-                dqn_env.step(actions_dqn_str)
+                ideas_env.step(actions_dqn_str)
                 rrlo_env.step(actions_rrlo)
 
                 local_env.step(actions_local_str)
@@ -1317,7 +1322,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                             random_cn_deadline_missed[j.t_id, i] += 1
                     random_cn_num_tasks[j.t_id, i] += len(jobs)
 
-                for jobs in dqn_env.curr_tasks.values():
+                for jobs in ideas_env.curr_tasks.values():
                     for j in jobs:
                         # print(j)
                         dqn_cn_energy[j.t_id, i] += j.cons_energy
@@ -1334,7 +1339,7 @@ def RRLO_evaluate(configs, cpu_loads, task_sizes, CNs):
                     rrlo_cn_num_tasks[j.t_id, i] += len(jobs)
 
                 tasks = random_task_gen.step(target_cpu_load, max_task_load)
-                next_state_dqn, _ = dqn_env.observe(copy.deepcopy(tasks))
+                next_state_dqn, _ = ideas_env.observe(copy.deepcopy(tasks))
                 next_state_rrlo, _ = rrlo_env.observe(copy.deepcopy(tasks))
 
                 # Update current state
@@ -1451,16 +1456,16 @@ def big_LITTLE_evaluate(
                 task_gen = TaskGen(configs["task_set1"])
             if i == 1:
                 task_gen = TaskGen(configs["task_set2"])
-            dqn_env = BaseDQNEnv(
+            dqn_env = HetrogenEnv(
                 configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound()
             )
-            local_env = BaseDQNEnv(
+            local_env = HetrogenEnv(
                 configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound()
             )
-            remote_env = BaseDQNEnv(
+            remote_env = HetrogenEnv(
                 configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound()
             )
-            random_env = BaseDQNEnv(
+            random_env = HetrogenEnv(
                 configs, task_gen.get_wcet_bound(), task_gen.get_task_size_bound()
             )
             rand_littlefreq_list = random_env.cpu_little.freqs
@@ -1608,22 +1613,22 @@ def big_LITTLE_evaluate(
         max_task_load = 3
 
         random_task_gen = RandomTaskGen(tasks_conf["train"])
-        dqn_env = BaseDQNEnv(
+        dqn_env = HetrogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        local_env = BaseDQNEnv(
+        local_env = HetrogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        remote_env = BaseDQNEnv(
+        remote_env = HetrogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        random_env = BaseDQNEnv(
+        random_env = HetrogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
@@ -1785,22 +1790,22 @@ def big_LITTLE_evaluate(
         max_task_load = 3
 
         normal_task_gen = NormalTaskGen(tasks_conf["train"])
-        dqn_env = BaseDQNEnv(
+        dqn_env = HetrogenEnv(
             configs,
             normal_task_gen.get_wcet_bound(),
             normal_task_gen.get_task_size_bound(),
         )
-        local_env = BaseDQNEnv(
+        local_env = HetrogenEnv(
             configs,
             normal_task_gen.get_wcet_bound(),
             normal_task_gen.get_task_size_bound(),
         )
-        remote_env = BaseDQNEnv(
+        remote_env = HetrogenEnv(
             configs,
             normal_task_gen.get_wcet_bound(),
             normal_task_gen.get_task_size_bound(),
         )
-        random_env = BaseDQNEnv(
+        random_env = HetrogenEnv(
             configs,
             normal_task_gen.get_wcet_bound(),
             normal_task_gen.get_task_size_bound(),
@@ -1966,22 +1971,22 @@ def big_LITTLE_evaluate(
         target_cpu_load = 0.35
 
         random_task_gen = RandomTaskGen(tasks_conf["train"])
-        dqn_env = BaseDQNEnv(
+        dqn_env = HetrogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        local_env = BaseDQNEnv(
+        local_env = HetrogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        remote_env = BaseDQNEnv(
+        remote_env = HetrogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
         )
-        random_env = BaseDQNEnv(
+        random_env = HetrogenEnv(
             configs,
             random_task_gen.get_wcet_bound(),
             random_task_gen.get_task_size_bound(),
