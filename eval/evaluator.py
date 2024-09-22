@@ -232,7 +232,7 @@ class Evaluator(abc.ABC):
         pass
 
 
-class iDEAS_BaseEvaluator(Evaluator):
+class iDEAS_MainEvaluator(Evaluator):
     def _init_results_container(self, scenario):
         if scenario == "fixed_taskset":
             self.num_results_item = 2
@@ -280,7 +280,7 @@ class iDEAS_BaseEvaluator(Evaluator):
             for scen in ["energy", "drop"]
         }
 
-        num_tasks = self.raw_results['total'][1]
+        num_tasks = self.raw_results["total"][1]
         for i, raw_result in enumerate(self.raw_results.values()):
             energy = raw_result[0]
             missed_deadline = raw_result[2]
@@ -306,7 +306,7 @@ class iDEAS_BaseEvaluator(Evaluator):
             state_dim=self.params["dqn_state_dim"],
             act_space=self.envs["ideas"].get_action_space(),
         )
-        dqn_dvfs.load_model("models/iDEAS_Base")
+        dqn_dvfs.load_model("models/iDEAS_Main")
         return {"ideas": dqn_dvfs}
 
     def _observe(self, tasks):
@@ -456,6 +456,100 @@ class iDEAS_RRLOEvaluator(Evaluator):
         return actions
 
 
+class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
+    def _init_envs(self):
+        envs = {}
+        env_temp = HetrogenEnv(
+            self.configs,
+            self.task_gen.get_wcet_bound(),
+            self.task_gen.get_task_size_bound(),
+        )
+        envs["random"] = copy.deepcopy(env_temp)
+        envs["ideas"] = copy.deepcopy(env_temp)
+        envs["local"] = copy.deepcopy(env_temp)
+        envs["remote"] = copy.deepcopy(env_temp)
+
+        return envs
+
+    def _init_algs(self):
+        dqn_dvfs = DQN_DVFS(
+            state_dim=self.params["dqn_state_dim"],
+            act_space=self.envs["ideas"].get_action_space(),
+        )
+        dqn_dvfs.load_model("models/iDEAS_Baseline")
+
+        cpu_freqs = {
+            "little": self.envs["random"].cpu_little.freqs,
+            "big": self.envs["random"].cpu_big.freqs,
+        }
+        random_policy = RandomIdeasPolicy(cpu_freqs, self.envs["random"].w_inter.powers)
+
+        # FIXME: Probably need to change local policy
+        local_policy = {
+            "offload": [],
+            "little": [],
+            "big": [[0, 1820], [1, 1820], [2, 1820], [3, 1820]],
+        }
+        remote_policy = {
+            "offload": [[0, 28], [1, 28], [2, 28], [3, 28]],
+            "little": [],
+            "big": [],
+        }
+
+        return {
+            "random": random_policy,
+            "ideas": dqn_dvfs,
+            "local": local_policy,
+            "remote": remote_policy,
+        }
+
+    def _init_results_container(self, scenario):
+        if scenario == "fixed_taskset":
+            self.num_results_item = 2
+        elif scenario == "varied_cpuload":
+            self.num_results_item = len(self.cpu_loads)
+        elif scenario == "varied_tasksize":
+            self.num_results_item = len(self.task_sizes) - 1
+        elif scenario == "varied_channel":
+            self.num_results_item = len(self.cns)
+        else:
+            raise ValueError(f"Unknown Scenario! {scenario}")
+
+        # 0: energy, 1: num_tasks, 2: missed deadline
+        ideas_stat = np.zeros((3, self.num_tasks, self.num_results_item))
+        local_stat = np.zeros((3, self.num_tasks, self.num_results_item))
+        remote_stat = np.zeros((3, self.num_tasks, self.num_results_item))
+        random_stat = np.zeros((3, self.num_tasks, self.num_results_item))
+
+        self.raw_results = {
+            "random": random_stat,
+            "ideas": ideas_stat,
+            "local": local_stat,
+            "remote": remote_stat,
+        }
+
+    def _observe(self, tasks):
+        ideas_state, _ = self.envs["ideas"].observe(copy.deepcopy(tasks))
+        self.envs["local"].observe(copy.deepcopy(tasks))
+        self.envs["remote"].observe(copy.deepcopy(tasks))
+        self.envs["random"].observe(copy.deepcopy(tasks))
+
+        return {"ideas": ideas_state}
+
+    def _run_algs(self, states):
+        actions_raw = self.algs["ideas"].execute(states["ideas"])
+        actions_str = self.algs["ideas"].conv_acts(actions_raw)
+
+        actions = {
+            "random": self.algs["random"].generate(),
+            "ideas": actions_str,
+            "local": self.algs["local"],
+            "remote": self.algs["remote"],
+        }
+
+        return actions
+
+
 # FIXME: This class is probably wrong
 class RandomPolicy:
     def __init__(self, freqs, powers):
@@ -476,6 +570,37 @@ class RandomPolicy:
         ]
         actions["local"] = [
             [i + offload, self.freqs[idx]] for i, idx in enumerate(random_freq_idx)
+        ]
+
+        return actions
+
+
+# FIXME: Check this class
+class RandomIdeasPolicy(RandomPolicy):
+    def generate(self):
+        offload = np.random.randint(0, 5)
+        little = np.random.randint(0, 5 - offload)
+        big = 4 - offload - little
+        actions = {"offload": [], "little": [], "big": []}
+        random_littlefreq_idx = np.random.choice(
+            len(self.freqs["little"]), size=little, replace=True
+        )
+        random_bigfreq_idx = np.random.choice(
+            len(self.freqs["big"]), size=big, replace=True
+        )
+        random_power_idx = np.random.choice(
+            len(self.powers), size=offload, replace=True
+        )
+        actions["offload"] = [
+            [i, self.powers[idx]] for i, idx in enumerate(random_power_idx)
+        ]
+        actions["little"] = [
+            [i + offload, self.freqs["little"][idx]]
+            for i, idx in enumerate(random_littlefreq_idx)
+        ]
+        actions["big"] = [
+            [i + offload + little, self.freqs["big"][idx]]
+            for i, idx in enumerate(random_bigfreq_idx)
         ]
 
         return actions

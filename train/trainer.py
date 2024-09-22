@@ -110,7 +110,7 @@ class Trainer(abc.ABC):
         pass
 
 
-class iDEAS_BaseTrainer(Trainer):
+class iDEAS_MainTrainer(Trainer):
     def _init_envs(self):
         self.env = HetrogenEnv(
             self.configs,
@@ -156,9 +156,13 @@ class iDEAS_BaseTrainer(Trainer):
         return self.alg.train(states, actions["raw"], rewards, next_states, is_final)
 
     def _save_algs(self):
-        os.makedirs("models/iDEAS_Base", exist_ok=True)
-        self.alg.save_model("models/iDEAS_Base")
+        os.makedirs("models/iDEAS_Main", exist_ok=True)
+        self.alg.save_model("models/iDEAS_Main")
 
+class iDEAS_BaselineTrainer(iDEAS_MainTrainer):
+    def _save_algs(self):
+        os.makedirs("models/iDEAS_Baseline", exist_ok=True)
+        self.alg.save_model("models/iDEAS_Baseline")
 
 class iDEAS_RRLOTrainer(Trainer):
     def _init_envs(self):
