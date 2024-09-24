@@ -6,6 +6,7 @@ from typing import List, Dict
 from env_models.task import Task
 from utils.utils import load_yaml
 
+
 class CPU:
     def __init__(self, cpu_conf_path):
         specs = load_yaml(cpu_conf_path)
@@ -28,46 +29,33 @@ class CPU:
 
     # Assign tasks to execute
     def step(self, tasks: Dict[int, Task], acts: List[List]):
-        # Check schedulability criteria
         total_util = 0
         for t_id, in_freq in acts:
-            job = tasks[t_id][0]
-            wcet_scaled = job.wcet * (self.freq / in_freq)
-            total_util += wcet_scaled / job.p
-        if total_util > 1:  # Not schedulable
-            # TODO: What's the best thing to do in case of unschedulable tasks
-            for t_id, in_freq in acts:
-                for job in tasks[t_id]:
+            aets = 0
+            for job in tasks[t_id]:
+                # AET can only be set at the time of execution
+                job.gen_aet(in_freq)
+                # Check if deadline will be missed
+                if job.aet > job.p:
                     job.deadline_missed = True
-            return
+                    job.aet = job.p  # If task is missed, it will be executed until the end of current cycle
+                # Calculate energy consumption (chip energy conusmption at given frequency)
+                cons_power = self.powers[self.freqs == in_freq][0]
+                job.cons_energy = cons_power * (job.aet / 1000)
+
+                aets += job.aet
+            total_util += aets / (job.p * len(tasks[t_id]))
         self.util = total_util
 
-        # AET can only be set at the time of execution
-        for t_id, in_freq in acts:
-            for job in tasks[t_id]:
-                job.gen_aet()
-                # Check if deadline will be missed
-                true_exec_time = (self.freq / in_freq) * job.aet
-                if true_exec_time > job.p:
-                    job.deadline_missed = True
-                    # FIXME: How to consider energy consumption of tasks that have missed their deadline?
-                    true_exec_time = job.p
-                # Calculate energy consumption (chip energy conusmption at given frequency)
-                cons_power = self.powers[self.freqs == in_freq][
-                    0
-                ]  # There should be only one element
-                job.cons_energy = cons_power * (true_exec_time / 1000)
-
     def get_min_energy(self, task: Task) -> float:
-        max_freq = self.freqs[-1]
         for i, frq in enumerate(self.freqs):
-            # If the task can be run, fetch the corresponding
-            # power which show the minimum computation power
-            wcet_scaled = task.wcet * (max_freq / frq)
+            # If the task can be executed, find the corresponding
+            # power at which the minimum energy is consumed
+            wcet_scaled = task.wcet * (task.base_freq / frq)
             if wcet_scaled < task.p:
                 min_energy = self.powers[i] * (wcet_scaled / 1000)
                 return min_energy
-        raise ValueError(f"Unable to schedule task: {task}")
+        raise ValueError(f"Unable to execute task: {task}")
 
 
 # CPU model that uses the cycle conserving algorithm for DVFS
@@ -77,7 +65,7 @@ class CPU_CC(CPU):
 
     def step(self, jobs: Dict[int, List[Task]]) -> List[Task]:
         tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
-        #FIXME: Check this condition
+        # FIXME: Check this condition
         # # Check schedulability criteria
         # total_util = self._cal_total_util(tasks)
         # if total_util > 1:
@@ -133,7 +121,7 @@ class CPU_CC(CPU):
             curr_jobs = [t for t in curr_jobs if not t.finished]
             # print(20*'-')
         # Check if any job is remained:
-        #FIXME: Check remaining tasks
+        # FIXME: Check remaining tasks
         # if len(curr_jobs):
         #     print("Some tasks are not completed!")
         # Calculate energy consumption
@@ -194,7 +182,7 @@ class CPU_LA(CPU):
 
     def step(self, jobs: Dict[int, List[Task]]) -> List[Task]:
         tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
-        #FIXME: Check this condition
+        # FIXME: Check this condition
         # total_util = self._cal_total_util(tasks)
         # if total_util > 1:
         #     raise ValueError("Total utilization is greater than 1")
@@ -247,7 +235,7 @@ class CPU_LA(CPU):
             finished_jobs.extend([t for t in curr_jobs if t.finished])
             curr_jobs = [t for t in curr_jobs if not t.finished]
 
-        #FIXME: Check remaining tasks
+        # FIXME: Check remaining tasks
         # if len(curr_jobs):
         #     print("Some tasks are not completed!")
 

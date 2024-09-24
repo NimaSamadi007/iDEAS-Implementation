@@ -27,17 +27,22 @@ class Task:
         self.exec_time_history = []
         self.exec_freq_history = []
 
-    def gen_aet(self, curr_freq=-1):
+    def gen_aet(self, curr_freq=None):
         if self.aet == -1:  # AET has not generated before
             self.aet = np.random.uniform(self.wcet / 2, self.wcet)
         # Scale AET and executed time based on the current CPU freq
-        if curr_freq != -1:  # No scaling is required if curr_freq is not provided
-            self.aet *= self.base_freq / curr_freq
-            self.executed_time *= self.base_freq / curr_freq
+        # No scaling is required if curr_freq is not provided as task is represented
+        # in base_freq
+        if curr_freq:
+            scale_factor = self.base_freq / curr_freq
+            self.aet *= scale_factor
+            self.wcet *= scale_factor
+            self.executed_time *= scale_factor
+            # WCET, AET, and executed_time are now represented in curr_freq
             self.base_freq = curr_freq
 
     def __repr__(self):
-        return f"(P: {self.p}, W: {self.wcet}, A: {self.aet:.3f}, b: {self.b}, energy: {self.cons_energy:.3f})"
+        return f"(P: {self.p}, W: {self.wcet}, A: {self.aet:.3f}, b: {self.b}, E: {self.cons_energy:.3f}, f: {self.base_freq})"
 
 
 class TaskGen:
@@ -97,11 +102,11 @@ class RandomTaskGen:
         single_task_load = target_cpu_load / self.num_tasks
         self.task_set = []
         for t_id in range(self.num_tasks):
-            p = np.random.randint(self.p_min // 20, self.p_max // 20) * 20
+            p = np.random.randint(self.p_min // 10, self.p_max // 10) * 10
             # Generate w based on p and task load while considering w ranges
             w = np.clip(p * single_task_load, self.w_min, self.w_max)
             b = np.clip(
-                np.random.randint(self.b_min // 20, self.b_max // 20) * 20,
+                np.random.randint(self.b_min // 5, self.b_max // 5) * 5,
                 self.b_min,
                 self.b_max,
             )

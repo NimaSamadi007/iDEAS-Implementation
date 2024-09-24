@@ -12,7 +12,12 @@ from utils.utils import (
 )
 
 from train.trainer import iDEAS_MainTrainer, iDEAS_RRLOTrainer, iDEAS_BaselineTrainer
-from eval.evaluator import iDEAS_MainEvaluator, iDEAS_RRLOEvaluator, iDEAS_BaselineEvaluator
+from eval.evaluator import (
+    iDEAS_MainEvaluator,
+    iDEAS_RRLOEvaluator,
+    iDEAS_BaselineEvaluator,
+)
+
 
 def iDEAS_Main(configs):
     params = configs["params"]
@@ -26,12 +31,22 @@ def iDEAS_Main(configs):
         print("Training completed")
         print(100 * "-")
         plot_loss_function(dqn_loss, "iDEAS", "iterations", "loss", "iDEAS_Main_loss")
-        plot_all_rewards(dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_Main_rewards")
+        plot_all_rewards(
+            dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_Main_rewards"
+        )
 
-
-    cpuloads = np.linspace(0.05, 3, 10)
-    tasksizes = np.round(np.linspace(110, 490, 11))
-    cns = np.logspace(np.log10(2e-11), np.log10(2e-6), num=11, base=10)
+    cpuloads = np.linspace(
+        params["min_task_load_eval"], params["max_task_load_eval"], 10
+    )
+    tasksizes = np.round(
+        np.linspace(params["min_task_size"], params["max_task_size"], 10)
+    )
+    cns = np.logspace(
+        np.log10(params["min_cn_power"]),
+        np.log10(params["max_cn_power"]),
+        num=10,
+        base=10,
+    )
 
     all_results = {}
     for i in tqdm(range(num_eval_cycles)):
@@ -134,11 +149,22 @@ def iDEAS_RRLO(configs):
         print(100 * "-")
 
         plot_loss_function(dqn_loss, "iDEAS", "iterations", "loss", "iDEAS_RRLO_loss")
-        plot_all_rewards(dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_RRLO_rewards")
+        plot_all_rewards(
+            dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_RRLO_rewards"
+        )
 
-    cpuloads = np.linspace(0.05, 2.05, 10)
-    tasksizes = np.round(np.linspace(110, 490, 11))
-    cns = np.logspace(np.log10(2e-11), np.log10(2e-6), num=10, base=10)
+    cpuloads = np.linspace(
+        params["min_task_load_eval"], params["max_task_load_eval"], 10
+    )
+    tasksizes = np.round(
+        np.linspace(params["min_task_size"], params["max_task_size"], 10)
+    )
+    cns = np.logspace(
+        np.log10(params["min_cn_power"]),
+        np.log10(params["max_cn_power"]),
+        num=10,
+        base=10,
+    )
 
     all_results = {}
     for i in tqdm(range(num_eval_cycles)):
@@ -270,16 +296,29 @@ def iDEAS_Baseline(configs):
         print("Training completed")
         print(100 * "-")
 
-        plot_loss_function(dqn_loss, "iDEAS", "iterations", "loss", "iDEAS_Baseline_loss")
-        plot_all_rewards(dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_Baseline_rewards")
+        plot_loss_function(
+            dqn_loss, "iDEAS", "iterations", "loss", "iDEAS_Baseline_loss"
+        )
+        plot_all_rewards(
+            dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_Baseline_rewards"
+        )
 
-
-    cpuloads = np.linspace(0.05, 3, 10)
-    tasksizes = np.round(np.linspace(110, 490, 11))
-    cns = np.logspace(np.log10(2e-11), np.log10(2e-6), num=11, base=10)
+    cpuloads = np.linspace(
+        params["min_task_load_eval"], params["max_task_load_eval"], 10
+    )
+    tasksizes = np.round(
+        np.linspace(params["min_task_size"], params["max_task_size"], 10)
+    )
+    cns = np.logspace(
+        np.log10(params["min_cn_power"]),
+        np.log10(params["max_cn_power"]),
+        num=11,
+        base=10,
+    )
 
     all_results = {}
-    for i in tqdm(range(num_eval_cycles)):
+    for i in range(num_eval_cycles):
+        print(f"Cycle {i+1}:")
         evaluator = iDEAS_BaselineEvaluator(configs, cpuloads, tasksizes, cns)
         result = evaluator.run()
 
@@ -290,7 +329,6 @@ def iDEAS_Baseline(configs):
                     (num_eval_cycles, *result[scenario].shape)
                 )
             all_results[scenario][i, :] = result[scenario]
-
 
     plot_infos = {
         "fixed_taskset_energy": [
@@ -398,8 +436,8 @@ if __name__ == "__main__":
     # configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
     # iDEAS_Main(configs_ideas_main)
 
-    # configs_ideas_rrlo = load_yaml("./configs/iDEAS_RRLO.yaml")
-    # iDEAS_RRLO(configs_ideas_rrlo)
+    configs_ideas_rrlo = load_yaml("./configs/iDEAS_RRLO.yaml")
+    iDEAS_RRLO(configs_ideas_rrlo)
 
-    configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
-    iDEAS_Baseline(configs_ideas_baseline)
+    # configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
+    # iDEAS_Baseline(configs_ideas_baseline)

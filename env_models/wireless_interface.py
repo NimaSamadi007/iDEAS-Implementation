@@ -60,8 +60,12 @@ class WirelessInterface:
         max_cg = 2 * self.cg_sigma
         return [
             0,
-            self.bandwidth * np.log2(1 + self.powers[-1] * max_cg / self.cn_power),
+            self.bandwidth * np.log2(1 + self.powers[-1] * max_cg / self.min_cn_power),
         ]
+
+    def set_cn_power_bounds(self, min_cn_power, max_cn_power):
+        self.min_cn_power = min_cn_power
+        self.max_cn_power = max_cn_power
 
     # No. of possible power values
     def __len__(self):

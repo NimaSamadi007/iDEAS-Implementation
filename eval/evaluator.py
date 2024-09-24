@@ -1,6 +1,7 @@
 import abc
 import copy
 import numpy as np
+from tqdm import tqdm
 
 from env_models.env import HetrogenEnv, HomogenEnv, RRLOEnv
 from env_models.task import TaskGen, NormalTaskGen, RandomTaskGen
@@ -30,17 +31,25 @@ class Evaluator(abc.ABC):
     def run(self):
         results = {}
         if self.do_taskset_eval:
+            print("Evaluating fixed taskset scenario:")
             result = self._eval_fixed_taskset()
             results.update(result)
+            print(100 * "-")
         if self.do_cpu_load_eval:
+            print("Evaluating cpu load variation:")
             result = self._eval_varied_cpuload()
             results.update(result)
+            print(100 * "-")
         if self.do_task_size_eval:
+            print("Evaluating task size variation:")
             result = self._eval_varied_tasksize()
             results.update(result)
+            print(100 * "-")
         if self.do_channel_eval:
+            print("Evaluating varied channel scenario:")
             result = self._eval_varied_channel()
             results.update(result)
+            print(100 * "-")
 
         return results
 
@@ -50,6 +59,7 @@ class Evaluator(abc.ABC):
         self._init_results_container(scenario_name)
 
         for task_id in range(2):
+            print(f"Taskset {task_id+1}")
             self.task_gen = TaskGen(self.tasks_conf[f"eval_{task_id+1}"])
             # Create environments to evaluate algorithms on
             self.envs = self._init_envs()
@@ -60,7 +70,7 @@ class Evaluator(abc.ABC):
 
             # Observe initial state
             states = self._observe(self.tasks)
-            for _ in range(self.eval_itr):
+            for _ in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
 
@@ -91,12 +101,13 @@ class Evaluator(abc.ABC):
         self.algs = self._init_algs()
 
         for i in range(len(self.cpu_loads)):
+            print(f"CPU Load {self.cpu_loads[i]:.3f}")
             target_cpu_load = self.cpu_loads[i]
             # Generate tasks
             self.tasks = self.task_gen.step(target_cpu_load, max_task_load)
             # Observe initial state
             states = self._observe(self.tasks)
-            for _ in range(self.eval_itr):
+            for _ in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
 
@@ -134,7 +145,8 @@ class Evaluator(abc.ABC):
         # Observe initial state
         states = self._observe(self.tasks)
         for i in range(len(self.task_sizes) - 1):
-            for _ in range(self.eval_itr):
+            print(f"Task Size {self.task_sizes[i]:.3f}")
+            for _ in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
 
@@ -173,6 +185,7 @@ class Evaluator(abc.ABC):
         self.algs = self._init_algs()
 
         for i in range(len(self.cns)):
+            print(f"Channel noise: {self.cns[i]}")
             # Generate tasks
             self.tasks = self.task_gen.step(target_cpu_load, max_task_load)
             # Change channel state
@@ -181,7 +194,7 @@ class Evaluator(abc.ABC):
 
             # Observe initial state
             states = self._observe(self.tasks)
-            for _ in range(self.eval_itr):
+            for _ in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
 

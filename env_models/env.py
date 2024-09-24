@@ -8,10 +8,11 @@ from env_models.wireless_interface import WirelessInterface, RRLOWirelessInterfa
 
 
 class HetrogenEnv:
-    def __init__(self, confs, wcet_bound, task_size_bound):
+    def __init__(self, confs, cpu_load_bound, wcet_bound, task_size_bound, cn_bound):
         self.cpu_little = CPU(confs["cpus"]["little"])
         self.cpu_big = CPU(confs["cpus"]["big"])
         self.w_inter = WirelessInterface(confs["w_inter"])
+        self.w_inter.set_cn_power_bounds(*cn_bound)
 
         self.latency_energy_coeff = confs["params"]["latency_energy_coeff"]
         self.deadline_missed_penalty = confs["params"]["deadline_missed_penalty"]
@@ -19,7 +20,7 @@ class HetrogenEnv:
 
         # Initialize environment state
         self._init_state_bounds(
-            wcet_bound, task_size_bound, self.w_inter.get_rate_bounds()
+            cpu_load_bound, wcet_bound, task_size_bound, self.w_inter.get_rate_bounds()
         )
         self.state_dim = confs["params"]["dqn_state_dim"]
         self.curr_tasks = None
@@ -50,20 +51,37 @@ class HetrogenEnv:
         }
         return action_space
 
-    def _init_state_bounds(self, wcet_bound, task_size_bound, chan_rate_bound):
+    def _init_state_bounds(
+        self, cpu_load_bound, wcet_bound, task_size_bound, chan_rate_bound
+    ):
         # (SU, U_little, U_big, WCET, B, chan_rate)
         self.min_state_vals = np.array(
-            [0, 0, 0, wcet_bound[0], task_size_bound[0], chan_rate_bound[0]],
+            [
+                cpu_load_bound[0],
+                cpu_load_bound[0],
+                cpu_load_bound[0],
+                wcet_bound[0],
+                task_size_bound[0],
+                chan_rate_bound[0],
+            ],
             dtype=float,
         )
         self.max_state_vals = np.array(
-            [1, 1, 1, wcet_bound[1], task_size_bound[1], chan_rate_bound[1]],
+            [
+                cpu_load_bound[1],
+                cpu_load_bound[1],
+                cpu_load_bound[1],
+                wcet_bound[1],
+                task_size_bound[1],
+                chan_rate_bound[1],
+            ],
             dtype=float,
         )
 
     def _get_system_state(self):
         # Update channel status when we are observing environment
         self.w_inter.update_channel_state()
+        channel_rate = self.w_inter.get_channel_rate()
 
         states = np.zeros((len(self.curr_tasks), self.state_dim), dtype=np.float32)
         su = 0.0
@@ -71,7 +89,7 @@ class HetrogenEnv:
             su += task[0].wcet / task[0].p
             states[i, 3] = task[0].wcet
             states[i, 4] = task[0].b
-            states[i, 5] = self.w_inter.get_channel_rate()
+            states[i, 5] = channel_rate
         states[:, 0] = su
         states[:, 1] = self.cpu_little.util
         states[:, 2] = self.cpu_big.util
@@ -112,7 +130,7 @@ class HetrogenEnv:
                     self.w_inter.get_min_energy(task[0]),
                 ]
             )
-            min_penalties.append(min_penalty / len(task))
+            min_penalties.append(min_penalty)
             if not is_deadline_missed:
                 penalties.append(penalty / len(task))
             else:
@@ -126,9 +144,17 @@ class HetrogenEnv:
 
 
 class HomogenEnv:
-    def __init__(self, confs: Dict[str, str], wcet_bound, task_size_bound):
+    def __init__(
+        self,
+        confs: Dict[str, str],
+        cpu_load_bound,
+        wcet_bound,
+        task_size_bound,
+        cn_bound,
+    ):
         self.cpu = CPU(confs["cpus"]["local"])
         self.w_inter = WirelessInterface(confs["w_inter"])
+        self.w_inter.set_cn_power_bounds(*cn_bound)
 
         self.latency_energy_coeff = confs["params"]["latency_energy_coeff"]
         self.deadline_missed_penalty = confs["params"]["deadline_missed_penalty"]
@@ -137,7 +163,7 @@ class HomogenEnv:
         # Initialize environment state
         self.state_dim = confs["params"]["dqn_state_dim"]
         self._init_state_bounds(
-            wcet_bound, task_size_bound, self.w_inter.get_rate_bounds()
+            cpu_load_bound, wcet_bound, task_size_bound, self.w_inter.get_rate_bounds()
         )
         self.curr_tasks = None
         self.curr_state = None
@@ -161,26 +187,44 @@ class HomogenEnv:
         action_space = {"offload": self.w_inter.powers, "local": self.cpu.freqs}
         return action_space
 
-    def _init_state_bounds(self, wcet_bound, task_size_bound, chan_rate_bound):
-        # (SU, U_local, WCET, B)
+    def _init_state_bounds(
+        self, cpu_load_bound, wcet_bound, task_size_bound, chan_rate_bound
+    ):
+        # (SU, U_local, WCET, B, r)
         self.min_state_vals = np.array(
-            [0, 0, wcet_bound[0], task_size_bound[0], chan_rate_bound[0]], dtype=float
+            [
+                cpu_load_bound[0],
+                cpu_load_bound[0],
+                wcet_bound[0],
+                task_size_bound[0],
+                chan_rate_bound[0],
+            ],
+            dtype=float,
         )
         self.max_state_vals = np.array(
-            [1, 1, wcet_bound[1], task_size_bound[1], chan_rate_bound[1]], dtype=float
+            [
+                cpu_load_bound[1],
+                cpu_load_bound[1],
+                wcet_bound[1],
+                task_size_bound[1],
+                chan_rate_bound[1],
+            ],
+            dtype=float,
         )
 
     def _get_system_state(self):
         # Update channel status when we are observing environment
         self.w_inter.update_channel_state()
+        channel_rate = self.w_inter.get_channel_rate()
 
+        # States: (SU, U_local, WCET, B, r)
         states = np.zeros((len(self.curr_tasks), self.state_dim), dtype=np.float32)
         su = 0.0
         for i, task in enumerate(self.curr_tasks.values()):
             su += task[0].wcet / task[0].p
             states[i, 2] = task[0].wcet
             states[i, 3] = task[0].b
-            states[i, 4] = self.w_inter.get_channel_rate()
+            states[i, 4] = channel_rate
         states[:, 0] = su
         states[:, 1] = self.cpu.util
 
@@ -215,11 +259,11 @@ class HomogenEnv:
             min_penalty = np.min(
                 [self.cpu.get_min_energy(task[0]), self.w_inter.get_min_energy(task[0])]
             )
-            min_penalties.append(min_penalty / len(task))
-            if not is_deadline_missed:
-                penalties.append(penalty / len(task))
-            else:
+            min_penalties.append(min_penalty)
+            if is_deadline_missed:
                 penalties.append(self.deadline_missed_penalty)
+            else:
+                penalties.append(penalty / len(task))
 
         # Calculate reward
         min_penalties = np.asarray(min_penalties, dtype=float)
@@ -293,6 +337,7 @@ class RRLOEnv:
     def _init_state_bounds(self):
         self.num_states = np.array([16, 16, 8])
         self.min_state_vals = np.array([0, 0, 0])
+        # FIXME: Check this one with the paper
         self.max_state_vals = np.array([1, 1, 2 * self.w_inter.cg_sigma])
         self.state_steps = (self.max_state_vals - self.min_state_vals) / (
             self.num_states - 1

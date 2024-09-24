@@ -119,8 +119,7 @@ class DQN_DVFS:
         self.losses = []
 
         # Training device
-        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.device = "cpu"
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Network initialization
         self.net = Network(state_dim, self.act_dim).to(self.device)
@@ -223,7 +222,7 @@ class DQN_DVFS:
 
     def _sel_act(self, state: np.ndarray, eval_mode=False):
         if not eval_mode and self.eps > np.random.random():
-            # First select between 3 possible targets
+            # First select between possible targets
             target_id = np.random.randint(len(self.act_space))
             # Then select action from the selected target
             sel_act = np.random.randint(

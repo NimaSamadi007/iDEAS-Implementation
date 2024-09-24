@@ -21,7 +21,7 @@ class Trainer(abc.ABC):
         self.params = configs["params"]
         self.task_configs = configs["tasks"]
         self.num_tasks = self.params["num_tasks"]
-        self.max_task_load, self.cpu_load_values, self.cn_values = self._load_params()
+        self._load_params()
 
         # Initialize task generator
         self.task_gen = RandomTaskGen(self.task_configs["train"])
@@ -70,11 +70,14 @@ class Trainer(abc.ABC):
         return all_losses, all_rewards
 
     def _load_params(self):
-        max_task_load = self.params["max_task_load_train"]
-        cpu_load_values = np.arange(0.01, max_task_load, 0.1)
-        cn_values = np.logspace(np.log10(2e-11), np.log10(2e-6), num=10, base=10)
-
-        return max_task_load, cpu_load_values, cn_values
+        self.min_task_load = self.params["min_task_load_train"]
+        self.max_task_load = self.params["max_task_load_train"]
+        self.min_cn_power = self.params["min_cn_power"]
+        self.max_cn_power = self.params["max_cn_power"]
+        self.cpu_load_values = np.arange(self.min_task_load, self.max_task_load, 0.2)
+        self.cn_values = np.logspace(
+            np.log10(self.min_cn_power), np.log10(self.max_cn_power), num=10, base=10
+        )
 
     @abc.abstractmethod
     def _init_envs(self):
@@ -113,8 +116,10 @@ class iDEAS_MainTrainer(Trainer):
     def _init_envs(self):
         self.env = HetrogenEnv(
             self.configs,
+            [self.min_task_load, self.max_task_load],
             self.task_gen.get_wcet_bound(),
             self.task_gen.get_task_size_bound(),
+            [self.cn_values[0], self.cn_values[-1]],
         )
 
     def _init_algs(self):
@@ -158,17 +163,21 @@ class iDEAS_MainTrainer(Trainer):
         os.makedirs("models/iDEAS_Main", exist_ok=True)
         self.alg.save_model("models/iDEAS_Main")
 
+
 class iDEAS_BaselineTrainer(iDEAS_MainTrainer):
     def _save_algs(self):
         os.makedirs("models/iDEAS_Baseline", exist_ok=True)
         self.alg.save_model("models/iDEAS_Baseline")
 
+
 class iDEAS_RRLOTrainer(Trainer):
     def _init_envs(self):
         self.ideas_env = HomogenEnv(
             self.configs,
+            [self.min_task_load, self.max_task_load],
             self.task_gen.get_wcet_bound(),
             self.task_gen.get_task_size_bound(),
+            [self.cn_values[0], self.cn_values[-1]],
         )
         self.rrlo_env = RRLOEnv(self.configs)
 
@@ -214,7 +223,6 @@ class iDEAS_RRLOTrainer(Trainer):
         return self._observe()
 
     def _run_algs(self, states):
-        # FIXME: Return two action types as a tuple
         actions_ideas_raw = self.ideas_dvfs.execute(states["ideas"])
         actions_ideas_str = self.ideas_dvfs.conv_acts(actions_ideas_raw)
 
