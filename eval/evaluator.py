@@ -14,6 +14,10 @@ class Evaluator(abc.ABC):
         self.configs = configs
         self.params = self.configs["params"]
         self.tasks_conf = self.configs["tasks"]
+        self.min_task_load = self.params["min_task_load_eval"]
+        self.max_task_load = self.params["max_task_load_eval"]
+        self.min_cn_power = self.params["min_cn_power"]
+        self.max_cn_power = self.params["max_cn_power"]
 
         self.do_taskset_eval = self.params["do_taskset_eval"]
         self.do_cpu_load_eval = self.params["do_cpu_load_eval"]
@@ -24,32 +28,32 @@ class Evaluator(abc.ABC):
 
         self.cpu_loads = cpu_loads
         self.task_sizes = task_sizes
-        self.cns = cns
+        self.cn_values = cns
 
         np.set_printoptions(suppress=True)
 
     def run(self):
         results = {}
         if self.do_taskset_eval:
-            print("Evaluating fixed taskset scenario:")
+            tqdm.write("Evaluating fixed taskset scenario:")
             result = self._eval_fixed_taskset()
             results.update(result)
-            print(100 * "-")
+            tqdm.write(100 * "-")
         if self.do_cpu_load_eval:
-            print("Evaluating cpu load variation:")
+            tqdm.write("Evaluating cpu load variation:")
             result = self._eval_varied_cpuload()
             results.update(result)
-            print(100 * "-")
+            tqdm.write(100 * "-")
         if self.do_task_size_eval:
-            print("Evaluating task size variation:")
+            tqdm.write("Evaluating task size variation:")
             result = self._eval_varied_tasksize()
             results.update(result)
-            print(100 * "-")
+            tqdm.write(100 * "-")
         if self.do_channel_eval:
-            print("Evaluating varied channel scenario:")
+            tqdm.write("Evaluating varied channel scenario:")
             result = self._eval_varied_channel()
             results.update(result)
-            print(100 * "-")
+            tqdm.write(100 * "-")
 
         return results
 
@@ -59,7 +63,7 @@ class Evaluator(abc.ABC):
         self._init_results_container(scenario_name)
 
         for task_id in range(2):
-            print(f"Taskset {task_id+1}")
+            tqdm.write(f"Taskset {task_id+1}")
             self.task_gen = TaskGen(self.tasks_conf[f"eval_{task_id+1}"])
             # Create environments to evaluate algorithms on
             self.envs = self._init_envs()
@@ -101,7 +105,7 @@ class Evaluator(abc.ABC):
         self.algs = self._init_algs()
 
         for i in range(len(self.cpu_loads)):
-            print(f"CPU Load {self.cpu_loads[i]:.3f}")
+            tqdm.write(f"CPU Load {self.cpu_loads[i]:.3f}")
             target_cpu_load = self.cpu_loads[i]
             # Generate tasks
             self.tasks = self.task_gen.step(target_cpu_load, max_task_load)
@@ -145,7 +149,7 @@ class Evaluator(abc.ABC):
         # Observe initial state
         states = self._observe(self.tasks)
         for i in range(len(self.task_sizes) - 1):
-            print(f"Task Size {self.task_sizes[i]:.3f}")
+            tqdm.write(f"Task Size {self.task_sizes[i]:.3f}")
             for _ in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
@@ -184,13 +188,13 @@ class Evaluator(abc.ABC):
         # Init DVFS algorithms
         self.algs = self._init_algs()
 
-        for i in range(len(self.cns)):
-            print(f"Channel noise: {self.cns[i]}")
+        for i in range(len(self.cn_values)):
+            tqdm.write(f"Channel noise: {self.cn_values[i]}")
             # Generate tasks
             self.tasks = self.task_gen.step(target_cpu_load, max_task_load)
             # Change channel state
             for env_tmp in self.envs.values():
-                env_tmp.w_inter.set_cn(self.cns[i])
+                env_tmp.w_inter.set_cn(self.cn_values[i])
 
             # Observe initial state
             states = self._observe(self.tasks)
@@ -254,7 +258,7 @@ class iDEAS_MainEvaluator(Evaluator):
         elif scenario == "varied_tasksize":
             self.num_results_item = len(self.task_sizes) - 1
         elif scenario == "varied_channel":
-            self.num_results_item = len(self.cns)
+            self.num_results_item = len(self.cn_values)
         else:
             raise ValueError(f"Unknown Scenario! {scenario}")
 
@@ -309,8 +313,10 @@ class iDEAS_MainEvaluator(Evaluator):
     def _init_envs(self):
         env_tmp = HetrogenEnv(
             self.configs,
+            [self.min_task_load, self.max_task_load],
             self.task_gen.get_wcet_bound(),
             self.task_gen.get_task_size_bound(),
+            [self.cn_values[0], self.cn_values[-1]],
         )
         return {"ideas": env_tmp}
 
@@ -338,8 +344,10 @@ class iDEAS_RRLOEvaluator(Evaluator):
         envs = {}
         env_temp = HomogenEnv(
             self.configs,
+            [self.min_task_load, self.max_task_load],
             self.task_gen.get_wcet_bound(),
             self.task_gen.get_task_size_bound(),
+            [self.cn_values[0], self.cn_values[-1]],
         )
         envs["random"] = copy.deepcopy(env_temp)
         envs["rrlo"] = RRLOEnv(self.configs)
@@ -394,7 +402,7 @@ class iDEAS_RRLOEvaluator(Evaluator):
         elif scenario == "varied_tasksize":
             self.num_results_item = len(self.task_sizes) - 1
         elif scenario == "varied_channel":
-            self.num_results_item = len(self.cns)
+            self.num_results_item = len(self.cn_values)
         else:
             raise ValueError(f"Unknown Scenario! {scenario}")
 
@@ -474,8 +482,10 @@ class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
         envs = {}
         env_temp = HetrogenEnv(
             self.configs,
+            [self.min_task_load, self.max_task_load],
             self.task_gen.get_wcet_bound(),
             self.task_gen.get_task_size_bound(),
+            [self.cn_values[0], self.cn_values[-1]],
         )
         envs["random"] = copy.deepcopy(env_temp)
         envs["ideas"] = copy.deepcopy(env_temp)
@@ -524,7 +534,7 @@ class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
         elif scenario == "varied_tasksize":
             self.num_results_item = len(self.task_sizes) - 1
         elif scenario == "varied_channel":
-            self.num_results_item = len(self.cns)
+            self.num_results_item = len(self.cn_values)
         else:
             raise ValueError(f"Unknown Scenario! {scenario}")
 

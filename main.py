@@ -167,7 +167,7 @@ def iDEAS_RRLO(configs):
     )
 
     all_results = {}
-    for i in tqdm(range(num_eval_cycles)):
+    for i in range(num_eval_cycles):
         evaluator = iDEAS_RRLOEvaluator(configs, cpuloads, tasksizes, cns)
         result = evaluator.run()
 

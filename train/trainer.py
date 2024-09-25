@@ -72,11 +72,11 @@ class Trainer(abc.ABC):
     def _load_params(self):
         self.min_task_load = self.params["min_task_load_train"]
         self.max_task_load = self.params["max_task_load_train"]
-        self.min_cn_power = self.params["min_cn_power"]
-        self.max_cn_power = self.params["max_cn_power"]
+        min_cn_power = self.params["min_cn_power"]
+        max_cn_power = self.params["max_cn_power"]
         self.cpu_load_values = np.arange(self.min_task_load, self.max_task_load, 0.2)
         self.cn_values = np.logspace(
-            np.log10(self.min_cn_power), np.log10(self.max_cn_power), num=10, base=10
+            np.log10(min_cn_power), np.log10(max_cn_power), num=10, base=10
         )
 
     @abc.abstractmethod
