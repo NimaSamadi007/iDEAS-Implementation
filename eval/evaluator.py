@@ -109,7 +109,7 @@ class Evaluator(abc.ABC):
             self.tasks = self.task_gen.step(target_cpu_load, max_task_load)
             # Observe initial state
             states = self._observe(self.tasks)
-            for _ in tqdm(range(self.eval_itr)):
+            for k in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
 
@@ -199,6 +199,7 @@ class Evaluator(abc.ABC):
             for _ in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
+                # tqdm.write(str(self.actions))
 
                 # Apply actions on the environments
                 self._step_envs(self.actions)
@@ -374,7 +375,6 @@ class iDEAS_RRLOEvaluator(Evaluator):
         random_policy = RandomPolicy(
             self.envs["random"].cpu.freqs, self.envs["random"].w_inter.powers
         )
-        # FIXME: Probably need to change local policy
         local_policy = {
             "offload": [],
             "local": [[0, 1820], [1, 1820], [2, 1820], [3, 1820]],
@@ -578,8 +578,8 @@ class RandomPolicy:
         self.powers = powers
 
     def generate(self):
-        offload = np.random.randint(0, 5)
         actions = {"offload": [], "local": []}
+        offload = np.random.randint(0, 5)
         random_freq_idx = np.random.choice(
             len(self.freqs), size=4 - offload, replace=True
         )

@@ -39,7 +39,7 @@ class HetrogenEnv:
     def observe(self, tasks):
         self.curr_tasks = tasks
         self.curr_state = self._get_system_state()
-        is_final = len(self.curr_tasks) * [False]
+        is_final = len(self.curr_tasks) * [True]
 
         return self.curr_state, is_final
 
@@ -179,7 +179,7 @@ class HomogenEnv:
     def observe(self, tasks):
         self.curr_tasks = tasks
         self.curr_state = self._get_system_state()
-        is_final = len(self.curr_tasks) * [False]
+        is_final = len(self.curr_tasks) * [True]
 
         return self.curr_state, is_final
 
@@ -214,6 +214,7 @@ class HomogenEnv:
 
     def _get_system_state(self):
         # Update channel status when we are observing environment
+        #FIXME: For evaluators, this function is called many times, altering channel
         self.w_inter.update_channel_state()
         channel_rate = self.w_inter.get_channel_rate()
 

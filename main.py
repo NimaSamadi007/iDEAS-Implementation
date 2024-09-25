@@ -1,5 +1,4 @@
 import numpy as np
-from tqdm import tqdm
 
 from utils.utils import (
     plot_res,
@@ -11,7 +10,7 @@ from utils.utils import (
     load_yaml,
 )
 
-from train.trainer import iDEAS_MainTrainer, iDEAS_RRLOTrainer, iDEAS_BaselineTrainer
+from train.trainer import iDEAS_MainTrainer, iDEAS_RRLOTrainer
 from eval.evaluator import (
     iDEAS_MainEvaluator,
     iDEAS_RRLOEvaluator,
@@ -49,7 +48,7 @@ def iDEAS_Main(configs):
     )
 
     all_results = {}
-    for i in tqdm(range(num_eval_cycles)):
+    for i in range(num_eval_cycles):
         evaluator = iDEAS_MainEvaluator(configs, cpuloads, tasksizes, cns)
         result = evaluator.run()
 
@@ -295,7 +294,7 @@ def iDEAS_Baseline(configs):
     num_eval_cycles = params["eval_cycle"]
 
     if params["do_train"]:
-        trainer = iDEAS_BaselineTrainer(configs)
+        trainer = iDEAS_MainTrainer(configs)
         dqn_loss, dqn_rewards = trainer.run()
         dqn_loss = np.array(dqn_loss)
         dqn_rewards = np.array(dqn_rewards)
@@ -401,7 +400,7 @@ def iDEAS_Baseline(configs):
     }
 
     alg_set = ["Random", "iDEAS", "Local", "Edge Only"]
-    alg_set2 = ["Random", "RRLO", "Local", "Edge Only"]
+    alg_set2 = ["Random", "Local", "Edge Only"]
     for scenario in plot_infos:
         mean_values = np.mean(all_results[scenario], axis=0)
         if scenario in ["fixed_taskset_energy", "fixed_taskset_drop"]:
@@ -440,11 +439,11 @@ def iDEAS_Baseline(configs):
 
 
 if __name__ == "__main__":
-    # configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
-    # iDEAS_Main(configs_ideas_main)
+    configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
+    iDEAS_Main(configs_ideas_main)
 
     configs_ideas_rrlo = load_yaml("./configs/iDEAS_RRLO.yaml")
     iDEAS_RRLO(configs_ideas_rrlo)
 
-    # configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
-    # iDEAS_Baseline(configs_ideas_baseline)
+    configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
+    iDEAS_Baseline(configs_ideas_baseline)

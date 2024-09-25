@@ -43,10 +43,10 @@ class Trainer(abc.ABC):
             # Run DVFS algorithm
             actions = self._run_algs(states)
 
-            if itr % 500 == 0:
-                tqdm.write(f"States:\n{str(states)}")
-                tqdm.write(f"Actions:\n{str(actions)}")
-                tqdm.write(20 * "=")
+            # if itr % 500 == 0:
+            #     tqdm.write(f"States:\n{str(states)}")
+            #     tqdm.write(f"Actions:\n{str(actions)}")
+            #     tqdm.write(20 * "=")
 
             # Step environment
             rewards = self._step_envs(actions)
@@ -162,12 +162,6 @@ class iDEAS_MainTrainer(Trainer):
     def _save_algs(self):
         os.makedirs("models/iDEAS_Main", exist_ok=True)
         self.alg.save_model("models/iDEAS_Main")
-
-
-class iDEAS_BaselineTrainer(iDEAS_MainTrainer):
-    def _save_algs(self):
-        os.makedirs("models/iDEAS_Baseline", exist_ok=True)
-        self.alg.save_model("models/iDEAS_Baseline")
 
 
 class iDEAS_RRLOTrainer(Trainer):
