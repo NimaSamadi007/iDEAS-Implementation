@@ -83,6 +83,8 @@ class RandomTaskGen:
         self.w_min, self.w_max = task_set_conf["w"]
         self.b_min, self.b_max = task_set_conf["b"]
         self.base_freq = task_set_conf["base_freq"]
+        self.step_p = task_set_conf["step_p"]
+        self.step_b = task_set_conf["step_b"]
 
     def step(self, target_cpu_load, max_task_load):
         # Generate base tasks
@@ -101,12 +103,16 @@ class RandomTaskGen:
     def _gen_base_tasks(self, target_cpu_load, max_task_load):
         single_task_load = target_cpu_load / self.num_tasks
         self.task_set = []
+        raw_p_range = np.arange(0, self.p_max, self.step_p)
+        p_range = raw_p_range[raw_p_range >= self.p_min]
+        raw_b_range = np.arange(0, self.b_max, self.step_b)
+        b_range = raw_b_range[raw_b_range >= self.b_min]
         for t_id in range(self.num_tasks):
-            p = np.random.randint(self.p_min // 10, self.p_max // 10) * 10
+            p = np.random.choice(p_range)
             # Generate w based on p and task load while considering w ranges
             w = np.clip(p * single_task_load, self.w_min, self.w_max)
             b = np.clip(
-                np.random.randint(self.b_min // 5, self.b_max // 5) * 5,
+                np.random.choice(b_range),
                 self.b_min,
                 self.b_max,
             )
@@ -137,6 +143,7 @@ class NormalTaskGen:
         self.w_min, self.w_max = task_set_conf["w"]
         self.b_min, self.b_max = task_set_conf["b"]
         self.base_freq = task_set_conf["base_freq"]
+        self.step_p = task_set_conf["step_p"]
 
     def step(self, target_cpu_load, mean, max_task_load):
         # Generate base tasks
@@ -156,8 +163,10 @@ class NormalTaskGen:
         single_task_load = target_cpu_load / self.num_tasks
         std = 20 / 3
         self.task_set = []
+        raw_p_range = np.arange(0, self.p_max, self.step_p)
+        p_range = raw_p_range[raw_p_range >= self.p_min]
         for t_id in range(self.num_tasks):
-            p = np.random.randint(self.p_min // 20, self.p_max // 20) * 20
+            p = np.random.choice(p_range)
             # Generate w based on p and task load while considering w ranges
             w = np.min([self.w_max, np.max([self.w_min, p * single_task_load])])
             b = np.min(

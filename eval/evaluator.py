@@ -16,8 +16,6 @@ class Evaluator(abc.ABC):
         self.tasks_conf = self.configs["tasks"]
         self.min_task_load = self.params["min_task_load_eval"]
         self.max_task_load = self.params["max_task_load_eval"]
-        self.min_cn_power = self.params["min_cn_power"]
-        self.max_cn_power = self.params["max_cn_power"]
 
         self.do_taskset_eval = self.params["do_taskset_eval"]
         self.do_cpu_load_eval = self.params["do_cpu_load_eval"]
@@ -98,7 +96,7 @@ class Evaluator(abc.ABC):
         max_task_load = self.params["max_task_load_eval"]
         self._init_results_container(scenario_name)
 
-        self.task_gen = RandomTaskGen(self.tasks_conf["train"])
+        self.task_gen = RandomTaskGen(self.tasks_conf["eval_3"])
         # Create environments to evaluate algorithms on
         self.envs = self._init_envs()
         # Init DVFS algorithms
@@ -136,7 +134,7 @@ class Evaluator(abc.ABC):
         max_task_load = self.params["max_task_load_eval"]
         self._init_results_container(scenario_name)
 
-        self.task_gen = NormalTaskGen(self.tasks_conf["train"])
+        self.task_gen = NormalTaskGen(self.tasks_conf["eval_3"])
         # Create environments to evaluate algorithms on
         self.envs = self._init_envs()
         # Init DVFS algorithms
@@ -182,7 +180,7 @@ class Evaluator(abc.ABC):
         max_task_load = self.params["max_task_load_eval"]
         self._init_results_container(scenario_name)
 
-        self.task_gen = RandomTaskGen(self.tasks_conf["train"])
+        self.task_gen = RandomTaskGen(self.tasks_conf["eval_3"])
         # Create environments to evaluate algorithms on
         self.envs = self._init_envs()
         # Init DVFS algorithms

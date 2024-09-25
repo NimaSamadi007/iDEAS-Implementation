@@ -3,7 +3,7 @@ params:
   train_itr: 3.0e+5   # Number of training iterations
   eval_itr: 10000   # Number of evaluation iterations
   eval_cycle: 1   # Evaluation cycle at each the algorithm is evaluated eval_itr times
-  do_train: false   # Train or not
+  do_train: true   # Train or not
   do_taskset_eval: true   # Taskset evaluation
   do_cpu_load_eval: true
   do_task_size_eval: true
@@ -25,6 +25,7 @@ params:
 tasks:
   eval_1: configs/tasks/eval_1.yaml
   eval_2: configs/tasks/eval_2.yaml
+  eval_3: configs/tasks/eval_3.yaml
   train: configs/tasks/train.yaml
 cpus:
   little: configs/cpus/little.yaml

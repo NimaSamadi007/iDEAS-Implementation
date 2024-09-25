@@ -25,6 +25,7 @@ params:
 tasks:
   eval_1: configs/tasks/eval_1.yaml
   eval_2: configs/tasks/eval_2.yaml
+  eval_3: configs/tasks/eval_3.yaml
   train: configs/tasks/train.yaml
 cpus:
   little: configs/cpus/little.yaml

@@ -245,7 +245,11 @@ def iDEAS_RRLO(configs):
     alg_set = ["Random", "RRLO", "iDEAS", "Local", "Edge Only"]
     alg_set2 = ["Random", "RRLO", "Local", "Edge Only"]
     for scenario in plot_infos:
-        mean_values = np.mean(all_results[scenario], axis=0)
+        if scenario in all_results:
+            mean_values = np.mean(all_results[scenario], axis=0)
+        else:
+            print(f"Scenario {scenario} not found in results")
+            continue
         if scenario in ["fixed_taskset_energy", "fixed_taskset_drop"]:
             plot_res(
                 alg_set,
@@ -258,6 +262,9 @@ def iDEAS_RRLO(configs):
             line_plot_res(alg_set, mean_values, *plot_infos[scenario])
 
     # Calculate improvement:
+    if "fixed_taskset_energy" not in all_results:
+        print("Scenario fixed_taskset_energy not found in results")
+        return
     energy_vals = all_results["fixed_taskset_energy"]
     random_energy = energy_vals[:, 0, :]
     rrlo_energy = energy_vals[:, 1, :]
