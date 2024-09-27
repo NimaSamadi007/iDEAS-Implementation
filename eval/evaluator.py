@@ -75,6 +75,7 @@ class Evaluator(abc.ABC):
             for _ in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
+                # tqdm.write(str(self.actions["random"]))
 
                 # Apply actions on the environments
                 self._step_envs(self.actions)
@@ -112,6 +113,7 @@ class Evaluator(abc.ABC):
             for k in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
+                # tqdm.write(str(self.actions["random"]))
 
                 # Apply actions on the environments
                 self._step_envs(self.actions)
@@ -571,7 +573,6 @@ class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
         return actions
 
 
-# FIXME: This class is probably wrong
 class RandomPolicy:
     def __init__(self, freqs, powers):
         self.freqs = freqs
@@ -579,18 +580,29 @@ class RandomPolicy:
 
     def generate(self):
         actions = {"offload": [], "local": []}
-        offload = np.random.randint(0, 5)
-        random_freq_idx = np.random.choice(
-            len(self.freqs), size=4 - offload, replace=True
+        num_task_to_offload = np.random.randint(0, 4)
+        # TODO: Set from num_tasks
+        task_ids = np.arange(4)
+        task_to_offload = np.random.choice(
+            task_ids, size=num_task_to_offload, replace=False
         )
-        random_power_idx = np.random.choice(
-            len(self.powers), size=offload, replace=True
+        task_to_local = np.array([i for i in task_ids if i not in task_to_offload])
+
+        # For each offload task, select a random power
+        power_idxs = np.random.choice(
+            len(self.powers), size=len(task_to_offload), replace=True
         )
+        freq_idxs = np.random.choice(
+            len(self.freqs), size=len(task_to_local), replace=True
+        )
+
         actions["offload"] = [
-            [i, self.powers[idx]] for i, idx in enumerate(random_power_idx)
+            [idx, self.powers[power_idx]]
+            for idx, power_idx in zip(task_to_offload, power_idxs)
         ]
         actions["local"] = [
-            [i + offload, self.freqs[idx]] for i, idx in enumerate(random_freq_idx)
+            [idx, self.freqs[freq_idx]]
+            for idx, freq_idx in zip(task_to_local, freq_idxs)
         ]
 
         return actions

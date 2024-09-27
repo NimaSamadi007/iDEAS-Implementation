@@ -41,6 +41,8 @@ class CPU:
                     job.aet = job.p  # If task is missed, it will be executed until the end of current cycle
                 # Calculate energy consumption (chip energy conusmption at given frequency)
                 cons_power = self.powers[self.freqs == in_freq][0]
+                if job.aet < 0:
+                    raise ValueError("AET is negative!")
                 job.cons_energy = cons_power * (job.aet / 1000)
 
                 aets += job.aet
@@ -65,11 +67,6 @@ class CPU_CC(CPU):
 
     def step(self, jobs: Dict[int, List[Task]]) -> List[Task]:
         tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
-        # FIXME: Check this condition
-        # # Check schedulability criteria
-        # total_util = self._cal_total_util(tasks)
-        # if total_util > 1:
-        #     raise ValueError("Total utilization is greater than 1")
         self.hp = math.lcm(*[task.p for task in tasks.values()])
         self.tasks = tasks
 
@@ -100,18 +97,21 @@ class CPU_CC(CPU):
             for job in curr_jobs:
                 # Execute tasks
                 job.gen_aet(self.freq)
-                if (job.aet - job.executed_time) < remain_time:
+                if (job.aet - job.executed_time) <= remain_time:
                     # This job will be executed completely
                     job.exec_time_history.append(
                         [curr_time, curr_time + job.aet - job.executed_time]
                     )
                     job.exec_freq_history.append(job.base_freq)
                     job.finished = True
-                    curr_time += job.aet - job.executed_time
-                    remain_time -= job.aet - job.executed_time
+                    curr_time += (job.aet - job.executed_time)
+                    remain_time -= (job.aet - job.executed_time)
+                    job.executed_time = job.aet
                     self.freq = self._task_complete(job.t_id, job.aet)
                 else:
                     # This job must continue to the next step
+                    if np.abs(next_issue_time - curr_time) < 1e-6:
+                        raise ValueError("Invalid execution time!")
                     job.exec_time_history.append([curr_time, next_issue_time])
                     job.exec_freq_history.append(job.base_freq)
                     job.executed_time += remain_time
@@ -119,24 +119,31 @@ class CPU_CC(CPU):
             # Remove finished tasks
             finished_jobs.extend([t for t in curr_jobs if t.finished])
             curr_jobs = [t for t in curr_jobs if not t.finished]
-            # print(20*'-')
+
         # Check if any job is remained:
-        # FIXME: Check remaining tasks
-        # if len(curr_jobs):
-        #     print("Some tasks are not completed!")
+        for t in curr_jobs:
+            t.deadline_missed = True
+            for i in range(len(t.exec_time_history)):
+                dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
+                power = self.powers[self.freqs == t.exec_freq_history[i]][0]
+                if dt < 0:
+                    raise ValueError("Execution time is negative!")
+                t.cons_energy += power * (dt / 1000)  # mJ
+
         # Calculate energy consumption
         for t in finished_jobs:
             # Task deadline is missed
             if t.exec_time_history[-1][1] > t.deadline:
                 t.deadline_missed = True
-                # FIXME: Check if this is an appropriate choice
-                t.exec_time_history[-1][1] = t.deadline
 
             for i in range(len(t.exec_time_history)):
                 dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
                 power = self.powers[self.freqs == t.exec_freq_history[i]][0]
+                if dt < 0:
+                    raise ValueError("Execution time is negative!")
                 t.cons_energy += power * (dt / 1000)  # mJ
 
+        finished_jobs.extend(curr_jobs)
         return finished_jobs
 
     def _task_release(self, task_id: int) -> int:
@@ -171,7 +178,7 @@ class CPU_CC(CPU):
     def _cal_total_util(self, tasks):
         total_util = 0
         for task in tasks.values():
-            total_util += task.wcet / task.p
+            total_util += task.aet / task.p
         return total_util
 
 
@@ -182,10 +189,6 @@ class CPU_LA(CPU):
 
     def step(self, jobs: Dict[int, List[Task]]) -> List[Task]:
         tasks = {t_id: copy.deepcopy(job[0]) for t_id, job in jobs.items()}
-        # FIXME: Check this condition
-        # total_util = self._cal_total_util(tasks)
-        # if total_util > 1:
-        #     raise ValueError("Total utilization is greater than 1")
         self.hp = math.lcm(*[task.p for task in tasks.values()])
         self.tasks = tasks
 
@@ -198,7 +201,7 @@ class CPU_LA(CPU):
             issued_jobs = [jobs[t_id].pop(0) for t_id in issued_tasks_id]
             for t in issued_jobs:
                 t.deadline = issue_time + t.p
-            for t in issued_jobs:  # TODO is there any better way? I believe I needed the deadlines saved before running the LA algo
+            for t in issued_jobs:  # TODO: is there any better way? I believe I needed the deadlines saved before running the LA algo
                 self.freq = self._task_release(
                     tasks=issued_jobs, task_id=t.t_id, curr_time=issue_time
                 )
@@ -235,21 +238,27 @@ class CPU_LA(CPU):
             finished_jobs.extend([t for t in curr_jobs if t.finished])
             curr_jobs = [t for t in curr_jobs if not t.finished]
 
-        # FIXME: Check remaining tasks
-        # if len(curr_jobs):
-        #     print("Some tasks are not completed!")
+        for t in curr_jobs:
+            t.deadline_missed = True
+            for i in range(len(t.exec_time_history)):
+                dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
+                power = self.powers[self.freqs == t.exec_freq_history[i]][0]
+                if dt < 0:
+                    raise ValueError("Execution time is negative!")
+                t.cons_energy += power * (dt / 1000)  # mJ
 
         for t in finished_jobs:
             if t.exec_time_history[-1][1] > t.deadline:
                 t.deadline_missed = True
-                # FIXME: Check if this is a correct choice
-                t.exec_time_history[-1][1] = t.deadline
 
             for i in range(len(t.exec_time_history)):
                 dt = t.exec_time_history[i][1] - t.exec_time_history[i][0]
                 power = self.powers[self.freqs == t.exec_freq_history[i]][0]
+                if dt < 0:
+                    raise ValueError("Execution time is negative!")
                 t.cons_energy += power * (dt / 1000)
 
+        finished_jobs.extend(curr_jobs)
         return finished_jobs
 
     def _task_release(self, tasks, task_id: int, curr_time) -> int:
@@ -302,5 +311,5 @@ class CPU_LA(CPU):
         else:
             task_list = tasks
         for task in task_list:
-            total_util += task.wcet / task.p
+            total_util += task.aet / task.p
         return total_util

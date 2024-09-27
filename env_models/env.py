@@ -39,7 +39,7 @@ class HetrogenEnv:
     def observe(self, tasks):
         self.curr_tasks = tasks
         self.curr_state = self._get_system_state()
-        is_final = len(self.curr_tasks) * [True]
+        is_final = len(self.curr_tasks) * [False]
 
         return self.curr_state, is_final
 
@@ -179,7 +179,7 @@ class HomogenEnv:
     def observe(self, tasks):
         self.curr_tasks = tasks
         self.curr_state = self._get_system_state()
-        is_final = len(self.curr_tasks) * [True]
+        is_final = len(self.curr_tasks) * [False]
 
         return self.curr_state, is_final
 
@@ -269,7 +269,9 @@ class HomogenEnv:
         # Calculate reward
         min_penalties = np.asarray(min_penalties, dtype=float)
         penalties = np.asarray(penalties, dtype=float)
-        rewards = np.exp(-self.reward_coeff * (penalties - min_penalties))
+        #FIXME: This must be penalty
+        # rewards = np.exp(self.reward_coeff * (penalties - min_penalties))
+        rewards = (penalties - min_penalties)**2
         return rewards, penalties, min_penalties
 
 
@@ -313,7 +315,7 @@ class RRLOEnv:
         self.curr_tasks = tasks
         self._gen_aet(self.curr_tasks)
         self.curr_state = self._descretize_states(self._get_system_state())
-        is_final = True
+        is_final = False
 
         return self.curr_state, is_final
 
@@ -345,9 +347,6 @@ class RRLOEnv:
         )
 
     def _gen_aet(self, tasks: Dict[int, List[Task]]):
-        # FIXME: This is rather a weird choice as we're not
-        # aware of task AET beforehand and it's only measured after
-        # a task is executed
         for task in tasks.values():
             for job in task:
                 job.gen_aet()

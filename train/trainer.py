@@ -43,19 +43,28 @@ class Trainer(abc.ABC):
             # Run DVFS algorithm
             actions = self._run_algs(states)
 
-            # if itr % 500 == 0:
-            #     tqdm.write(f"States:\n{str(states)}")
-            #     tqdm.write(f"Actions:\n{str(actions)}")
-            #     tqdm.write(20 * "=")
-
             # Step environment
             rewards = self._step_envs(actions)
+
+            if itr % 1000 == 0:
+                tqdm.write(f"For load: {self._target_cpu_load}, CN: {self._cn}")
+                tqdm.write(
+                    f"Tasks: {self.tasks[0][0]}, {self.tasks[1][0]}, {self.tasks[2][0]}, {self.tasks[3][0]}"
+                )
+                tqdm.write(f"iDEAS Penalty:\n{str(rewards['ideas_penalty'])}")
+                tqdm.write(f"iDEAS  Min Penalty:\n{str(rewards['ideas_min_penalty'])}")
+                tqdm.write(f"RRLO Penalty:\n{str(rewards['rrlo'])}")
 
             # Observe next state
             next_states, is_final = self._observe()
 
             # Train DVFS algorithm
             loss = self._train_algs(states, actions, rewards, next_states, is_final)
+
+            if itr % 1000 == 0:
+                if loss:
+                    tqdm.write(f"Loss value: {loss:.3f}")
+                tqdm.write(20 * "=")
 
             if loss:
                 all_rewards.append(rewards)
@@ -211,6 +220,9 @@ class iDEAS_RRLOTrainer(Trainer):
         states_tmp, _ = self.rrlo_env.observe(copy.deepcopy(self.tasks))
         states["rrlo"] = states_tmp
 
+        self._target_cpu_load = target_cpu_load
+        self._cn = cn
+
         return states, is_final
 
     def reset(self):
@@ -236,7 +248,12 @@ class iDEAS_RRLOTrainer(Trainer):
 
         # For RRLO, penalty is used for updating the Q-table and using
         # it in 'rewrads' variable may be misleading
-        rewards = {"ideas": rewards_ideas, "rrlo": penalty_rrlo}
+        rewards = {
+            "ideas": rewards_ideas,
+            "rrlo": penalty_rrlo,
+            "ideas_min_penalty": min_penalties,
+            "ideas_penalty": penalites,
+        }
         return rewards
 
     def _train_algs(self, states, actions, rewards, next_states, is_final):

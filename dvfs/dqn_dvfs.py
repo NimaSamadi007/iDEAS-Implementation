@@ -18,13 +18,13 @@ class Network(nn.Module):
         super(Network, self).__init__()
 
         self.net = nn.Sequential(
-            nn.Linear(in_dim, 256),
+            nn.Linear(in_dim, 128),
             nn.ReLU(),
-            nn.Linear(256, 256),
+            nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(64, 64),
             nn.ReLU(),
-            nn.Linear(128, out_dim),
+            nn.Linear(64, out_dim),
         )
         self.net.apply(self._init_weights)
 
@@ -93,7 +93,7 @@ class DQN_DVFS:
         min_eps: float = 0.1,
         eps_update_step: int = 1e3,
         gamma: float = 0.9,
-        weight_decay: float = 1e-5,
+        weight_decay: float = 1e-2,
     ):
         # Parameters
         self.state_dim = state_dim
@@ -178,6 +178,8 @@ class DQN_DVFS:
         loss = self._compute_net_loss(samples)
         self.optimizer.zero_grad()
         loss.backward()
+        #FIXME: Check better ranges
+        nn.utils.clip_grad_value_(self.net.parameters(), 100)
         self.optimizer.step()
 
         return loss.item()

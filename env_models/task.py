@@ -42,7 +42,7 @@ class Task:
             self.base_freq = curr_freq
 
     def __repr__(self):
-        return f"(P: {self.p}, W: {self.wcet}, A: {self.aet:.3f}, b: {self.b}, E: {self.cons_energy:.3f}, f: {self.base_freq})"
+        return f"(P: {self.p:.3f}, W: {self.wcet:.3f}, A: {self.aet:.3f}, b: {self.b:.3f}, E: {self.cons_energy:.3f}, f: {self.base_freq})"
 
 
 class TaskGen:
