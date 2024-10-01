@@ -93,7 +93,8 @@ class DQN_DVFS:
         min_eps: float = 0.1,
         eps_update_step: int = 1e3,
         gamma: float = 0.9,
-        weight_decay: float = 1e-2,
+        weight_decay: float = 1e-5,
+        lr: float = 1e-3,
     ):
         # Parameters
         self.state_dim = state_dim
@@ -131,7 +132,7 @@ class DQN_DVFS:
         self.target_net.eval()
 
         # Optimizer
-        self.optimizer = optim.Adam(self.net.parameters(), weight_decay=weight_decay)
+        self.optimizer = optim.AdamW(self.net.parameters(), lr=lr, weight_decay=weight_decay)
 
     def train(
         self,
@@ -205,7 +206,7 @@ class DQN_DVFS:
         Load pretrained model from the provided path
         """
         if os.path.exists(f"{path}/dqn_model.pt"):
-            self.net.load_state_dict(torch.load(f"{path}/dqn_model.pt"))
+            self.net.load_state_dict(torch.load(f"{path}/dqn_model.pt", weights_only=True))
         else:
             print(f"Model {path}/dqn_model.pt does not exist!")
 

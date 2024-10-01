@@ -335,7 +335,7 @@ class iDEAS_MainEvaluator(Evaluator):
         return {"ideas": states}
 
     def _run_algs(self, states):
-        actions_raw = self.algs["ideas"].execute(states["ideas"])
+        actions_raw = self.algs["ideas"].execute(states["ideas"], eval_mode=True)
         actions_str = self.algs["ideas"].conv_acts(actions_raw)
         return {"ideas": actions_str}
 
@@ -462,7 +462,7 @@ class iDEAS_RRLOEvaluator(Evaluator):
         return {"ideas": ideas_state, "rrlo": rrlo_state}
 
     def _run_algs(self, states):
-        actions_raw = self.algs["ideas"].execute(states["ideas"])
+        actions_raw = self.algs["ideas"].execute(states["ideas"], eval_mode=True)
         actions_str = self.algs["ideas"].conv_acts(actions_raw)
         actions_rrlo, _ = self.algs["rrlo"].execute(states["rrlo"])
 
@@ -560,7 +560,7 @@ class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
         return {"ideas": ideas_state}
 
     def _run_algs(self, states):
-        actions_raw = self.algs["ideas"].execute(states["ideas"])
+        actions_raw = self.algs["ideas"].execute(states["ideas"], eval_mode=True)
         actions_str = self.algs["ideas"].conv_acts(actions_raw)
 
         actions = {

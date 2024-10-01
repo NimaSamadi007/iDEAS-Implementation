@@ -141,6 +141,7 @@ class iDEAS_MainTrainer(Trainer):
             update_target_net=self.params["update_target_net"],
             eps_decay=self.params["eps_decay"],
             min_eps=self.params["min_eps"],
+            lr=self.params["lr"],
         )
 
     def _observe(self):
@@ -194,6 +195,7 @@ class iDEAS_RRLOTrainer(Trainer):
             update_target_net=self.params["update_target_net"],
             eps_decay=self.params["eps_decay"],
             min_eps=self.params["min_eps"],
+            lr=self.params["lr"],
         )
         self.rrlo_dvfs = RRLO_DVFS(
             state_bounds=self.rrlo_env.get_state_bounds(),

@@ -269,9 +269,8 @@ class HomogenEnv:
         # Calculate reward
         min_penalties = np.asarray(min_penalties, dtype=float)
         penalties = np.asarray(penalties, dtype=float)
-        #FIXME: This must be penalty
-        # rewards = np.exp(self.reward_coeff * (penalties - min_penalties))
-        rewards = (penalties - min_penalties)**2
+        #FIXME: Check reward and penalty notion
+        rewards = np.exp(-self.reward_coeff * penalties)
         return rewards, penalties, min_penalties
 
 
