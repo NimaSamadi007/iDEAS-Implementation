@@ -110,8 +110,6 @@ class CPU_CC(CPU):
                     self.freq = self._task_complete(job.t_id, job.aet)
                 else:
                     # This job must continue to the next step
-                    if np.abs(next_issue_time - curr_time) < 1e-6:
-                        raise ValueError("Invalid execution time!")
                     job.exec_time_history.append([curr_time, next_issue_time])
                     job.exec_freq_history.append(job.base_freq)
                     job.executed_time += remain_time

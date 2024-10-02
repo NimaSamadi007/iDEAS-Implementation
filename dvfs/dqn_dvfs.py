@@ -18,11 +18,11 @@ class Network(nn.Module):
         super(Network, self).__init__()
 
         self.net = nn.Sequential(
-            nn.Linear(in_dim, 128),
+            nn.Linear(in_dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
             nn.ReLU(),
             nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, 64),
             nn.ReLU(),
             nn.Linear(64, out_dim),
         )
