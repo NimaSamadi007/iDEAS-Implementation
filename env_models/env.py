@@ -131,10 +131,7 @@ class HetrogenEnv:
                 ]
             )
             min_penalties.append(min_penalty)
-            if not is_deadline_missed:
-                penalties.append(penalty / len(task))
-            else:
-                penalties.append(self.deadline_missed_penalty)
+            penalties.append(penalty / len(task))
 
         # Calculate reward
         min_penalties = np.asarray(min_penalties, dtype=float)
@@ -261,10 +258,7 @@ class HomogenEnv:
                 [self.cpu.get_min_energy(task[0]), self.w_inter.get_min_energy(task[0])]
             )
             min_penalties.append(min_penalty)
-            if is_deadline_missed:
-                penalties.append(self.deadline_missed_penalty)
-            else:
-                penalties.append(penalty / len(task))
+            penalties.append(penalty / len(task))
 
         # Calculate reward
         min_penalties = np.asarray(min_penalties, dtype=float)
