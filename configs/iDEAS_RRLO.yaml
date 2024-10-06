@@ -18,7 +18,7 @@ params:
   lr: 1.0e-4
   mem_size: 10000
   update_target_net: 1000
-  eps_decay: 0.002
+  eps_decay: 0.0015
   min_eps: 0.05
   reward_coeff: 5
   deadline_missed_penalty: 1.0e+2

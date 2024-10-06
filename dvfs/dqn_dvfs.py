@@ -24,8 +24,6 @@ class Network(nn.Module):
             nn.ReLU(),
             nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(64, 64),
-            nn.ReLU(),
             nn.Linear(64, out_dim),
         )
         self.net.apply(self._init_weights)
