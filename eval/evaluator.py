@@ -464,7 +464,7 @@ class iDEAS_RRLOEvaluator(Evaluator):
     def _run_algs(self, states):
         actions_raw = self.algs["ideas"].execute(states["ideas"], eval_mode=True)
         actions_str = self.algs["ideas"].conv_acts(actions_raw)
-        actions_rrlo, _ = self.algs["rrlo"].execute(states["rrlo"])
+        actions_rrlo, _ = self.algs["rrlo"].execute(states["rrlo"], eval_mode=True)
 
         actions = {
             "random": self.algs["random"].generate(),

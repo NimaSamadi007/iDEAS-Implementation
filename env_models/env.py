@@ -114,12 +114,10 @@ class HetrogenEnv:
         for task in self.curr_tasks.values():
             penalty = 0
             min_penalty = 0
-            is_deadline_missed = False
             for job in task:
                 # Calculate last execution penalty
                 if job.deadline_missed:
-                    is_deadline_missed = True
-                    break
+                    penalty += self.deadline_missed_penalty
                 else:
                     penalty += job.cons_energy + self.latency_energy_coeff * job.aet
 
@@ -245,12 +243,10 @@ class HomogenEnv:
         for task in self.curr_tasks.values():
             penalty = 0
             min_penalty = 0
-            is_deadline_missed = False
             for job in task:
                 # Calculate last execution penalty
                 if job.deadline_missed:
-                    is_deadline_missed = True
-                    break
+                    penalty += self.deadline_missed_penalty
                 else:
                     penalty += job.cons_energy + self.latency_energy_coeff * job.aet
 
@@ -264,7 +260,7 @@ class HomogenEnv:
         min_penalties = np.asarray(min_penalties, dtype=float)
         penalties = np.asarray(penalties, dtype=float)
         #FIXME: Check reward and penalty notion
-        rewards = np.exp(-self.reward_coeff * penalties)
+        rewards = np.exp(-self.reward_coeff * (penalties-min_penalties))
         return rewards, penalties, min_penalties
 
 

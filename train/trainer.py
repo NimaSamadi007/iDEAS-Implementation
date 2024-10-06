@@ -51,9 +51,8 @@ class Trainer(abc.ABC):
                 tqdm.write(
                     f"Tasks: {self.tasks[0][0]}, {self.tasks[1][0]}, {self.tasks[2][0]}, {self.tasks[3][0]}"
                 )
-                tqdm.write(f"iDEAS Penalty:\n{str(rewards['ideas_penalty'])}")
-                tqdm.write(f"iDEAS  Min Penalty:\n{str(rewards['ideas_min_penalty'])}")
-                tqdm.write(f"RRLO Penalty:\n{str(rewards['rrlo'])}")
+                tqdm.write(f"iDEAS Reward:{str(rewards['ideas'])}")
+                tqdm.write(f"RRLO Penalty:{str(rewards['rrlo'])}")
 
             # Observe next state
             next_states, is_final = self._observe()

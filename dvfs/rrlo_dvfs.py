@@ -4,7 +4,16 @@ import os
 
 class RRLO_DVFS:
     def __init__(
-        self, state_bounds, num_w_inter_powers, num_dvfs_algs, dvfs_algs, num_tasks
+        self,
+        state_bounds,
+        num_w_inter_powers,
+        num_dvfs_algs,
+        dvfs_algs,
+        num_tasks,
+        eps_decay=1.0 / 2000,
+        max_eps=1.0,
+        min_eps=0.1,
+        eps_update_step=1e3,
     ):
         self.state_bounds = state_bounds
         self.num_total_states = self.state_bounds.prod()
@@ -12,6 +21,11 @@ class RRLO_DVFS:
         self.num_w_inter_powers = num_w_inter_powers
         self.dvfs_algs = dvfs_algs
         self.num_tasks = num_tasks
+        self.eps = max_eps
+        self.max_eps = max_eps
+        self.min_eps = min_eps
+        self.eps_decay = eps_decay
+        self.eps_update_step = eps_update_step
         self.act_bounds = (
             np.ones(self.num_tasks + 2, dtype=int) * 2
         )  # Initialize all with value 2
@@ -26,9 +40,14 @@ class RRLO_DVFS:
             )
         )
         self.Q_table_b = np.zeros_like(self.Q_table_a)
+        self.eps_update_cnt = 0
 
-    def execute(self, state: np.ndarray) -> np.ndarray:
-        row_idx = self._conv_state_to_row(state)
+    def execute(self, state: np.ndarray, eval_mode=False) -> np.ndarray:
+        if not eval_mode and self.eps > np.random.random():
+            # Select random action for exploration
+            row_idx = np.random.randint(self.num_total_states)
+        else:
+            row_idx = self._conv_state_to_row(state)
         act_a = np.argmin(self.Q_table_a[row_idx, :])
         act_b = np.argmin(self.Q_table_b[row_idx, :])
         if self.Q_table_a[row_idx, act_a] < self.Q_table_b[row_idx, act_b]:
@@ -50,6 +69,13 @@ class RRLO_DVFS:
             + self.beta * Q_table[next_state_row_idx, next_action]
             - Q_table[state_row_idx, actions]
         )
+        # Update epsilon
+        self.eps_update_cnt += 1
+        if self.eps_update_cnt % self.eps_update_step == 0:
+            self.eps_update_cnt = 0
+            self.eps = max(
+                self.min_eps, self.eps - self.eps_decay * (self.max_eps - self.min_eps)
+            )
 
     def save_model(self, path: str):
         """
