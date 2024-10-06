@@ -1,7 +1,7 @@
 ---
 params:
   # General parameters
-  train_itr: 1.0e+6   # Number of training iterations
+  train_itr: 8.0e+5   # Number of training iterations
   eval_itr: 10000   # Number of evaluation iterations
   eval_cycle: 1   # Evaluation cycle at each the algorithm is evaluated eval_itr times
   do_train: true    # Train or not
@@ -15,14 +15,14 @@ params:
   rrlo_state_dim: 3
   batch_size: 16
   gamma: 0.9
-  lr: 1.0e-4
+  lr: 5.0e-3
   mem_size: 10000
   update_target_net: 1000
   eps_decay: 0.0015
-  min_eps: 0.05
-  reward_coeff: 5
-  deadline_missed_penalty: 1.0e+2
-  latency_energy_coeff: 0.05
+  min_eps: 0.02
+  reward_coeff: 0.1
+  deadline_missed_penalty: 5.0e+1
+  latency_energy_coeff: 0.01
 
   # Eval taskset parameters
   num_tasks: 4
