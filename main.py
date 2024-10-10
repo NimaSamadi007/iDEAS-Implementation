@@ -24,14 +24,14 @@ def iDEAS_Main(configs):
 
     if params["do_train"]:
         trainer = iDEAS_MainTrainer(configs)
-        dqn_loss, dqn_rewards = trainer.run()
-        dqn_loss = np.array(dqn_loss)
-        dqn_rewards = np.array(dqn_rewards)
+        loss, rewards = trainer.run()
+        loss = np.array(loss)
+        rewards = np.array([reward["ideas"] for reward in rewards])
         print("Training completed")
         print(100 * "-")
-        plot_loss_function(dqn_loss, "iDEAS", "iterations", "loss", "iDEAS_Main_loss")
+        plot_loss_function(loss, "iDEAS", "iterations", "loss", "iDEAS_Main_loss")
         plot_all_rewards(
-            dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_Main_rewards"
+            rewards, "iDEAS", "iterations", "rewards", "iDEAS_Main_rewards"
         )
 
     cpuloads = np.linspace(
@@ -140,16 +140,16 @@ def iDEAS_RRLO(configs):
 
     if params["do_train"]:
         trainer = iDEAS_RRLOTrainer(configs)
-        dqn_loss, all_rewards = trainer.run()
+        dqn_loss, rewards = trainer.run()
         dqn_loss = np.array(dqn_loss)
-        dqn_rewards = np.array([all_reward["ideas"] for all_reward in all_rewards])
+        rewards = np.array([reward["ideas"] for reward in rewards])
 
         print("Training completed")
         print(100 * "-")
 
         plot_loss_function(dqn_loss, "iDEAS", "iterations", "loss", "iDEAS_RRLO_loss")
         plot_all_rewards(
-            dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_RRLO_rewards"
+            rewards, "iDEAS", "iterations", "rewards", "iDEAS_RRLO_rewards"
         )
 
     cpuloads = np.linspace(
@@ -295,18 +295,18 @@ def iDEAS_Baseline(configs):
 
     if params["do_train"]:
         trainer = iDEAS_MainTrainer(configs)
-        dqn_loss, dqn_rewards = trainer.run()
-        dqn_loss = np.array(dqn_loss)
-        dqn_rewards = np.array(dqn_rewards)
+        loss, rewards = trainer.run()
+        loss = np.array(loss)
+        rewards = np.array([reward["ideas"] for reward in rewards])
 
         print("Training completed")
         print(100 * "-")
 
         plot_loss_function(
-            dqn_loss, "iDEAS", "iterations", "loss", "iDEAS_Baseline_loss"
+            loss, "iDEAS", "iterations", "loss", "iDEAS_Baseline_loss"
         )
         plot_all_rewards(
-            dqn_rewards, "iDEAS", "iterations", "rewards", "iDEAS_Baseline_rewards"
+            rewards, "iDEAS", "iterations", "rewards", "iDEAS_Baseline_rewards"
         )
 
     cpuloads = np.linspace(
@@ -439,11 +439,11 @@ def iDEAS_Baseline(configs):
 
 
 if __name__ == "__main__":
-    # configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
-    # iDEAS_Main(configs_ideas_main)
+    configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
+    iDEAS_Main(configs_ideas_main)
 
     configs_ideas_rrlo = load_yaml("./configs/iDEAS_RRLO.yaml")
     iDEAS_RRLO(configs_ideas_rrlo)
 
-    # configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
-    # iDEAS_Baseline(configs_ideas_baseline)
+    configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
+    iDEAS_Baseline(configs_ideas_baseline)

@@ -52,7 +52,8 @@ class Trainer(abc.ABC):
                     f"Tasks: {self.tasks[0][0]}, {self.tasks[1][0]}, {self.tasks[2][0]}, {self.tasks[3][0]}"
                 )
                 tqdm.write(f"iDEAS Reward:{str(rewards['ideas'])}")
-                tqdm.write(f"RRLO Penalty:{str(rewards['rrlo'])}")
+                if 'rrlo' in rewards:
+                    tqdm.write(f"RRLO Penalty:{str(rewards['rrlo'])}")
 
             # Observe next state
             next_states, is_final = self._observe()
@@ -150,6 +151,9 @@ class iDEAS_MainTrainer(Trainer):
         self.tasks = self.task_gen.step(target_cpu_load, self.max_task_load)
         state, is_final = self.env.observe(self.tasks)
 
+        self._target_cpu_load = target_cpu_load
+        self._cn = cn
+
         return state, is_final
 
     def reset(self):
@@ -158,15 +162,15 @@ class iDEAS_MainTrainer(Trainer):
     def _run_algs(self, states):
         actions_raw = self.alg.execute(states)
         actions_str = self.alg.conv_acts(actions_raw)
-        actions = {"raw": actions_raw, "str": actions_str}
+        actions = {"ideas": {"raw": actions_raw, "str": actions_str}}
         return actions
 
     def _step_envs(self, actions):
-        rewards, penalites, min_penalties = self.env.step(actions["str"])
-        return rewards
+        rewards, penalites, min_penalties = self.env.step(actions["ideas"]["str"])
+        return {"ideas": rewards, "min_penalty": min_penalties, "penalty": penalites}
 
     def _train_algs(self, states, actions, rewards, next_states, is_final):
-        return self.alg.train(states, actions["raw"], rewards, next_states, is_final)
+        return self.alg.train(states, actions["ideas"]["raw"], rewards["ideas"], next_states, is_final)
 
     def _save_algs(self):
         os.makedirs("models/iDEAS_Main", exist_ok=True)

@@ -499,7 +499,7 @@ class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
             state_dim=self.params["dqn_state_dim"],
             act_space=self.envs["ideas"].get_action_space(),
         )
-        dqn_dvfs.load_model("models/iDEAS_Baseline")
+        dqn_dvfs.load_model("models/iDEAS_Main")
 
         cpu_freqs = {
             "little": self.envs["random"].cpu_little.freqs,
@@ -611,29 +611,49 @@ class RandomPolicy:
 # FIXME: Check this class
 class RandomIdeasPolicy(RandomPolicy):
     def generate(self):
-        offload = np.random.randint(0, 5)
-        little = np.random.randint(0, 5 - offload)
-        big = 4 - offload - little
         actions = {"offload": [], "little": [], "big": []}
-        random_littlefreq_idx = np.random.choice(
-            len(self.freqs["little"]), size=little, replace=True
+        num_task_to_offload = np.random.randint(0, 4)
+        num_task_to_little = np.random.randint(0, 4 - num_task_to_offload)
+        num_task_to_big = 4 - num_task_to_offload - num_task_to_little
+
+        assert num_task_to_offload + num_task_to_little + num_task_to_big == 4
+        assert num_task_to_little >= 0 and num_task_to_big >= 0
+
+        task_ids = np.arange(4)
+        task_to_offload = np.random.choice(
+            task_ids, size=num_task_to_offload, replace=False
         )
-        random_bigfreq_idx = np.random.choice(
-            len(self.freqs["big"]), size=big, replace=True
+        remaining_task_ids = np.array([i for i in task_ids if i not in task_to_offload])
+        task_to_little = np.random.choice(
+            remaining_task_ids, size=num_task_to_little, replace=False
         )
-        random_power_idx = np.random.choice(
-            len(self.powers), size=offload, replace=True
+        task_to_big = np.array(
+            [i for i in remaining_task_ids if i not in task_to_little]
         )
+
+        # For each offload task, select a random power
+        power_idxs = np.random.choice(
+            len(self.powers), size=len(task_to_offload), replace=True
+        )
+        # Select random frequencies for little and big cores
+        little_freq_idxs = np.random.choice(
+            len(self.freqs["little"]), size=len(task_to_little), replace=True
+        )
+        big_freq_idxs = np.random.choice(
+            len(self.freqs["big"]), size=len(task_to_big), replace=True
+        )
+
         actions["offload"] = [
-            [i, self.powers[idx]] for i, idx in enumerate(random_power_idx)
+            [idx, self.powers[power_idx]]
+            for idx, power_idx in zip(task_to_offload, power_idxs)
         ]
         actions["little"] = [
-            [i + offload, self.freqs["little"][idx]]
-            for i, idx in enumerate(random_littlefreq_idx)
+            [idx, self.freqs["little"][freq_idx]]
+            for idx, freq_idx in zip(task_to_little, little_freq_idxs)
         ]
         actions["big"] = [
-            [i + offload + little, self.freqs["big"][idx]]
-            for i, idx in enumerate(random_bigfreq_idx)
+            [idx, self.freqs["big"][freq_idx]]
+            for idx, freq_idx in zip(task_to_big, big_freq_idxs)
         ]
 
         return actions

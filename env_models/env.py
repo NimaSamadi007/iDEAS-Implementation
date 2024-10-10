@@ -209,7 +209,6 @@ class HomogenEnv:
 
     def _get_system_state(self):
         # Update channel status when we are observing environment
-        #FIXME: For evaluators, this function is called many times, altering channel
         self.w_inter.update_channel_state()
         channel_rate = self.w_inter.get_channel_rate()
 
@@ -259,8 +258,8 @@ class HomogenEnv:
         # Calculate reward
         min_penalties = np.asarray(min_penalties, dtype=float)
         penalties = np.asarray(penalties, dtype=float)
-        #FIXME: Check reward and penalty notion
-        rewards = np.exp(-self.reward_coeff * (penalties-min_penalties))
+        # FIXME: Check reward and penalty notion
+        rewards = np.exp(-self.reward_coeff * (penalties - min_penalties))
         return rewards, penalties, min_penalties
 
 
