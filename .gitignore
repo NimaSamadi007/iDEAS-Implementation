@@ -1,8 +1,9 @@
 # Project related stuff
 .vscode
 *.png
-test.ipynb
 *.pt
+*.npy
+experiments/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
