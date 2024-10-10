@@ -129,6 +129,8 @@ class HetrogenEnv:
                 ]
             )
             min_penalties.append(min_penalty)
+            if penalty / len(task) > self.deadline_missed_penalty:
+                raise ValueError(f"Penalty {penalty / len(task)} excceds {self.deadline_missed_penalty}")
             penalties.append(penalty / len(task))
 
         # Calculate reward
@@ -253,6 +255,8 @@ class HomogenEnv:
                 [self.cpu.get_min_energy(task[0]), self.w_inter.get_min_energy(task[0])]
             )
             min_penalties.append(min_penalty)
+            if penalty / len(task) > self.deadline_missed_penalty:
+                raise ValueError(f"Penalty {penalty / len(task)} excceds {self.deadline_missed_penalty}")
             penalties.append(penalty / len(task))
 
         # Calculate reward
