@@ -15,7 +15,7 @@ params:
   rrlo_state_dim: 3
   batch_size: 16
   gamma: 0.99
-  lr: 5.0e-3
+  lr: 1.0e-4
   mem_size: 10000
   update_target_net: 1000
   eps_decay: 0.0015
