@@ -64,7 +64,7 @@ def iDEAS_Main(configs):
         "fixed_taskset_energy": [
             ["Task set 1", "Task set 2"],
             "Task sets",
-            "Consumed Energy (J) ",
+            "Consumed Energy (mJ) ",
             "Energy Consumption Levels on Different Task sets",
             "iDEAS_Main_fixed_taskset_energy",
         ],
@@ -78,7 +78,7 @@ def iDEAS_Main(configs):
         "varied_cpuload_energy": [
             cpuloads,
             "Task Load",
-            "Consumed Energy (J) ",
+            "Consumed Energy (mJ) ",
             "Energy Consumption Levels for Different Task Loads",
             "iDEAS_Main_varied_cpuload_energy",
             True,
@@ -94,7 +94,7 @@ def iDEAS_Main(configs):
         "varied_tasksize_energy": [
             tasksizes[:-1],
             "Task Size (KB)",
-            "Consumed Energy (J) ",
+            "Consumed Energy (mJ) ",
             "Energy Consumption Levels for Different Task Sizes",
             "iDEAS_Main_varied_tasksize_energy",
             True,
@@ -110,7 +110,7 @@ def iDEAS_Main(configs):
         "varied_channel_energy": [
             cns,
             "Channel Noise",
-            "Consumed Energy (J) ",
+            "Consumed Energy (mJ) ",
             "Energy Consumption Levels for Different Channel Noises",
             "iDEAS_Main_varied_channel_energy",
             True,
@@ -180,7 +180,7 @@ def iDEAS_RRLO(configs):
 
     plot_infos = {
         "fixed_taskset_energy": [
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different Baseline Single Core Schemes",
             "iDEAS_RRLO_fixed_taskset_energy",
             True,
@@ -193,7 +193,7 @@ def iDEAS_RRLO(configs):
         "varied_cpuload_energy": [
             cpuloads,
             "Task Load",
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different Single Core Schemes With Respect to Various Task Loads",
             "iDEAS_RRLO_varied_cpuload_energy",
             True,
@@ -208,7 +208,7 @@ def iDEAS_RRLO(configs):
         "varied_tasksize_energy": [
             tasksizes[:-1],
             "Task Size(KB)",
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different Single Core Schemes With Respect to Various Task Sizes",
             "iDEAS_RRLO_varied_tasksize_energy",
             True,
@@ -224,7 +224,7 @@ def iDEAS_RRLO(configs):
         "varied_channel_energy": [
             cns,
             "Channel Noise",
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different Single Core Schemes With Respect to Various Channel Noises",
             "iDEAS_RRLO_varied_channel_energy",
             True,
@@ -338,7 +338,7 @@ def iDEAS_Baseline(configs):
 
     plot_infos = {
         "fixed_taskset_energy": [
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different Baseline big.LITTLE Schemes",
             "iDEAS_Baseline_fixed_taskset_energy",
             True,
@@ -351,7 +351,7 @@ def iDEAS_Baseline(configs):
         "varied_cpuload_energy": [
             cpuloads,
             "Task Load",
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different big.LITTLE Schemes With Respect to Various Task Loads",
             "iDEAS_Baseline_varied_cpuload_energy",
             True,
@@ -366,7 +366,7 @@ def iDEAS_Baseline(configs):
         "varied_tasksize_energy": [
             tasksizes[:-1],
             "Task Size(KB)",
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different big.LITTLE Schemes With Respect to Various Task Sizes",
             "iDEAS_Baseline_varied_tasksize_energy",
             True,
@@ -382,7 +382,7 @@ def iDEAS_Baseline(configs):
         "varied_channel_energy": [
             cns,
             "Channel Noise",
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different big.LITTLE Schemes With Respect to Various Channel Noises",
             "iDEAS_Baseline_varied_channel_energy",
             True,
@@ -439,11 +439,11 @@ def iDEAS_Baseline(configs):
 
 
 if __name__ == "__main__":
-    # configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
-    # iDEAS_Main(configs_ideas_main)
+    configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
+    iDEAS_Main(configs_ideas_main)
 
     configs_ideas_rrlo = load_yaml("./configs/iDEAS_RRLO.yaml")
     iDEAS_RRLO(configs_ideas_rrlo)
 
-    # configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
-    # iDEAS_Baseline(configs_ideas_baseline)
+    configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
+    iDEAS_Baseline(configs_ideas_baseline)
