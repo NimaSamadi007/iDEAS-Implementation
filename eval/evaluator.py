@@ -72,10 +72,11 @@ class Evaluator(abc.ABC):
 
             # Observe initial state
             states = self._observe(self.tasks)
-            for _ in tqdm(range(self.eval_itr)):
+            for itr in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
-                # tqdm.write(str(self.actions["random"]))
+                if itr % 500 == 0:
+                    tqdm.write(str(self.actions["ideas"]))
 
                 # Apply actions on the environments
                 self._step_envs(self.actions)
@@ -110,10 +111,12 @@ class Evaluator(abc.ABC):
             self.tasks = self.task_gen.step(target_cpu_load, max_task_load)
             # Observe initial state
             states = self._observe(self.tasks)
-            for k in tqdm(range(self.eval_itr)):
+            for itr in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
                 # tqdm.write(str(self.actions["random"]))
+                if itr % 500 == 0:
+                    tqdm.write(str(self.actions["ideas"]))
 
                 # Apply actions on the environments
                 self._step_envs(self.actions)
@@ -150,9 +153,11 @@ class Evaluator(abc.ABC):
         states = self._observe(self.tasks)
         for i in range(len(self.task_sizes) - 1):
             tqdm.write(f"Task Size {self.task_sizes[i]:.3f}")
-            for _ in tqdm(range(self.eval_itr)):
+            for itr in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
+                if itr % 500 == 0:
+                    tqdm.write(str(self.actions["ideas"]))
 
                 # Apply actions on the environments
                 self._step_envs(self.actions)
@@ -198,10 +203,11 @@ class Evaluator(abc.ABC):
 
             # Observe initial state
             states = self._observe(self.tasks)
-            for _ in tqdm(range(self.eval_itr)):
+            for itr in tqdm(range(self.eval_itr)):
                 # Run DVFS algorithms and baselines
                 self.actions = self._run_algs(states)
-                # tqdm.write(str(self.actions))
+                if itr % 500 == 0:
+                    tqdm.write(str(self.actions["ideas"]))
 
                 # Apply actions on the environments
                 self._step_envs(self.actions)
