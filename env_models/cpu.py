@@ -17,7 +17,7 @@ class CPU:
             raise ValueError("CPU powers must be sorted incrementally")
 
         self.freqs = np.asarray(specs["freqs"])
-        self.powers = np.asarray(specs["powers"]) * 1e-3
+        self.powers = np.asarray(specs["powers"])
         self.model = specs["model"]
         self.cpu_type = specs["type"]
 

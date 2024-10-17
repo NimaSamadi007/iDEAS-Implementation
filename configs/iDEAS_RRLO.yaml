@@ -1,8 +1,8 @@
 ---
 params:
   # General parameters
-  train_itr: 8.0e+5   # Number of training iterations
-  eval_itr: 10000   # Number of evaluation iterations
+  train_itr: 4.0e+5   # Number of training iterations
+  eval_itr: 5000   # Number of evaluation iterations
   eval_cycle: 1   # Evaluation cycle at each the algorithm is evaluated eval_itr times
   do_train: false    # Train or not
   do_taskset_eval: true   # Taskset evaluation
@@ -13,28 +13,28 @@ params:
   # DVFS algorithms parameters
   dqn_state_dim: 5
   rrlo_state_dim: 3
-  batch_size: 16
-  gamma: 0.99
+  batch_size: 32
+  gamma: 0.95
   lr: 1.0e-4
   mem_size: 10000
-  update_target_net: 1000
-  eps_decay: 0.0015
+  update_target_net: 100
+  eps_decay: 0.005
   min_eps: 0.02
   reward_coeff: 0.1
-  deadline_missed_penalty: 5.0e+1
-  latency_energy_coeff: 0.01
+  deadline_missed_penalty: 1.2e+2
+  latency_energy_coeff: 0
 
   # Eval taskset parameters
   num_tasks: 4
   target_cpu_load: 0.35
   min_task_load_train: 0.1
-  max_task_load_train: 3
+  max_task_load_train: 2
   min_task_load_eval: 0.1
   max_task_load_eval: 2
   min_task_size: 120
   max_task_size: 480
-  min_cn_power: 1.0e-11
-  max_cn_power: 1.0e-7
+  min_cn_power: 1.0e-7
+  max_cn_power: 1.0e-4
 tasks:
   eval_1: configs/tasks/eval_1.yaml
   eval_2: configs/tasks/eval_2.yaml

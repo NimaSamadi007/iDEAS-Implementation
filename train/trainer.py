@@ -52,6 +52,7 @@ class Trainer(abc.ABC):
                     f"Tasks: {self.tasks[0][0]}, {self.tasks[1][0]}, {self.tasks[2][0]}, {self.tasks[3][0]}"
                 )
                 tqdm.write(f"iDEAS Reward:{str(rewards['ideas'])}")
+                tqdm.write(f"Actions iDEAS: {str(actions['ideas']['str'])}")
                 if 'rrlo' in rewards:
                     tqdm.write(f"RRLO Penalty:{str(rewards['rrlo'])}")
 
