@@ -439,11 +439,11 @@ def iDEAS_Baseline(configs):
 
 
 if __name__ == "__main__":
-    # configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
-    # iDEAS_Main(configs_ideas_main)
+    configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
+    iDEAS_Main(configs_ideas_main)
 
     configs_ideas_rrlo = load_yaml("./configs/iDEAS_RRLO.yaml")
     iDEAS_RRLO(configs_ideas_rrlo)
 
-    # configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
-    # iDEAS_Baseline(configs_ideas_baseline)
+    configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
+    iDEAS_Baseline(configs_ideas_baseline)

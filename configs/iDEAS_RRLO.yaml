@@ -21,16 +21,16 @@ params:
   eps_decay: 0.005
   min_eps: 0.02
   reward_coeff: 0.1
-  deadline_missed_penalty: 1.2e+2
+  deadline_missed_penalty: 2.0e+2
   latency_energy_coeff: 0
 
   # Eval taskset parameters
   num_tasks: 4
   target_cpu_load: 0.35
   min_task_load_train: 0.1
-  max_task_load_train: 2
+  max_task_load_train: 5
   min_task_load_eval: 0.1
-  max_task_load_eval: 2
+  max_task_load_eval: 5
   min_task_size: 120
   max_task_size: 480
   min_cn_power: 1.0e-7
