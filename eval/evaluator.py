@@ -356,11 +356,11 @@ class iDEAS_RRLOEvaluator(Evaluator):
             self.task_gen.get_task_size_bound(),
             [self.cn_values[0], self.cn_values[-1]],
         )
-        envs["random"] = copy.deepcopy(env_temp)
+        #envs["random"] = copy.deepcopy(env_temp)
         envs["rrlo"] = RRLOEnv(self.configs)
         envs["ideas"] = copy.deepcopy(env_temp)
-        envs["local"] = copy.deepcopy(env_temp)
-        envs["remote"] = copy.deepcopy(env_temp)
+        #envs["local"] = copy.deepcopy(env_temp)
+        #envs["remote"] = copy.deepcopy(env_temp)
 
         return envs
 
@@ -380,24 +380,24 @@ class iDEAS_RRLOEvaluator(Evaluator):
         )
         rrlo_dvfs.load_model("models/iDEAS_RRLO")
 
-        random_policy = RandomPolicy(
-            self.envs["random"].cpu.freqs, self.envs["random"].w_inter.powers
-        )
-        local_policy = {
-            "offload": [],
-            "local": [[0, 1820], [1, 1820], [2, 1820], [3, 1820]],
-        }
-        remote_policy = {
-            "offload": [[0, 28], [1, 28], [2, 28], [3, 28]],
-            "local": [],
-        }
+        #random_policy = RandomPolicy(
+         #   self.envs["random"].cpu.freqs, self.envs["random"].w_inter.powers
+       # )
+        #local_policy = {
+         #   "offload": [],
+          #  "local": [[0, 1820], [1, 1820], [2, 1820], [3, 1820]],
+        #}
+        #remote_policy = {
+         #   "offload": [[0, 28], [1, 28], [2, 28], [3, 28]],
+          #  "local": [],
+        #}
 
         return {
-            "random": random_policy,
+            #"random": random_policy,
             "rrlo": rrlo_dvfs,
             "ideas": dqn_dvfs,
-            "local": local_policy,
-            "remote": remote_policy,
+            #"local": local_policy,
+            #"remote": remote_policy,
         }
 
     def _init_results_container(self, scenario):
@@ -415,16 +415,16 @@ class iDEAS_RRLOEvaluator(Evaluator):
         # 0: energy, 1: num_tasks, 2: missed deadline
         ideas_stat = np.zeros((3, self.num_tasks, self.num_results_item))
         rrlo_stat = np.zeros((3, self.num_tasks, self.num_results_item))
-        local_stat = np.zeros((3, self.num_tasks, self.num_results_item))
-        remote_stat = np.zeros((3, self.num_tasks, self.num_results_item))
-        random_stat = np.zeros((3, self.num_tasks, self.num_results_item))
+        #local_stat = np.zeros((3, self.num_tasks, self.num_results_item))
+        #remote_stat = np.zeros((3, self.num_tasks, self.num_results_item))
+        #random_stat = np.zeros((3, self.num_tasks, self.num_results_item))
 
         self.raw_results = {
-            "random": random_stat,
+            #"random": random_stat,
             "rrlo": rrlo_stat,
-            "ideas": ideas_stat,
-            "local": local_stat,
-            "remote": remote_stat,
+            "ideas": ideas_stat
+            #"local": local_stat,
+            #"remote": remote_stat,
         }
 
     def _process_results(self, idx):
@@ -461,9 +461,9 @@ class iDEAS_RRLOEvaluator(Evaluator):
     def _observe(self, tasks):
         ideas_state, _ = self.envs["ideas"].observe(copy.deepcopy(tasks))
         rrlo_state, _ = self.envs["rrlo"].observe(copy.deepcopy(tasks))
-        self.envs["local"].observe(copy.deepcopy(tasks))
-        self.envs["remote"].observe(copy.deepcopy(tasks))
-        self.envs["random"].observe(copy.deepcopy(tasks))
+        #self.envs["local"].observe(copy.deepcopy(tasks))
+        #self.envs["remote"].observe(copy.deepcopy(tasks))
+        #self.envs["random"].observe(copy.deepcopy(tasks))
 
         return {"ideas": ideas_state, "rrlo": rrlo_state}
 
@@ -473,11 +473,11 @@ class iDEAS_RRLOEvaluator(Evaluator):
         actions_rrlo, _ = self.algs["rrlo"].execute(states["rrlo"], eval_mode=True)
 
         actions = {
-            "random": self.algs["random"].generate(),
+            #"random": self.algs["random"].generate(),
             "rrlo": actions_rrlo,
-            "ideas": actions_str,
-            "local": self.algs["local"],
-            "remote": self.algs["remote"],
+            "ideas": actions_str
+            #"local": self.algs["local"],
+            #"remote": self.algs["remote"],
         }
 
         return actions

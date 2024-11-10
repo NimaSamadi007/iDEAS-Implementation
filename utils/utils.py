@@ -120,6 +120,53 @@ def plot_all_rewards(all_rewards, alg, xlabel, ylabel, fig_name):
     fig.savefig(file_path)
 
 
+
+def plot_loss_and_reward(losses, rewards, alg, xlabel, ylabel1, ylabel2, fig_name):
+    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["text.usetex"] = True
+    os.makedirs("results", exist_ok=True)
+    file_path = f"results/{fig_name}.png"
+
+    mean_all_rewards = np.mean(rewards[:, :4], axis=1)
+
+    colors = ListedColormap(
+        [
+            "#ffbb78",  # Light orange
+            "#17becf",  # Cyan
+            "#2ca02c",  # Green
+            "#d62728",  # Red
+            "#1f77b4",  # Blue
+            "#9467bd",  # Purple
+            "#ff7f0e",  # Orange
+            "#8c564b",  # Brown
+            "#e377c2",  # Pink
+            "#7f7f7f",  # Gray
+            "#bcbd22",  # Yellow-green
+            "#aec7e8",  # Light blue
+        ]
+    ).colors
+
+    fig, ax1 = plt.subplots(figsize=(20, 12))
+    plt.title(rf"{alg} Loss and Reward values")
+
+    ax1.set_xlabel(rf"{xlabel}")
+    ax1.set_ylabel(rf"{ylabel1}", color=colors[4])
+    ax1.plot(moving_avg(losses, 10000)[:-10000], label=rf"Loss", color=colors[4], linewidth=5)
+    ax1.tick_params(axis='y', labelcolor=colors[4])
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+    ax2.set_ylabel(rf"{ylabel2}", color=colors[3])  # we already handled the x-label with ax1
+    ax2.plot(moving_avg(mean_all_rewards, 10000)[:-10000], label=rf"Rewards", color=colors[3], linewidth=5)
+    ax2.tick_params(axis='y', labelcolor=colors[3])
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.grid(True)
+    fig.savefig(file_path)
+    #plt.show()
+
+
+
 def plot_penalty(penalty, min_penalty, t_id):
     fig = plt.figure(figsize=(20, 12))
     plt.title(f"Penalties task{t_id}")
@@ -287,8 +334,10 @@ def stack_bar_res(
         step_sizes = np.diff(x_val)
         if xlog:
             bar_widths = step_sizes * 0.4
+            bar_widths=np.append(bar_widths, bar_widths[-1])
         else:
             bar_widths = step_sizes * 0.7
+            bar_widths=np.append(bar_widths, bar_widths[-1])
     else:
         bar_widths = 0.5
     # Plotting both tasksets
@@ -306,20 +355,20 @@ def stack_bar_res(
     bottom = np.zeros(data1.shape[1])  # Initialize the bottom array to zeros
 
     for values, color, label in zip(
-        [data1[i] for i in range(data1.shape[0] - 1)],
+        [data1[i] for i in range(data1.shape[0]-1)],
         colors[: data1.shape[0] - 1],
         labels[:-1],
     ):
         if numbered:
             ax.bar(
-                x_val[:-1],
-                values[:-1],
+                x_val,
+                values,
                 width=bar_widths,
-                bottom=bottom[:-1],
+                bottom=bottom,
                 label=rf"{label}",
                 color=color,
             )
-            bottom[:-1] += values[:-1]  # Update the bottom for the next stack
+            bottom += values  # Update the bottom for the next stack
 
         else:
             ax.bar(
@@ -336,21 +385,24 @@ def stack_bar_res(
 
     # ax.margins(y=1)
     if numbered:
-        for x, value in zip(x_val[:-1], data1[-1][:-1]):
-            ax.text(x, value, rf"{value:.5f}", ha="center", va="bottom")
+        for x, value in zip(x_val, data1[-1]):
+            ax.text(x, value, rf"{value:.3f}", ha="center", va="bottom")
     else:
         for i, value in enumerate(data1[-1]):
-            ax.text(i, value, rf"{value:.5f}", ha="center", va="bottom")
+            ax.text(i, value, rf"{value:.3f}", ha="center", va="bottom")
     ax.set_xlabel(rf"{xlabel}")
     ax.set_ylabel(rf"{ylabel}")
     ax.set_title(rf"{title}")
+
     if numbered:
+        ax.set_xticks(x_val)
+        #ax.set_xticklabels([rf"{x:.2f}" for x in x_val])
         x0, x1 = ax.get_xlim()
         visible = [t for t in ax.get_xticks() if t >= x0 and t <= x1]
-        ax.set_xticks(visible, list(map(str, visible)))
+        ax.set_xticks(np.round(visible,2), list(map(str, np.round(visible,2))))
         y0, y1 = ax.get_ylim()
         visible = [t for t in ax.get_yticks() if t >= y0 and t <= y1]
-        ax.set_yticks(visible, list(map(str, visible)))
+        ax.set_yticks(np.round(visible,2), list(map(str, np.round(visible,2))))
     else:
         ax.set_xticks(ind, x_val)
         y0, y1 = ax.get_ylim()
