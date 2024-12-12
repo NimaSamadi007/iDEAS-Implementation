@@ -1,8 +1,8 @@
 # Project related stuff
 .vscode
-*.png
-*.pt
-*.npy
+#*.png
+#*.pt
+#*.npy
 experiments/*
 
 # Byte-compiled / optimized / DLL files
