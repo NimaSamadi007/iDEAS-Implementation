@@ -20,70 +20,24 @@ from eval.evaluator import (
 )
 import json
 
-
 def iDEAS_Main(configs):
-    params = configs["params"]
-    num_eval_cycles = params["eval_cycle"]
 
-    if params["do_train"]:
-        trainer = iDEAS_MainTrainer(configs)
-        loss, rewards = trainer.run()
-        loss = np.array(loss)
-        rewards = np.array([reward["ideas"] for reward in rewards])
-        print("Training completed")
-        print(100 * "-")
-        plot_loss_function(loss, "iDEAS", "iterations", "loss", "iDEAS_Main_loss")
-        plot_all_rewards(
-            rewards, "iDEAS", "iterations", "rewards", "iDEAS_Main_rewards"
-        )
-        plot_loss_and_reward(loss, rewards, "iDEAS", "iterations", "loss", "rewards", "iDEAS_Main_loss_reward")
         
-        os.makedirs("iDEAS conv", exist_ok=True)
-        #with open("iDEAS conv/loss.txt", 'w') as file: 
-        np.save("iDEAS conv/loss.npy",loss)
-        np.save("iDEAS conv/reward.npy",rewards)
-
     loss = np.load("iDEAS conv/loss.npy")
     rewards=np.load("iDEAS conv/reward.npy")
     plot_loss_and_reward(loss, rewards, "iDEAS", "iterations", "loss", "rewards", "iDEAS_Main_loss_reward")
 
-    linspace_values = np.linspace(1, params["max_task_load_eval"], 6) # Create the desired array with the first value as min_task_load_eval 
-    cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
-    #cpuloads = np.linspace(
-     #   params["min_task_load_eval"], params["max_task_load_eval"], 10
-    #)
-    tasksizes = np.round(
-        np.linspace(params["min_task_size"], params["max_task_size"], 10)
-    )
-    cns = np.logspace(
-        np.log10(params["min_cn_power"]),
-        np.log10(params["max_cn_power"]),
-        num=10,
-        base=10,
-    )
 
-    os.makedirs("iDEAS_res", exist_ok=True)
-    #with open("iDEAS conv/loss.txt", 'w') as file: 
-    np.save("iDEAS_res/cpuloads.npy",cpuloads)
-    np.save("iDEAS_res/tasksizes.npy",tasksizes)
-    np.save("iDEAS_res/cns.npy",cns)
-
-    all_results = {}
-    for i in range(num_eval_cycles):
-        evaluator = iDEAS_MainEvaluator(configs, cpuloads, tasksizes, cns)
-        result = evaluator.run()
-
-        for scenario in result:
-            if scenario not in all_results:
-                # Create result holder array
-                all_results[scenario] = np.zeros(
-                    (num_eval_cycles, *result[scenario].shape)
-                )
-            all_results[scenario][i, :] = result[scenario]
-
-    
+    cpuloads=np.load("iDEAS_res/cpuloads.npy")
+    tasksizes=np.load("iDEAS_res/tasksizes.npy")
+    cns=np.load("iDEAS_res/cns.npy")
+    #all_results=np.load("iDEAS_res/all_results.npy",allow_pickle=True)
     #with open('iDEAS_res/all_results.json', 'w') as json_file:
      #   json.dump(all_results, json_file, indent=4)
+    with open('iDEAS_res/all_results.json', 'r') as json_file:
+        all_results = json.load(json_file)
+
+
     plot_infos = {
         "fixed_taskset_energy": [
             ["Task Set I", "Task Set II"],
@@ -159,68 +113,21 @@ def iDEAS_Main(configs):
 
 
 def iDEAS_RRLO(configs):
-    params = configs["params"]
-    num_eval_cycles = params["eval_cycle"]
 
-    if params["do_train"]:
-        trainer = iDEAS_RRLOTrainer(configs)
-        dqn_loss, rewards = trainer.run()
-        dqn_loss = np.array(dqn_loss)
-        rewards = np.array([reward["ideas"] for reward in rewards])
-
-        print("Training completed")
-        print(100 * "-")
-
-        plot_loss_function(dqn_loss, "iDEAS", "iterations", "loss", "iDEAS_RRLO_loss")
-        plot_all_rewards(
-            rewards, "iDEAS", "iterations", "rewards", "iDEAS_RRLO_rewards"
-        )
-        plot_loss_and_reward(dqn_loss, rewards, "iDEAS", "iterations", "loss", "rewards", "iDEAS_RRLO_loss_reward")
-        os.makedirs("RRLO conv", exist_ok=True)
-        
-        
-        np.save("RRLO conv/loss.npy",dqn_loss)
-        np.save("RRLO conv/reward.npy",rewards)
-    
 
     loss = np.load("RRLO conv/loss.npy")
     rewards=np.load("RRLO conv/reward.npy")
-    plot_loss_and_reward(loss, rewards, "iDEAS", "iterations", "loss", "rewards", "iDEAS_RRLO_loss_reward")
+    plot_loss_and_reward(loss, rewards, "iDEAS", "iterations", "loss", "rewards", "iDEAS_Main_loss_reward")
 
 
-    linspace_values = np.linspace(1, params["max_task_load_eval"], 6) # Create the desired array with the first value as min_task_load_eval 
-    cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
-    tasksizes = np.round(
-        np.linspace(params["min_task_size"], params["max_task_size"], 10)
-    )
-    cns = np.logspace(
-        np.log10(params["min_cn_power"]),
-        np.log10(params["max_cn_power"]),
-        num=10,
-        base=10,
-    )
-    os.makedirs("RRLO_res", exist_ok=True)
-    #with open("iDEAS conv/loss.txt", 'w') as file: 
-    np.save("RRLO_res/cpuloads.npy",cpuloads)
-    np.save("RRLO_res/tasksizes.npy",tasksizes)
-    np.save("RRLO_res/cns.npy",cns)
-    all_results = {}
-    for i in range(num_eval_cycles):
-        evaluator = iDEAS_RRLOEvaluator(configs, cpuloads, tasksizes, cns)
-        result = evaluator.run()
-
-        for scenario in result:
-            if scenario not in all_results:
-                # Create result holder array
-                all_results[scenario] = np.zeros(
-                    (num_eval_cycles, *result[scenario].shape)
-                )
-            all_results[scenario][i, :] = result[scenario]
-
-    
-
+    cpuloads=np.load("RRLO_res/cpuloads.npy")
+    tasksizes=np.load("RRLO_res/tasksizes.npy")
+    cns=np.load("RRLO_res/cns.npy")
+    #all_results=np.load("RRLO_res/all_results.npy")
     #with open('RRLO_res/all_results.json', 'w') as json_file:
      #   json.dump(all_results, json_file, indent=4)
+    with open('RRLO_res/all_results.json', 'r') as json_file:
+        all_results = json.load(json_file)
 
     plot_infos = {
         "fixed_taskset_energy": [
@@ -353,67 +260,21 @@ def iDEAS_RRLO(configs):
 
 
 def iDEAS_Baseline(configs):
-    params = configs["params"]
-    num_eval_cycles = params["eval_cycle"]
 
-    if params["do_train"]:
-        trainer = iDEAS_MainTrainer(configs)
-        loss, rewards = trainer.run()
-        loss = np.array(loss)
-        rewards = np.array([reward["ideas"] for reward in rewards])
 
-        print("Training completed")
-        print(100 * "-")
+    loss = np.load("baseline conv/loss.npy")
+    rewards=np.load("baseline conv/reward.npy")
+    plot_loss_and_reward(loss, rewards, "iDEAS", "iterations", "loss", "rewards", "iDEAS_Main_loss_reward")
 
-        plot_loss_function(
-            loss, "iDEAS", "iterations", "loss", "iDEAS_Baseline_loss"
-        )
-        plot_all_rewards(
-            rewards, "iDEAS", "iterations", "rewards", "iDEAS_Baseline_rewards"
-        )
-        plot_loss_and_reward(loss, rewards, "iDEAS", "iterations", "loss", "rewards", "iDEAS_baseline_loss_reward")
-        os.makedirs("baseline conv", exist_ok=True)
-        np.save("baseline conv/loss.npy",loss)
-        np.save("baseline conv/reward.npy",rewards)
 
-    
-    #loss = np.load("baseline conv/loss.npy")
-    #rewards=np.load("base conv/reward.npy")
-    #plot_loss_and_reward(loss, rewards, "iDEAS", "iterations", "loss", "rewards", "iDEAS_RRLO_loss_reward")
-
-    linspace_values = np.linspace(1, params["max_task_load_eval"], 6) # Create the desired array with the first value as min_task_load_eval 
-    cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
-    tasksizes = np.round(
-        np.linspace(params["min_task_size"], params["max_task_size"], 10)
-    )
-    cns = np.logspace(
-        np.log10(params["min_cn_power"]),
-        np.log10(params["max_cn_power"]),
-        num=11,
-        base=10,
-    )
-
-    os.makedirs("baseline_res", exist_ok=True)
-    #with open("iDEAS conv/loss.txt", 'w') as file: 
-    np.save("baseline_res/cpuloads.npy",cpuloads)
-    np.save("baseline_res/tasksizes.npy",tasksizes)
-    np.save("baseline_res/cns.npy",cns)
-    all_results = {}
-    for i in range(num_eval_cycles):
-        print(f"Cycle {i+1}:")
-        evaluator = iDEAS_BaselineEvaluator(configs, cpuloads, tasksizes, cns)
-        result = evaluator.run()
-
-        for scenario in result:
-            if scenario not in all_results:
-                # Create result holder array
-                all_results[scenario] = np.zeros(
-                    (num_eval_cycles, *result[scenario].shape)
-                )
-            all_results[scenario][i, :] = result[scenario]
-
+    cpuloads=np.load("baseline_res/cpuloads.npy")
+    tasksizes=np.load("baseline_res/tasksizes.npy")
+    cns=np.load("baseline_res/cns.npy")
+    #all_results=np.load("baseline_res/all_results.npy")
     #with open('baseline_res/all_results.json', 'w') as json_file:
      #   json.dump(all_results, json_file, indent=4)
+    with open('baseline_res/all_results.json', 'r') as json_file:
+        all_results = json.load(json_file)
     plot_infos = {
         "fixed_taskset_energy": [
             "Energy Consumption (mJ)",
@@ -498,8 +359,8 @@ def iDEAS_Baseline(configs):
 
     # Calculate improvement:
     energy_vals = all_results["fixed_taskset_energy"]
-    random_energy = energy_vals[:, 1, :]
-    ideas_energy = energy_vals[:, 0, :]
+    random_energy = energy_vals[:, 0, :]
+    ideas_energy = energy_vals[:, 1, :]
     local_energy = energy_vals[:, 2, :]
     remote_energy = energy_vals[:, 3, :]
 
@@ -527,11 +388,11 @@ def iDEAS_Baseline(configs):
 
 
 if __name__ == "__main__":
-    #configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
-    #iDEAS_Main(configs_ideas_main)
+    configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
+    iDEAS_Main(configs_ideas_main)
 
-    configs_ideas_rrlo = load_yaml("./configs/iDEAS_RRLO.yaml")
-    iDEAS_RRLO(configs_ideas_rrlo)
+    #configs_ideas_rrlo = load_yaml("./configs/iDEAS_RRLO.yaml")
+    #iDEAS_RRLO(configs_ideas_rrlo)
 
     configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
     iDEAS_Baseline(configs_ideas_baseline)

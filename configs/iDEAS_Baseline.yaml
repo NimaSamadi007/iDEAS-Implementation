@@ -27,7 +27,7 @@ params:
   target_cpu_load: 0.35 # Target CPU load
   min_task_load_train: 0.1 # Minimum task load for training
   max_task_load_train: 10 # Maximum task load for training
-  min_task_load_eval: 0.1 # Minimum task load for evaluation
+  min_task_load_eval: 0.2 # Minimum task load for evaluation
   max_task_load_eval: 6 # Maximum task load for evaluation
   min_task_size: 120 # Minimum task size
   max_task_size: 300 # Maximum task size

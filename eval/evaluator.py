@@ -526,8 +526,8 @@ class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
         }
 
         return {
-            "random": random_policy,
             "ideas": dqn_dvfs,
+            "random": random_policy,
             "local": local_policy,
             "remote": remote_policy,
         }
@@ -551,8 +551,8 @@ class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
         random_stat = np.zeros((3, self.num_tasks, self.num_results_item))
 
         self.raw_results = {
-            "random": random_stat,
             "ideas": ideas_stat,
+            "random": random_stat,
             "local": local_stat,
             "remote": remote_stat,
         }
@@ -570,8 +570,8 @@ class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
         actions_str = self.algs["ideas"].conv_acts(actions_raw)
 
         actions = {
-            "random": self.algs["random"].generate(),
             "ideas": actions_str,
+            "random": self.algs["random"].generate(),
             "local": self.algs["local"],
             "remote": self.algs["remote"],
         }

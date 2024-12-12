@@ -35,6 +35,7 @@ def plot_loss_function(losses, alg, xlabel, ylabel, fig_name):
     plt.rcParams["text.usetex"] = True
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
+    file_path1 = f"results/{fig_name}.eps"
 
     colors = ListedColormap(
         [
@@ -54,7 +55,7 @@ def plot_loss_function(losses, alg, xlabel, ylabel, fig_name):
     ).colors
 
     fig = plt.figure(figsize=(20, 12))
-    plt.title(rf"{alg} Loss function values")
+    #plt.title(rf"{alg} Loss function values")
     plt.xlabel(rf"{xlabel}")
     plt.ylabel(rf"{ylabel}")
     plt.plot(moving_avg(losses, 10000), label=rf"Loss", color=colors[4], linewidth=5)
@@ -67,6 +68,7 @@ def plot_loss_function(losses, alg, xlabel, ylabel, fig_name):
     plt.tight_layout()
     plt.grid(True)
     fig.savefig(file_path)
+    fig.savefig(file_path1, format='eps')
 
 
 def plot_all_rewards(all_rewards, alg, xlabel, ylabel, fig_name):
@@ -75,6 +77,7 @@ def plot_all_rewards(all_rewards, alg, xlabel, ylabel, fig_name):
     plt.rcParams["text.usetex"] = True
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
+    file_path1 = f"results/{fig_name}.eps"
 
     colors = ListedColormap(
         [
@@ -96,7 +99,7 @@ def plot_all_rewards(all_rewards, alg, xlabel, ylabel, fig_name):
     mean_all_rewards = np.mean(all_rewards[:, :4], axis=1)
 
     fig = plt.figure(figsize=(20, 12))
-    plt.title(rf"{alg} Reward value")
+    #plt.title(rf"{alg} Reward value")
     plt.plot(
         moving_avg(mean_all_rewards, 10000),
         label=rf"Rewards",
@@ -118,6 +121,7 @@ def plot_all_rewards(all_rewards, alg, xlabel, ylabel, fig_name):
     plt.tight_layout()
     plt.grid(True)
     fig.savefig(file_path)
+    fig.savefig(file_path1, format='eps')
 
 
 
@@ -127,9 +131,10 @@ def plot_loss_and_reward(losses, rewards, alg, xlabel, ylabel1, ylabel2, fig_nam
     plt.rcParams["text.usetex"] = True
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
+    file_path1 = f"results/{fig_name}.eps"
 
     mean_all_rewards = np.mean(rewards[:, :4], axis=1)
-
+    markers = ["o", "s", "D", "^", "v", "<", ">", "*", "+", "x", "p", "H"]
     colors = ListedColormap(
         [
             "#ffbb78",  # Light orange
@@ -148,28 +153,31 @@ def plot_loss_and_reward(losses, rewards, alg, xlabel, ylabel1, ylabel2, fig_nam
     ).colors
 
     fig, ax1 = plt.subplots(figsize=(20, 12))
-    plt.title(rf"{alg} Loss and Reward values")
+    #plt.title(rf"{alg} Loss and Reward values")
 
     ax1.set_xlabel(rf"{xlabel}")
     ax1.set_ylabel(rf"{ylabel1}", color=colors[4])
-    ax1.plot(moving_avg(losses, 10000)[:-10000], label=rf"Loss", color=colors[4], linewidth=5)
+    line1,=ax1.plot(moving_avg(losses, 10000)[:-10000], label=rf"Loss", color=colors[4], linewidth=5)
     ax1.tick_params(axis='y', labelcolor=colors[4])
 
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
     ax2.set_ylabel(rf"{ylabel2}", color=colors[3])  # we already handled the x-label with ax1
-    ax2.plot(moving_avg(mean_all_rewards, 10000)[:-10000], label=rf"Rewards", color=colors[3], linewidth=5)
+    line2,=ax2.plot(moving_avg(mean_all_rewards, 10000)[:-10000], label=rf"Rewards", color=colors[3], linewidth=5 )
     ax2.tick_params(axis='y', labelcolor=colors[3])
-
+    lines = [line1, line2]
+    labels = [line.get_label() for line in lines]
+    ax2.legend(lines, labels)
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     plt.grid(True)
     fig.savefig(file_path)
+    fig.savefig(file_path1, format='eps')
     #plt.show()
 
 
 
 def plot_penalty(penalty, min_penalty, t_id):
     fig = plt.figure(figsize=(20, 12))
-    plt.title(f"Penalties task{t_id}")
+    #plt.title(f"Penalties task{t_id}")
     plt.plot(moving_avg(penalty, 100))
     plt.plot(moving_avg(min_penalty, 100))
     plt.grid(True)
@@ -189,10 +197,11 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel, title, fig_name, ylog=
     # Plotting both tasksets
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
+    file_path1 = f"results/{fig_name}.eps"
     fig = plt.figure(figsize=(20, 12))
-    plt.bar(ind, taskset1, width=0.4, label=r"Taskset1", color="#17becf")
+    plt.bar(ind, taskset1, width=0.5*0.4, label=r"Task set I", color="#17becf")
     plt.bar(
-        [i + 0.4 for i in ind], taskset2, width=0.4, label=r"Taskset2", color="#ffbb78"
+        [i + 0.4 for i in ind], taskset2, width=0.5*0.4, label=r"Task set II", color="#ffbb78"
     )
     if ylog:
         plt.yscale("log")
@@ -204,7 +213,7 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel, title, fig_name, ylog=
     # Labels and Title
     plt.xlabel(rf"{xlabel}")
     plt.ylabel(rf"{ylabel}")
-    plt.title(rf"{title}")
+    #plt.title(rf"{title}")
     # X-axis tick labels positioning
     plt.xticks([i + 0.2 for i in ind], alg_set)
 
@@ -219,10 +228,11 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel, title, fig_name, ylog=
     # Displaying the plot
     plt.grid(True)
     fig.savefig(file_path)
+    fig.savefig(file_path1, format='eps')
 
 
 def line_plot_res(
-    alg_set, data1, y_val, xlabel, ylabel, title, fig_name, ylog=False, xlog=False
+    alg_set, data1, y_val, xlabel, ylabel, title, fig_name,legend_order=None, ylog=False, xlog=False
 ):
     # Data for plotting
     # algorithms = ['Local Scheduling', 'RRLO [8]', 'Our Algorithm']
@@ -254,6 +264,7 @@ def line_plot_res(
     # Plotting both tasksets
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
+    file_path1 = f"results/{fig_name}.eps"
     fig = plt.figure(figsize=(20, 12))
     if ylog:
         plt.yscale("log")
@@ -273,7 +284,7 @@ def line_plot_res(
     # Labels and Title
     plt.xlabel(rf"{xlabel}")
     plt.ylabel(rf"{ylabel}")
-    plt.title(rf"{title}")
+    #plt.title(rf"{title}")
 
     # x0,x1 = plt.xlim()
     # visible= [t for t in plt.xticks() if t>=x0 and t<= x1]
@@ -284,13 +295,21 @@ def line_plot_res(
     # X-axis tick labels positioning
     # plt.xticks([i + 0.2 for i in ind], alg_set,fontweight='bold')
     # Adding legend to specify which color represents which task set
-    legend = plt.legend()
+    if legend_order is None:
+        legend=plt.legend()
+    else:
+        handles, labels = plt.gca().get_legend_handles_labels() # Specify the order you want for the legend
+        #order = [1, 0, 3, 2] # This is an example. Adjust the order as needed. # Create the legend with the specified order 
+        plt.legend([handles[idx] for idx in legend_order], [labels[idx] for idx in legend_order])
+    
+    #legend = plt.legend()
     # for text in legend.get_texts():
     #   text.set_fontweight('bold')  # Set legend text to bold
     plt.tight_layout()
     # Displaying the plot
     plt.grid(True)
     fig.savefig(file_path)
+    fig.savefig(file_path1, format='eps')
 
 
 def stack_bar_res(
@@ -333,16 +352,17 @@ def stack_bar_res(
     if numbered:
         step_sizes = np.diff(x_val)
         if xlog:
-            bar_widths = step_sizes * 0.4
+            bar_widths = step_sizes * 0.4*0.5
             bar_widths=np.append(bar_widths, bar_widths[-1])
         else:
-            bar_widths = step_sizes * 0.7
+            bar_widths = step_sizes * 0.7*0.5
             bar_widths=np.append(bar_widths, bar_widths[-1])
     else:
-        bar_widths = 0.5
+        bar_widths = 0.4
     # Plotting both tasksets
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
+    file_path1 = f"results/{fig_name}.eps"
     fig, ax = plt.subplots(figsize=(20, 12))
 
     max_hight = np.max(data1[-1])
@@ -392,22 +412,22 @@ def stack_bar_res(
             ax.text(i, value, rf"{value:.3f}", ha="center", va="bottom")
     ax.set_xlabel(rf"{xlabel}")
     ax.set_ylabel(rf"{ylabel}")
-    ax.set_title(rf"{title}")
+    #ax.set_title(rf"{title}")
 
-    if numbered:
-        ax.set_xticks(x_val)
+    #if numbered:
+     #   ax.set_xticks(x_val)
         #ax.set_xticklabels([rf"{x:.2f}" for x in x_val])
-        x0, x1 = ax.get_xlim()
-        visible = [t for t in ax.get_xticks() if t >= x0 and t <= x1]
-        ax.set_xticks(np.round(visible,2), list(map(str, np.round(visible,2))))
-        y0, y1 = ax.get_ylim()
-        visible = [t for t in ax.get_yticks() if t >= y0 and t <= y1]
-        ax.set_yticks(np.round(visible,2), list(map(str, np.round(visible,2))))
-    else:
-        ax.set_xticks(ind, x_val)
-        y0, y1 = ax.get_ylim()
-        visible = [t for t in ax.get_yticks() if t >= y0 and t <= y1]
-        ax.set_yticks(visible, list(map(str, visible)))
+      #  x0, x1 = ax.get_xlim()
+       # visible = [t for t in ax.get_xticks() if t >= x0 and t <= x1]
+       # ax.set_xticks(np.round(visible,2), list(map(str, np.round(visible,2))))
+       # y0, y1 = ax.get_ylim()
+       # visible = [t for t in ax.get_yticks() if t >= y0 and t <= y1]
+       # ax.set_yticks(np.round(visible,2), list(map(str, np.round(visible,2))))
+    #else:
+     #   ax.set_xticks(ind, x_val)
+      #  y0, y1 = ax.get_ylim()
+       # visible = [t for t in ax.get_yticks() if t >= y0 and t <= y1]
+       # ax.set_yticks(visible, list(map(str, visible)))
 
     legend = ax.legend()
     # for text in legend.get_texts():
@@ -420,6 +440,7 @@ def stack_bar_res(
     # Displaying the plot
     ax.grid(True)
     fig.savefig(file_path)
+    fig.savefig(file_path1, format='eps')
 
 
 def print_improvement(alg_set, improvements_task1, improvements_task2, num1, num2):

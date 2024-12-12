@@ -6,8 +6,8 @@ params:
   eval_cycle: 10  # Evaluation cycle at each the algorithm is evaluated eval_itr times
   do_train: false   # Train or not
   do_taskset_eval: true   # Taskset evaluation
-  do_cpu_load_eval: true
-  do_task_size_eval: true
+  do_cpu_load_eval: false
+  do_task_size_eval: false
   do_channel_eval: false
 
   # DVFS algorithms parameters
@@ -29,7 +29,7 @@ params:
   target_cpu_load: 0.35
   min_task_load_train: 0.1
   max_task_load_train: 10
-  min_task_load_eval: 0.1
+  min_task_load_eval: 0.2
   max_task_load_eval: 6
   min_task_size: 120
   max_task_size: 300
