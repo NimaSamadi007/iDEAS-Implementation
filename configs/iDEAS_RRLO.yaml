@@ -1,12 +1,12 @@
 ---
 params:
   # General parameters
-  train_itr: 1.5e+5   # Number of training iterations
-  eval_itr: 1000   # Number of evaluation iterations
-  eval_cycle: 1  # Evaluation cycle at each the algorithm is evaluated eval_itr times
+  train_itr: 1.5e+6   # Number of training iterations
+  eval_itr: 10000   # Number of evaluation iterations
+  eval_cycle: 10  # Evaluation cycle at each the algorithm is evaluated eval_itr times
   do_train: false   # Train or not
   do_taskset_eval: true   # Taskset evaluation
-  do_cpu_load_eval: true
+  do_cpu_load_eval: false
   do_task_size_eval: false
   do_channel_eval: false
 
@@ -28,6 +28,15 @@ params:
   num_tasks: 4
   target_cpu_load: 0.35
   min_task_load_train: 0.1
+<<<<<<< HEAD
+  max_task_load_train: 3
+  min_task_load_eval: 0.1
+  max_task_load_eval: 3
+  min_task_size: 120
+  max_task_size: 480
+  min_cn_power: 1.0e-11
+  max_cn_power: 1.0e-7
+=======
   max_task_load_train: 10
   min_task_load_eval: 0.2
   max_task_load_eval: 6
@@ -35,6 +44,7 @@ params:
   max_task_size: 300
   min_cn_power: 1.0e-7
   max_cn_power: 1.0e-4
+>>>>>>> 7dac5b396e0c672f846ce4261c44470484463042
 tasks:
   eval_1: configs/tasks/eval_1.yaml
   eval_2: configs/tasks/eval_2.yaml
