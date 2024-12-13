@@ -4,6 +4,8 @@
 *.pt
 *.npy
 experiments/*
+baseline_res
+results/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

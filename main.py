@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 from utils.utils import (
     plot_res,
@@ -7,6 +8,7 @@ from utils.utils import (
     line_plot_res,
     stack_bar_res,
     plot_all_rewards,
+    plot_loss_and_reward,
     load_yaml,
 )
 
@@ -21,6 +23,7 @@ from eval.evaluator import (
 def iDEAS_Main(configs):
     params = configs["params"]
     num_eval_cycles = params["eval_cycle"]
+    results_dir = "results/ideas_main"
 
     if params["do_train"]:
         trainer = iDEAS_MainTrainer(configs)
@@ -33,10 +36,37 @@ def iDEAS_Main(configs):
         plot_all_rewards(
             rewards, "iDEAS", "iterations", "rewards", "iDEAS_Main_rewards"
         )
+        plot_loss_and_reward(
+            loss,
+            rewards,
+            "iDEAS",
+            "iterations",
+            "loss",
+            "rewards",
+            "iDEAS_Main_loss_reward",
+        )
 
-    cpuloads = np.linspace(
-        params["min_task_load_eval"], params["max_task_load_eval"], 10
-    )
+        os.makedirs(results_dir, exist_ok=True)
+        np.save(f"{results_dir}/loss.npy", loss)
+        np.save(f"{results_dir}/reward.npy", rewards)
+
+    loss = np.load(f"{results_dir}/loss.npy") if os.path.exists(f"{results_dir}/loss.npy") else None
+    rewards = np.load(f"{results_dir}/reward.npy") if os.path.exists(f"{results_dir}/reward.npy") else None
+    if loss and rewards:
+        plot_loss_and_reward(
+            loss,
+            rewards,
+            "iDEAS",
+            "iterations",
+            "loss",
+            "rewards",
+            "iDEAS_Main_loss_reward",
+        )
+
+    linspace_values = np.linspace(
+        1, params["max_task_load_eval"], 6
+    )  # Create the desired array with the first value as min_task_load_eval
+    cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
     tasksizes = np.round(
         np.linspace(params["min_task_size"], params["max_task_size"], 10)
     )
@@ -46,6 +76,11 @@ def iDEAS_Main(configs):
         num=10,
         base=10,
     )
+
+    os.makedirs(results_dir, exist_ok=True)
+    np.save(f"{results_dir}/cpuloads.npy", cpuloads)
+    np.save(f"{results_dir}/tasksizes.npy", tasksizes)
+    np.save(f"{results_dir}/cns.npy", cns)
 
     all_results = {}
     for i in range(num_eval_cycles):
@@ -62,30 +97,30 @@ def iDEAS_Main(configs):
 
     plot_infos = {
         "fixed_taskset_energy": [
-            ["Task set 1", "Task set 2"],
-            "Task sets",
-            "Consumed Energy (J) ",
+            ["Task Set I", "Task Set II"],
+            "Task Sets",
+            "Energy Consumption (mJ) ",
             "Energy Consumption Levels on Different Task sets",
             "iDEAS_Main_fixed_taskset_energy",
         ],
         "fixed_taskset_drop": [
-            ["Task set 1", "Task set 2"],
-            "Task sets",
+            ["Task Set 1", "Task Set 2"],
+            "Task Sets",
             "Dropped Tasks (\%) ",
             "Dropped Tasks levels on Different Task sets",
             "iDEAS_Main_fixed_taskset_drop",
         ],
         "varied_cpuload_energy": [
             cpuloads,
-            "Task Load",
-            "Consumed Energy (J) ",
-            "Energy Consumption Levels for Different Task Loads",
+            "Utilization",
+            "Energy Consumption (mJ) ",
+            "Energy Consumption Levels for Different Utilization",
             "iDEAS_Main_varied_cpuload_energy",
             True,
         ],
         "varied_cpuload_drop": [
             cpuloads,
-            "Task Load",
+            "Utilization",
             "Dropped Tasks (\%) ",
             "Dropped Tasks levels for Different Task Loads",
             "iDEAS_Main_varied_cpuload_drop",
@@ -94,7 +129,7 @@ def iDEAS_Main(configs):
         "varied_tasksize_energy": [
             tasksizes[:-1],
             "Task Size (KB)",
-            "Consumed Energy (J) ",
+            "Energy Consumption (mJ) ",
             "Energy Consumption Levels for Different Task Sizes",
             "iDEAS_Main_varied_tasksize_energy",
             True,
@@ -110,7 +145,7 @@ def iDEAS_Main(configs):
         "varied_channel_energy": [
             cns,
             "Channel Noise",
-            "Consumed Energy (J) ",
+            "Energy Consumption (mJ) ",
             "Energy Consumption Levels for Different Channel Noises",
             "iDEAS_Main_varied_channel_energy",
             True,
@@ -137,6 +172,7 @@ def iDEAS_Main(configs):
 def iDEAS_RRLO(configs):
     params = configs["params"]
     num_eval_cycles = params["eval_cycle"]
+    results_dir = "results/ideas_rrlo"
 
     if params["do_train"]:
         trainer = iDEAS_RRLOTrainer(configs)
@@ -151,10 +187,38 @@ def iDEAS_RRLO(configs):
         plot_all_rewards(
             rewards, "iDEAS", "iterations", "rewards", "iDEAS_RRLO_rewards"
         )
+        plot_loss_and_reward(
+            dqn_loss,
+            rewards,
+            "iDEAS",
+            "iterations",
+            "loss",
+            "rewards",
+            "iDEAS_RRLO_loss_reward",
+        )
+        os.makedirs(results_dir, exist_ok=True)
 
-    cpuloads = np.linspace(
-        params["min_task_load_eval"], params["max_task_load_eval"], 10
-    )
+        np.save(f"{results_dir}/loss.npy", dqn_loss)
+        np.save(f"{results_dir}/reward.npy", rewards)
+
+    # Check if results exist
+    loss = np.load(f"{results_dir}/loss.npy") if os.path.exists(f"{results_dir}/loss.npy") else None
+    rewards = np.load(f"{results_dir}/reward.npy") if os.path.exists(f"{results_dir}/reward.npy") else None
+    if loss and rewards:
+        plot_loss_and_reward(
+            loss,
+            rewards,
+            "iDEAS",
+            "iterations",
+            "loss",
+            "rewards",
+            "iDEAS_RRLO_loss_reward",
+        )
+
+    linspace_values = np.linspace(
+        1, params["max_task_load_eval"], 6
+    )  # Create the desired array with the first value as min_task_load_eval
+    cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
     tasksizes = np.round(
         np.linspace(params["min_task_size"], params["max_task_size"], 10)
     )
@@ -164,7 +228,10 @@ def iDEAS_RRLO(configs):
         num=10,
         base=10,
     )
-
+    os.makedirs(results_dir, exist_ok=True)
+    np.save(f"{results_dir}/cpuloads.npy", cpuloads)
+    np.save(f"{results_dir}/tasksizes.npy", tasksizes)
+    np.save(f"{results_dir}/cns.npy", cns)
     all_results = {}
     for i in range(num_eval_cycles):
         evaluator = iDEAS_RRLOEvaluator(configs, cpuloads, tasksizes, cns)
@@ -178,9 +245,10 @@ def iDEAS_RRLO(configs):
                 )
             all_results[scenario][i, :] = result[scenario]
 
+
     plot_infos = {
         "fixed_taskset_energy": [
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different Baseline Single Core Schemes",
             "iDEAS_RRLO_fixed_taskset_energy",
             True,
@@ -192,25 +260,31 @@ def iDEAS_RRLO(configs):
         ],
         "varied_cpuload_energy": [
             cpuloads,
-            "Task Load",
-            "Energy Consumption (J)",
-            "Energy Consumption of Different Single Core Schemes With Respect to Various Task Loads",
+            "Utilization",
+            "Energy Consumption (mJ)",
+            "Energy Consumption of Different Single Core Schemes With Respect to Various Utilization",
             "iDEAS_RRLO_varied_cpuload_energy",
+            None,
             True,
+            False,
         ],
         "varied_cpuload_drop": [
             cpuloads,
-            "Task Load",
+            "Utilization",
             "Dropped Tasks (\%) ",
-            "Dropped Tasks of Different Baseline Single Core Scheme With Respect to Various Task Loads",
+            "Dropped Tasks of Different Baseline Single Core Scheme With Respect to Various Utilization",
             "iDEAS_RRLO_varied_cpuload_drop",
+            None,
+            False,
+            False,
         ],
         "varied_tasksize_energy": [
             tasksizes[:-1],
             "Task Size(KB)",
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different Single Core Schemes With Respect to Various Task Sizes",
             "iDEAS_RRLO_varied_tasksize_energy",
+            None,
             True,
             False,
         ],
@@ -220,13 +294,17 @@ def iDEAS_RRLO(configs):
             "Dropped Tasks (\%) ",
             "Dropped Tasks of Different Baseline Single Core Scheme With Respect to Various Task Sizes",
             "iDEAS_RRLO_varied_tasksize_drop",
+            None,
+            False,
+            False,
         ],
         "varied_channel_energy": [
             cns,
             "Channel Noise",
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different Single Core Schemes With Respect to Various Channel Noises",
             "iDEAS_RRLO_varied_channel_energy",
+            None,
             True,
             True,
         ],
@@ -236,13 +314,14 @@ def iDEAS_RRLO(configs):
             "Dropped Tasks (\%) ",
             "Dropped Tasks of Different Baseline Single Core Scheme With Respect to Various Channel Noises",
             "iDEAS_RRLO_varied_channel_drop",
+            None,
             False,
             True,
         ],
     }
 
-    alg_set = ["Random", "RRLO", "iDEAS", "Local", "Edge Only"]
-    alg_set2 = ["Random", "RRLO", "Local", "Edge Only"]
+    alg_set = ["RRLO", "iDEAS"]
+    alg_set2 = ["RRLO"]
     for scenario in plot_infos:
         if scenario in all_results:
             mean_values = np.mean(all_results[scenario], axis=0)
@@ -265,26 +344,27 @@ def iDEAS_RRLO(configs):
         print("Scenario fixed_taskset_energy not found in results")
         return
     energy_vals = all_results["fixed_taskset_energy"]
-    random_energy = energy_vals[:, 0, :]
-    rrlo_energy = energy_vals[:, 1, :]
-    ideas_energy = energy_vals[:, 2, :]
-    local_energy = energy_vals[:, 3, :]
-    remote_energy = energy_vals[:, 4, :]
+    rrlo_energy = energy_vals[:, 0, :]
+    ideas_energy = energy_vals[:, 1, :]
 
-    random_improvement = (ideas_energy - random_energy) / random_energy * 100
     rrlo_improvement = (ideas_energy - rrlo_energy) / rrlo_energy * 100
-    local_improvement = (ideas_energy - local_energy) / local_energy * 100
-    remote_improvement = (ideas_energy - remote_energy) / remote_energy * 100
 
     taskset_improvement = np.stack(
-        [random_improvement, rrlo_improvement, local_improvement, remote_improvement],
+        [rrlo_improvement],
         axis=1,
     )
     improvement_eval = np.mean(taskset_improvement, axis=0)
+
+    with open("results/RRLO.text", "w") as file:
+        file.write(
+            print_improvement(
+                alg_set2, improvement_eval[:, 0], improvement_eval[:, 1], 1, 1
+            )
+        )
     print("iDEAS energy consumption improvements:")
     print(
         print_improvement(
-            alg_set2, improvement_eval[:, 0], improvement_eval[:, 1], 4, 4
+            alg_set2, improvement_eval[:, 0], improvement_eval[:, 1], 1, 1
         )
     )
 
@@ -292,6 +372,7 @@ def iDEAS_RRLO(configs):
 def iDEAS_Baseline(configs):
     params = configs["params"]
     num_eval_cycles = params["eval_cycle"]
+    results_dir = "results/ideas_baseline"
 
     if params["do_train"]:
         trainer = iDEAS_MainTrainer(configs)
@@ -302,16 +383,27 @@ def iDEAS_Baseline(configs):
         print("Training completed")
         print(100 * "-")
 
-        plot_loss_function(
-            loss, "iDEAS", "iterations", "loss", "iDEAS_Baseline_loss"
-        )
+        plot_loss_function(loss, "iDEAS", "iterations", "loss", "iDEAS_Baseline_loss")
         plot_all_rewards(
             rewards, "iDEAS", "iterations", "rewards", "iDEAS_Baseline_rewards"
         )
+        plot_loss_and_reward(
+            loss,
+            rewards,
+            "iDEAS",
+            "iterations",
+            "loss",
+            "rewards",
+            "iDEAS_baseline_loss_reward",
+        )
+        os.makedirs(results_dir, exist_ok=True)
+        np.save(f"{results_dir}/loss.npy", loss)
+        np.save(f"{results_dir}/reward.npy", rewards)
 
-    cpuloads = np.linspace(
-        params["min_task_load_eval"], params["max_task_load_eval"], 10
-    )
+    linspace_values = np.linspace(
+        1, params["max_task_load_eval"], 6
+    )  # Create the desired array with the first value as min_task_load_eval
+    cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
     tasksizes = np.round(
         np.linspace(params["min_task_size"], params["max_task_size"], 10)
     )
@@ -322,6 +414,10 @@ def iDEAS_Baseline(configs):
         base=10,
     )
 
+    os.makedirs(results_dir, exist_ok=True)
+    np.save(f"{results_dir}/cpuloads.npy", cpuloads)
+    np.save(f"{results_dir}/tasksizes.npy", tasksizes)
+    np.save(f"{results_dir}/cns.npy", cns)
     all_results = {}
     for i in range(num_eval_cycles):
         print(f"Cycle {i+1}:")
@@ -338,7 +434,7 @@ def iDEAS_Baseline(configs):
 
     plot_infos = {
         "fixed_taskset_energy": [
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different Baseline big.LITTLE Schemes",
             "iDEAS_Baseline_fixed_taskset_energy",
             True,
@@ -350,25 +446,28 @@ def iDEAS_Baseline(configs):
         ],
         "varied_cpuload_energy": [
             cpuloads,
-            "Task Load",
-            "Energy Consumption (J)",
-            "Energy Consumption of Different big.LITTLE Schemes With Respect to Various Task Loads",
+            "Utilization",
+            "Energy Consumption (mJ)",
+            "Energy Consumption of Different big.LITTLE Schemes With Respect to Various Utilization",
             "iDEAS_Baseline_varied_cpuload_energy",
+            [2, 1, 3, 0],
             True,
         ],
         "varied_cpuload_drop": [
             cpuloads,
-            "Task Load",
+            "Utilization",
             "Dropped Tasks (\%) ",
-            "Dropped Tasks of Different Baseline big.LITTLE Scheme With Respect to Various Task Loads",
+            "Dropped Tasks of Different Baseline big.LITTLE Scheme With Respect to Various Utilization",
             "iDEAS_Baseline_varied_cpuload_drop",
+            [1, 3, 0, 2],
         ],
         "varied_tasksize_energy": [
             tasksizes[:-1],
             "Task Size(KB)",
-            "Energy Consumption (J)",
+            "Energy Consumption (mJ)",
             "Energy Consumption of Different big.LITTLE Schemes With Respect to Various Task Sizes",
             "iDEAS_Baseline_varied_tasksize_energy",
+            [3, 2, 1, 0],
             True,
             False,
         ],
@@ -378,28 +477,11 @@ def iDEAS_Baseline(configs):
             "Dropped Tasks (\%) ",
             "Dropped Tasks of Different Baseline big.LITTLE Scheme With Respect to Various Task Sizes",
             "iDEAS_Baseline_varied_tasksize_drop",
-        ],
-        "varied_channel_energy": [
-            cns,
-            "Channel Noise",
-            "Energy Consumption (J)",
-            "Energy Consumption of Different big.LITTLE Schemes With Respect to Various Channel Noises",
-            "iDEAS_Baseline_varied_channel_energy",
-            True,
-            True,
-        ],
-        "varied_channel_drop": [
-            cns,
-            "Channel Noise",
-            "Dropped Tasks (\%) ",
-            "Dropped Tasks of Different Baseline big.LITTLE Scheme With Respect to Various Channel Noises",
-            "iDEAS_Baseline_varied_channel_drop",
-            False,
-            True,
+            [1, 0, 2, 3],
         ],
     }
 
-    alg_set = ["Random", "iDEAS", "Local", "Edge Only"]
+    alg_set = ["iDEAS", "Random", "Local", "Edge Only"]
     alg_set2 = ["Random", "Local", "Edge Only"]
     for scenario in plot_infos:
         mean_values = np.mean(all_results[scenario], axis=0)
@@ -416,8 +498,8 @@ def iDEAS_Baseline(configs):
 
     # Calculate improvement:
     energy_vals = all_results["fixed_taskset_energy"]
-    random_energy = energy_vals[:, 0, :]
-    ideas_energy = energy_vals[:, 1, :]
+    random_energy = energy_vals[:, 1, :]
+    ideas_energy = energy_vals[:, 0, :]
     local_energy = energy_vals[:, 2, :]
     remote_energy = energy_vals[:, 3, :]
 
@@ -430,6 +512,12 @@ def iDEAS_Baseline(configs):
         axis=1,
     )
     improvement_eval = np.mean(taskset_improvement, axis=0)
+    with open("results/baseline.txt", "w") as file:
+        file.write(
+            print_improvement(
+                alg_set2, improvement_eval[:, 0], improvement_eval[:, 1], 3, 3
+            )
+        )
     print("iDEAS energy consumption improvements:")
     print(
         print_improvement(

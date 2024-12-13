@@ -17,7 +17,7 @@ class CPU:
             raise ValueError("CPU powers must be sorted incrementally")
 
         self.freqs = np.asarray(specs["freqs"])
-        self.powers = np.asarray(specs["powers"]) * 1e-3
+        self.powers = np.asarray(specs["powers"])
         self.model = specs["model"]
         self.cpu_type = specs["type"]
 
@@ -57,7 +57,6 @@ class CPU:
             if wcet_scaled < task.p:
                 min_energy = self.powers[i] * (wcet_scaled / 1000)
                 return min_energy
-        raise ValueError(f"Unable to execute task: {task}")
 
 
 # CPU model that uses the cycle conserving algorithm for DVFS

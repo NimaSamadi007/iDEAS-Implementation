@@ -110,10 +110,8 @@ class HetrogenEnv:
 
     def _cal_reward(self):
         penalties = []
-        min_penalties = []
         for task in self.curr_tasks.values():
             penalty = 0
-            min_penalty = 0
             for job in task:
                 # Calculate last execution penalty
                 if job.deadline_missed:
@@ -121,23 +119,14 @@ class HetrogenEnv:
                 else:
                     penalty += job.cons_energy + self.latency_energy_coeff * job.aet
 
-            min_penalty = np.min(
-                [
-                    self.cpu_little.get_min_energy(task[0]),
-                    self.cpu_big.get_min_energy(task[0]),
-                    self.w_inter.get_min_energy(task[0]),
-                ]
-            )
-            min_penalties.append(min_penalty)
             if penalty / len(task) > self.deadline_missed_penalty:
                 raise ValueError(f"Penalty {penalty / len(task)} excceds {self.deadline_missed_penalty}")
             penalties.append(penalty / len(task))
 
         # Calculate reward
-        min_penalties = np.asarray(min_penalties, dtype=float)
         penalties = np.asarray(penalties, dtype=float)
-        rewards = np.exp(-self.reward_coeff * (penalties - min_penalties))
-        return rewards, penalties, min_penalties
+        rewards = np.exp(-self.reward_coeff * (penalties))
+        return rewards, penalties, None
 
 
 class HomogenEnv:
@@ -240,10 +229,8 @@ class HomogenEnv:
 
     def _cal_reward(self):
         penalties = []
-        min_penalties = []
         for task in self.curr_tasks.values():
             penalty = 0
-            min_penalty = 0
             for job in task:
                 # Calculate last execution penalty
                 if job.deadline_missed:
@@ -251,20 +238,14 @@ class HomogenEnv:
                 else:
                     penalty += job.cons_energy + self.latency_energy_coeff * job.aet
 
-            min_penalty = np.min(
-                [self.cpu.get_min_energy(task[0]), self.w_inter.get_min_energy(task[0])]
-            )
-            min_penalties.append(min_penalty)
             if penalty / len(task) > self.deadline_missed_penalty:
                 raise ValueError(f"Penalty {penalty / len(task)} excceds {self.deadline_missed_penalty}")
             penalties.append(penalty / len(task))
 
         # Calculate reward
-        min_penalties = np.asarray(min_penalties, dtype=float)
         penalties = np.asarray(penalties, dtype=float)
-        # FIXME: Check reward and penalty notion
-        rewards = np.exp(-self.reward_coeff * (penalties - min_penalties))
-        return rewards, penalties, min_penalties
+        rewards = np.exp(-self.reward_coeff * (penalties))
+        return rewards, penalties, None
 
 
 class RRLOEnv:
