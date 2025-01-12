@@ -28,3 +28,4 @@ Each scenario has its own parameters that you may want to change to analyze each
 To run the code, from repo root directory, run `python main.py` and all three scenarios will be started.
 
 ## Results
+Results along with an analysis of them are presented in the paper. The model weights corresponding to paper resutls are in `paper-model-weight` directory. To use them, transfer the folders and weights inside this directory to `models` directory. Then, only evaluate the models and do not train them as it will replace the weights.

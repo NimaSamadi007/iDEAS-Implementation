@@ -1,7 +1,6 @@
 # Project related stuff
 .vscode
 *.png
-*.pt
 *.npy
 experiments/*
 baseline_res
