@@ -5,8 +5,15 @@ from env_models.remote import EdgeServer
 from env_models.task import Task
 from utils.utils import load_yaml
 
+
 class WirelessInterface:
     def __init__(self, w_inter_conf_path):
+        """
+        Wireless interface model used in iDEAS
+
+        Args:
+            w_inter_conf_path (str): path to the wireless interface configuration file
+        """
         specs = load_yaml(w_inter_conf_path)
 
         # Power levels are represented in dbm and must be converted accordingly
@@ -40,7 +47,6 @@ class WirelessInterface:
                     job.deadline_missed = True
                 job.cons_energy = (dbm_to_mw(self.power) * job.b * 1024 * 8) / rate
 
-    # TODO: How frequent channel state must be updated?
     def update_channel_state(self):
         self.cg = np.random.rayleigh(scale=self.cg_sigma)
         return self.cg
@@ -74,6 +80,12 @@ class WirelessInterface:
 
 class RRLOWirelessInterface(WirelessInterface):
     def __init__(self, w_inter_conf_path):
+        """
+        Wireless interface model used in RRLO algorithm
+
+        Args:
+            w_inter_conf_path (str): path to the wireless interface configuration file
+        """
         super().__init__(w_inter_conf_path)
 
     def offload(self, tasks: Dict[int, Task], power_level: float):
@@ -98,5 +110,6 @@ class RRLOWirelessInterface(WirelessInterface):
 def dbm_to_w(pow_dbm: float) -> float:
     return (10 ** (pow_dbm / 10)) / 1000
 
+
 def dbm_to_mw(pow_dbm: float) -> float:
-    return (10 ** (pow_dbm / 10))
+    return 10 ** (pow_dbm / 10)
