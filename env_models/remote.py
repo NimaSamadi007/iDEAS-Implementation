@@ -6,5 +6,5 @@ class EdgeServer:
         pass
 
     def execute(self, job: Task):
-        # TODO: Edge server CPU has a 3200 MHz CPU frequency
+        # Edge server CPU has a 2800 MHz CPU frequency
         job.gen_aet(2800)

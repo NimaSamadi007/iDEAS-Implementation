@@ -8,6 +8,12 @@ from utils.utils import load_yaml
 
 class Task:
     def __init__(self, specs: Dict[str, Any]):
+        """
+        Execution task model
+
+        Args:
+            specs (Dict[str, Any]): task specifications including period, worst-case execution time, task ID, input data size, and base CPU frequency
+        """
         self.p = specs["p"]  # period time, (ms)
         self.b = specs["b"]  # task input data (KB)
         self.wcet = specs["w"]  # worst-case execution time, (ms)
@@ -47,6 +53,12 @@ class Task:
 
 class TaskGen:
     def __init__(self, task_conf_path):
+        """
+        Task generator class to generate tasks based on the provided configuration file
+
+        Args:
+            task_conf_path (str): path to the task configuration file
+        """
         self.task_set = []
         task_set_conf = load_yaml(task_conf_path)
         for i in range(len(task_set_conf)):

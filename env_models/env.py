@@ -9,6 +9,20 @@ from env_models.wireless_interface import WirelessInterface, RRLOWirelessInterfa
 
 class HetrogenEnv:
     def __init__(self, confs, cpu_load_bound, wcet_bound, task_size_bound, cn_bound):
+        """
+        Heterogeneous environment with two CPUs (big and little) and
+        edge server for offloading tasks.
+
+        Args:
+            confs (Dict[str, str]): Environment configurations containing CPU and wireless interface configs
+            cpu_load_bound (List[int]): CPU load bounds (min and max)
+            wcet_bound (List[int]): WCET bounds (min and max)
+            task_size_bound (List[int]): Task size bounds (min and max)
+            cn_bound (List[int]): CN power bounds (min and max)
+
+        Note:
+            Bounds are used for state normalization
+        """
         self.cpu_little = CPU(confs["cpus"]["little"])
         self.cpu_big = CPU(confs["cpus"]["big"])
         self.w_inter = WirelessInterface(confs["w_inter"])
@@ -138,6 +152,19 @@ class HomogenEnv:
         task_size_bound,
         cn_bound,
     ):
+        """
+        Homogeneous environment with a single CPU and edge server for offloading tasks.
+
+        Args:
+            confs (Dict[str, str]): Environment configurations containing CPU and wireless interface configs
+            cpu_load_bound (List[int]): CPU load bounds (min and max)
+            wcet_bound (List[int]): WCET bounds (min and max)
+            task_size_bound (List[int]): Task size bounds (min and max)
+            cn_bound (List[int]): CN power bounds (min and max)
+
+        Note:
+            Bounds are used for state normalization
+        """
         self.cpu = CPU(confs["cpus"]["local"])
         self.w_inter = WirelessInterface(confs["w_inter"])
         self.w_inter.set_cn_power_bounds(*cn_bound)
@@ -250,6 +277,13 @@ class HomogenEnv:
 
 class RRLOEnv:
     def __init__(self, confs: Dict[str, str]):
+        """
+        RRLO environment with a single CPU and edge server for offloading tasks. CPUs
+        use CC and LA algorithms for DVFS.
+
+        Args:
+            confs (Dict[str, str]): Environment configurations containing CPU and wireless interface configs
+        """
         self.cpu_cc = CPU_CC(confs["cpus"]["local"])
         self.cpu_la = CPU_LA(confs["cpus"]["local"])
 
@@ -313,7 +347,6 @@ class RRLOEnv:
     def _init_state_bounds(self):
         self.num_states = np.array([16, 16, 8])
         self.min_state_vals = np.array([0, 0, 0])
-        # FIXME: Check this one with the paper
         self.max_state_vals = np.array([1, 1, 2 * self.w_inter.cg_sigma])
         self.state_steps = (self.max_state_vals - self.min_state_vals) / (
             self.num_states - 1

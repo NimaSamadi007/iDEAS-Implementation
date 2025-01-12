@@ -1,3 +1,8 @@
+"""
+Main entry point function to train iDEAS scenarios
+and evaluate each algorithm's performance.
+"""
+
 import numpy as np
 import os
 
@@ -21,6 +26,15 @@ from eval.evaluator import (
 
 
 def iDEAS_Main(configs):
+    """
+    iDEAS main scenario which evaluates algorithm convergence
+
+    Args:
+        configs (dict): Configuration parameters read from yaml file
+
+    Returns:
+        None
+    """
     params = configs["params"]
     num_eval_cycles = params["eval_cycle"]
     results_dir = "results/ideas_main"
@@ -50,8 +64,16 @@ def iDEAS_Main(configs):
         np.save(f"{results_dir}/loss.npy", loss)
         np.save(f"{results_dir}/reward.npy", rewards)
 
-    loss = np.load(f"{results_dir}/loss.npy") if os.path.exists(f"{results_dir}/loss.npy") else None
-    rewards = np.load(f"{results_dir}/reward.npy") if os.path.exists(f"{results_dir}/reward.npy") else None
+    loss = (
+        np.load(f"{results_dir}/loss.npy")
+        if os.path.exists(f"{results_dir}/loss.npy")
+        else None
+    )
+    rewards = (
+        np.load(f"{results_dir}/reward.npy")
+        if os.path.exists(f"{results_dir}/reward.npy")
+        else None
+    )
     if loss and rewards:
         plot_loss_and_reward(
             loss,
@@ -170,6 +192,16 @@ def iDEAS_Main(configs):
 
 
 def iDEAS_RRLO(configs):
+    """
+    iDEAS comparison with RRLO scenario which evaluates iDEAS performance
+    compared to RLLO
+
+    Args:
+        configs (dict): Configuration parameters read from yaml file
+
+    Returns:
+        None
+    """
     params = configs["params"]
     num_eval_cycles = params["eval_cycle"]
     results_dir = "results/ideas_rrlo"
@@ -202,8 +234,16 @@ def iDEAS_RRLO(configs):
         np.save(f"{results_dir}/reward.npy", rewards)
 
     # Check if results exist
-    loss = np.load(f"{results_dir}/loss.npy") if os.path.exists(f"{results_dir}/loss.npy") else None
-    rewards = np.load(f"{results_dir}/reward.npy") if os.path.exists(f"{results_dir}/reward.npy") else None
+    loss = (
+        np.load(f"{results_dir}/loss.npy")
+        if os.path.exists(f"{results_dir}/loss.npy")
+        else None
+    )
+    rewards = (
+        np.load(f"{results_dir}/reward.npy")
+        if os.path.exists(f"{results_dir}/reward.npy")
+        else None
+    )
     if loss and rewards:
         plot_loss_and_reward(
             loss,
@@ -244,7 +284,6 @@ def iDEAS_RRLO(configs):
                     (num_eval_cycles, *result[scenario].shape)
                 )
             all_results[scenario][i, :] = result[scenario]
-
 
     plot_infos = {
         "fixed_taskset_energy": [
@@ -370,6 +409,16 @@ def iDEAS_RRLO(configs):
 
 
 def iDEAS_Baseline(configs):
+    """
+    iDEAS comparison with baseline algorithms scenario which evaluates iDEAS performance
+    compared to these baselines
+
+    Args:
+        configs (dict): Configuration parameters read from yaml file
+
+    Returns:
+        None
+    """
     params = configs["params"]
     num_eval_cycles = params["eval_cycle"]
     results_dir = "results/ideas_baseline"
@@ -420,7 +469,7 @@ def iDEAS_Baseline(configs):
     np.save(f"{results_dir}/cns.npy", cns)
     all_results = {}
     for i in range(num_eval_cycles):
-        print(f"Cycle {i+1}:")
+        print(f"Cycle {i + 1}:")
         evaluator = iDEAS_BaselineEvaluator(configs, cpuloads, tasksizes, cns)
         result = evaluator.run()
 
