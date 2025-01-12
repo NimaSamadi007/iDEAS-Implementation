@@ -11,6 +11,15 @@ from dvfs.rrlo_dvfs import RRLO_DVFS
 
 class Evaluator(abc.ABC):
     def __init__(self, configs, cpu_loads, task_sizes, cns):
+        """
+        Evaluator base class to evaluate trained algorithms on different scenarios
+
+        Args:
+            configs (dict): configuration dictionary
+            cpu_loads (list): list of cpu loads to evaluate
+            task_sizes (list): list of task sizes to evaluate
+            cns (list): list of channel noise values to evaluate
+        """
         self.configs = configs
         self.params = self.configs["params"]
         self.tasks_conf = self.configs["tasks"]
@@ -56,6 +65,9 @@ class Evaluator(abc.ABC):
         return results
 
     def _eval_fixed_taskset(self):
+        """
+        Fixed taskset evaluation scenario
+        """
         # Results container
         scenario_name = "fixed_taskset"
         self._init_results_container(scenario_name)
@@ -93,6 +105,9 @@ class Evaluator(abc.ABC):
         return self._get_results(scenario_name)
 
     def _eval_varied_cpuload(self):
+        """
+        CPU load variation evaluation scenario
+        """
         # Results container
         scenario_name = "varied_cpuload"
         max_task_load = self.params["max_task_load_eval"]
@@ -133,6 +148,9 @@ class Evaluator(abc.ABC):
         return self._get_results(scenario_name)
 
     def _eval_varied_tasksize(self):
+        """
+        Task size variation evaluation scenario
+        """
         # Results container
         scenario_name = "varied_tasksize"
         target_cpu_load = self.params["target_cpu_load"]
@@ -181,6 +199,9 @@ class Evaluator(abc.ABC):
         return self._get_results(scenario_name)
 
     def _eval_varied_channel(self):
+        """
+        Channel noise evaluation scenario
+        """
         # Results container
         scenario_name = "varied_channel"
         target_cpu_load = self.params["target_cpu_load"]
@@ -336,7 +357,6 @@ class iDEAS_MainEvaluator(Evaluator):
         return {"ideas": dqn_dvfs}
 
     def _observe(self, tasks):
-        # FIXME: Make sure if copying tasks is needed here
         states, _ = self.envs["ideas"].observe(copy.deepcopy(tasks))
         return {"ideas": states}
 
@@ -483,7 +503,6 @@ class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
         }
         random_policy = RandomIdeasPolicy(cpu_freqs, self.envs["random"].w_inter.powers)
 
-        # FIXME: Probably need to change local policy
         local_policy = {
             "offload": [],
             "little": [],

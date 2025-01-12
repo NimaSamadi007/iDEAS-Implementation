@@ -13,6 +13,12 @@ from utils.utils import set_random_seed
 
 class Trainer(abc.ABC):
     def __init__(self, configs):
+        """
+        Trainer base class to train DVFS algorithms
+
+        Args:
+            configs (Dict): configuration dictionary
+        """
         # Set random seed
         set_random_seed(42)
 
