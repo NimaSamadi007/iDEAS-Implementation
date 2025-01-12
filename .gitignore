@@ -1,9 +1,11 @@
 # Project related stuff
 .vscode
 *.png
-*.pt
 *.npy
 experiments/*
+baseline_res
+results/*
+models/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

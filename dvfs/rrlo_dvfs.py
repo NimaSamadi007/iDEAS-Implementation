@@ -1,3 +1,7 @@
+"""
+RRLO DVFS algorithm implementation
+"""
+
 import numpy as np
 import os
 
@@ -15,6 +19,20 @@ class RRLO_DVFS:
         min_eps=0.1,
         eps_update_step=1e3,
     ):
+        """
+        Initialize the RRLO DVFS algorithm
+
+        Args:
+            state_bounds (np.ndarray): state space bounds (min and max values)
+            num_w_inter_powers (int): number of possible wireless interface power levels
+            num_dvfs_algs (int): number of possible (traditional) DVFS algorithms
+            dvfs_algs (List[str]): list of DVFS algorithm names
+            num_tasks (int): number of tasks
+            eps_decay (float): epsilon decay rate
+            max_eps (float): maximum epsilon value
+            min_eps (float): minimum epsilon value
+            eps_update_step (int): epsilon update step
+        """
         self.state_bounds = state_bounds
         self.num_total_states = self.state_bounds.prod()
         self.num_dvfs_algs = num_dvfs_algs
@@ -105,6 +123,10 @@ class RRLO_DVFS:
         return row
 
     def _conv_col_to_act(self, act_idx: int) -> np.ndarray:
+        """
+        Converts the action index to the action dictionary
+        based on number of power levels, DVFS algorithms, and target devices
+        """
         local = []
         offload = []
         for i in range(len(self.act_bounds) - 1):

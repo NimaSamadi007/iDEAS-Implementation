@@ -1,3 +1,7 @@
+"""
+Trainer module to train algorithms
+"""
+
 import abc
 import numpy as np
 from tqdm import tqdm
@@ -13,6 +17,12 @@ from utils.utils import set_random_seed
 
 class Trainer(abc.ABC):
     def __init__(self, configs):
+        """
+        Trainer base class to train DVFS algorithms
+
+        Args:
+            configs (Dict): configuration dictionary
+        """
         # Set random seed
         set_random_seed(42)
 
@@ -52,6 +62,7 @@ class Trainer(abc.ABC):
                     f"Tasks: {self.tasks[0][0]}, {self.tasks[1][0]}, {self.tasks[2][0]}, {self.tasks[3][0]}"
                 )
                 tqdm.write(f"iDEAS Reward:{str(rewards['ideas'])}")
+                tqdm.write(f"Actions iDEAS: {str(actions['ideas']['str'])}")
                 if 'rrlo' in rewards:
                     tqdm.write(f"RRLO Penalty:{str(rewards['rrlo'])}")
 
@@ -166,8 +177,8 @@ class iDEAS_MainTrainer(Trainer):
         return actions
 
     def _step_envs(self, actions):
-        rewards, penalites, min_penalties = self.env.step(actions["ideas"]["str"])
-        return {"ideas": rewards, "min_penalty": min_penalties, "penalty": penalites}
+        rewards, penalites, _ = self.env.step(actions["ideas"]["str"])
+        return {"ideas": rewards, "penalty": penalites}
 
     def _train_algs(self, states, actions, rewards, next_states, is_final):
         return self.alg.train(states, actions["ideas"]["raw"], rewards["ideas"], next_states, is_final)
@@ -246,7 +257,7 @@ class iDEAS_RRLOTrainer(Trainer):
         return actions
 
     def _step_envs(self, actions):
-        rewards_ideas, penalites, min_penalties = self.ideas_env.step(
+        rewards_ideas, penalites, _ = self.ideas_env.step(
             actions["ideas"]["str"]
         )
         penalty_rrlo = self.rrlo_env.step(actions["rrlo"]["str"])
@@ -256,7 +267,6 @@ class iDEAS_RRLOTrainer(Trainer):
         rewards = {
             "ideas": rewards_ideas,
             "rrlo": penalty_rrlo,
-            "ideas_min_penalty": min_penalties,
             "ideas_penalty": penalites,
         }
         return rewards

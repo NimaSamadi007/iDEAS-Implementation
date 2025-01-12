@@ -15,16 +15,21 @@ import os
 
 class Network(nn.Module):
     def __init__(self, in_dim: int, out_dim: int):
+        """
+        DNN used in DQN algorithm
+
+        Args:
+            in_dim (int): input size of network
+            out_dim (int): output (feature) size of network
+        """
         super(Network, self).__init__()
 
         self.net = nn.Sequential(
-            nn.Linear(in_dim, 256),
+            nn.Linear(in_dim, 64),
             nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(64, 32),
             nn.ReLU(),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, out_dim),
+            nn.Linear(32, out_dim),
         )
         self.net.apply(self._init_weights)
 
@@ -39,6 +44,14 @@ class Network(nn.Module):
 
 class ReplayBuffer:
     def __init__(self, state_dim: int, size: int, batch_size: int):
+        """
+        Replay buffer for DQN that stores (s, a, r, s') pairs
+
+        Args:
+            state_dim (int): size of state space
+            size (int): total size of buffer storage
+            batch_size (int): batch size for sampling
+        """
         self.state_buf = np.zeros([size, state_dim], dtype=np.float32)
         self.next_state_buf = np.zeros_like(self.state_buf)
         self.actions_buf = np.zeros(size, dtype=np.float32)

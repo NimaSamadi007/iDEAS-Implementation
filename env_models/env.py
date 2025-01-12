@@ -1,3 +1,7 @@
+"""
+Environment models used in iDEAS and RRLO algorithms
+"""
+
 from typing import Dict, List
 import numpy as np
 import math
@@ -9,6 +13,20 @@ from env_models.wireless_interface import WirelessInterface, RRLOWirelessInterfa
 
 class HetrogenEnv:
     def __init__(self, confs, cpu_load_bound, wcet_bound, task_size_bound, cn_bound):
+        """
+        Heterogeneous environment with two CPUs (big and little) and
+        edge server for offloading tasks.
+
+        Args:
+            confs (Dict[str, str]): Environment configurations containing CPU and wireless interface configs
+            cpu_load_bound (List[int]): CPU load bounds (min and max)
+            wcet_bound (List[int]): WCET bounds (min and max)
+            task_size_bound (List[int]): Task size bounds (min and max)
+            cn_bound (List[int]): CN power bounds (min and max)
+
+        Note:
+            Bounds are used for state normalization
+        """
         self.cpu_little = CPU(confs["cpus"]["little"])
         self.cpu_big = CPU(confs["cpus"]["big"])
         self.w_inter = WirelessInterface(confs["w_inter"])
@@ -110,10 +128,8 @@ class HetrogenEnv:
 
     def _cal_reward(self):
         penalties = []
-        min_penalties = []
         for task in self.curr_tasks.values():
             penalty = 0
-            min_penalty = 0
             for job in task:
                 # Calculate last execution penalty
                 if job.deadline_missed:
@@ -121,23 +137,14 @@ class HetrogenEnv:
                 else:
                     penalty += job.cons_energy + self.latency_energy_coeff * job.aet
 
-            min_penalty = np.min(
-                [
-                    self.cpu_little.get_min_energy(task[0]),
-                    self.cpu_big.get_min_energy(task[0]),
-                    self.w_inter.get_min_energy(task[0]),
-                ]
-            )
-            min_penalties.append(min_penalty)
             if penalty / len(task) > self.deadline_missed_penalty:
                 raise ValueError(f"Penalty {penalty / len(task)} excceds {self.deadline_missed_penalty}")
             penalties.append(penalty / len(task))
 
         # Calculate reward
-        min_penalties = np.asarray(min_penalties, dtype=float)
         penalties = np.asarray(penalties, dtype=float)
-        rewards = np.exp(-self.reward_coeff * (penalties - min_penalties))
-        return rewards, penalties, min_penalties
+        rewards = np.exp(-self.reward_coeff * (penalties))
+        return rewards, penalties, None
 
 
 class HomogenEnv:
@@ -149,6 +156,19 @@ class HomogenEnv:
         task_size_bound,
         cn_bound,
     ):
+        """
+        Homogeneous environment with a single CPU and edge server for offloading tasks.
+
+        Args:
+            confs (Dict[str, str]): Environment configurations containing CPU and wireless interface configs
+            cpu_load_bound (List[int]): CPU load bounds (min and max)
+            wcet_bound (List[int]): WCET bounds (min and max)
+            task_size_bound (List[int]): Task size bounds (min and max)
+            cn_bound (List[int]): CN power bounds (min and max)
+
+        Note:
+            Bounds are used for state normalization
+        """
         self.cpu = CPU(confs["cpus"]["local"])
         self.w_inter = WirelessInterface(confs["w_inter"])
         self.w_inter.set_cn_power_bounds(*cn_bound)
@@ -240,10 +260,8 @@ class HomogenEnv:
 
     def _cal_reward(self):
         penalties = []
-        min_penalties = []
         for task in self.curr_tasks.values():
             penalty = 0
-            min_penalty = 0
             for job in task:
                 # Calculate last execution penalty
                 if job.deadline_missed:
@@ -251,24 +269,25 @@ class HomogenEnv:
                 else:
                     penalty += job.cons_energy + self.latency_energy_coeff * job.aet
 
-            min_penalty = np.min(
-                [self.cpu.get_min_energy(task[0]), self.w_inter.get_min_energy(task[0])]
-            )
-            min_penalties.append(min_penalty)
             if penalty / len(task) > self.deadline_missed_penalty:
                 raise ValueError(f"Penalty {penalty / len(task)} excceds {self.deadline_missed_penalty}")
             penalties.append(penalty / len(task))
 
         # Calculate reward
-        min_penalties = np.asarray(min_penalties, dtype=float)
         penalties = np.asarray(penalties, dtype=float)
-        # FIXME: Check reward and penalty notion
-        rewards = np.exp(-self.reward_coeff * (penalties - min_penalties))
-        return rewards, penalties, min_penalties
+        rewards = np.exp(-self.reward_coeff * (penalties))
+        return rewards, penalties, None
 
 
 class RRLOEnv:
     def __init__(self, confs: Dict[str, str]):
+        """
+        RRLO environment with a single CPU and edge server for offloading tasks. CPUs
+        use CC and LA algorithms for DVFS.
+
+        Args:
+            confs (Dict[str, str]): Environment configurations containing CPU and wireless interface configs
+        """
         self.cpu_cc = CPU_CC(confs["cpus"]["local"])
         self.cpu_la = CPU_LA(confs["cpus"]["local"])
 
@@ -332,7 +351,6 @@ class RRLOEnv:
     def _init_state_bounds(self):
         self.num_states = np.array([16, 16, 8])
         self.min_state_vals = np.array([0, 0, 0])
-        # FIXME: Check this one with the paper
         self.max_state_vals = np.array([1, 1, 2 * self.w_inter.cg_sigma])
         self.state_steps = (self.max_state_vals - self.min_state_vals) / (
             self.num_states - 1

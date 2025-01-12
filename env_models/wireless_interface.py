@@ -1,3 +1,7 @@
+"""
+Wireless interface models
+"""
+
 import numpy as np
 from typing import List, Dict
 
@@ -5,8 +9,15 @@ from env_models.remote import EdgeServer
 from env_models.task import Task
 from utils.utils import load_yaml
 
+
 class WirelessInterface:
     def __init__(self, w_inter_conf_path):
+        """
+        Wireless interface model used in iDEAS
+
+        Args:
+            w_inter_conf_path (str): path to the wireless interface configuration file
+        """
         specs = load_yaml(w_inter_conf_path)
 
         # Power levels are represented in dbm and must be converted accordingly
@@ -38,9 +49,8 @@ class WirelessInterface:
                 job.aet += ((job.b * 1024 * 8) / rate) * 1e3  # aet unit: ms
                 if job.aet > job.p:
                     job.deadline_missed = True
-                job.cons_energy = (dbm_to_w(self.power) * job.b * 1024 * 8) / rate
+                job.cons_energy = (dbm_to_mw(self.power) * job.b * 1024 * 8) / rate
 
-    # TODO: How frequent channel state must be updated?
     def update_channel_state(self):
         self.cg = np.random.rayleigh(scale=self.cg_sigma)
         return self.cg
@@ -53,7 +63,7 @@ class WirelessInterface:
     def get_min_energy(self, task: Task) -> float:
         min_power = self.powers[0]
         rate = self.get_channel_rate() * 1e6  # unit: bps
-        min_energy = (dbm_to_w(min_power) * task.b * 1024 * 8) / rate
+        min_energy = (dbm_to_mw(min_power) * task.b * 1024 * 8) / rate
         return min_energy
 
     def get_rate_bounds(self):
@@ -74,6 +84,12 @@ class WirelessInterface:
 
 class RRLOWirelessInterface(WirelessInterface):
     def __init__(self, w_inter_conf_path):
+        """
+        Wireless interface model used in RRLO algorithm
+
+        Args:
+            w_inter_conf_path (str): path to the wireless interface configuration file
+        """
         super().__init__(w_inter_conf_path)
 
     def offload(self, tasks: Dict[int, Task], power_level: float):
@@ -92,8 +108,12 @@ class RRLOWirelessInterface(WirelessInterface):
                 job.aet += ((job.b * 1024 * 8) / rate) * 1e3  # aet unit: ms
                 if job.aet > job.p:
                     job.deadline_missed = True
-                job.cons_energy = (dbm_to_w(self.power) * job.b * 1024 * 8) / rate
+                job.cons_energy = (dbm_to_mw(self.power) * job.b * 1024 * 8) / rate
 
 
 def dbm_to_w(pow_dbm: float) -> float:
     return (10 ** (pow_dbm / 10)) / 1000
+
+
+def dbm_to_mw(pow_dbm: float) -> float:
+    return 10 ** (pow_dbm / 10)

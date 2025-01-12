@@ -1,3 +1,7 @@
+"""
+Task models used in the iDEAS and RRLO environments
+"""
+
 import copy
 import numpy as np
 import math
@@ -8,6 +12,12 @@ from utils.utils import load_yaml
 
 class Task:
     def __init__(self, specs: Dict[str, Any]):
+        """
+        Execution task model
+
+        Args:
+            specs (Dict[str, Any]): task specifications including period, worst-case execution time, task ID, input data size, and base CPU frequency
+        """
         self.p = specs["p"]  # period time, (ms)
         self.b = specs["b"]  # task input data (KB)
         self.wcet = specs["w"]  # worst-case execution time, (ms)
@@ -47,6 +57,12 @@ class Task:
 
 class TaskGen:
     def __init__(self, task_conf_path):
+        """
+        Task generator class to generate tasks based on the provided configuration file
+
+        Args:
+            task_conf_path (str): path to the task configuration file
+        """
         self.task_set = []
         task_set_conf = load_yaml(task_conf_path)
         for i in range(len(task_set_conf)):
@@ -76,6 +92,13 @@ class TaskGen:
 
 class RandomTaskGen:
     def __init__(self, task_conf_path):
+        """
+        Random task generator class to generate a totally random task
+        based on the parameter values provided in the configuration file
+
+        Args:
+            task_conf_path (str): path to the task configuration file
+        """
         task_set_conf = load_yaml(task_conf_path)
 
         self.num_tasks = task_set_conf["num_tasks"]
@@ -101,6 +124,15 @@ class RandomTaskGen:
         return [copy.deepcopy(task) for _ in range(num_tasks)]
 
     def _gen_base_tasks(self, target_cpu_load, max_task_load):
+        """
+        Generate a tasks that matches the target CPU load (required task load)
+        while considering the task parameters ranges and maximum task load
+        that will be imposed on the system.
+
+        Args:
+            target_cpu_load (float): target CPU load that needs to be achieved
+            max_task_load (float): maximum task load that will be imposed on the system
+        """
         single_task_load = target_cpu_load / self.num_tasks
         self.task_set = []
         raw_p_range = np.arange(0, self.p_max, self.step_p)
@@ -136,6 +168,13 @@ class RandomTaskGen:
 
 class NormalTaskGen:
     def __init__(self, task_conf_path):
+        """
+        Task generator based on normal distribution to generate task sizes. Other
+        parameters are generated randomly based on the provided configuration file and ranges.
+
+        Args:
+            task_conf_path (str): path to the task configuration file
+        """
         task_set_conf = load_yaml(task_conf_path)
 
         self.num_tasks = task_set_conf["num_tasks"]
@@ -160,6 +199,15 @@ class NormalTaskGen:
         return [copy.deepcopy(task) for _ in range(num_tasks)]
 
     def _gen_base_tasks(self, target_cpu_load, mean, max_task_load):
+        """
+        Generate the base task with task size from normal distribution and other parameters
+        uniformly distributed within the provided ranges.
+
+        Args:
+            target_cpu_load (float): target CPU load that needs to be achieved
+            mean (float): mean value of the normal distribution used in task size generation
+            max_task_load (float): maximum task load that will be imposed on the system
+        """
         single_task_load = target_cpu_load / self.num_tasks
         std = 20 / 3
         self.task_set = []
