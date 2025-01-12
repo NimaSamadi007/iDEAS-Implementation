@@ -1,3 +1,7 @@
+"""
+CPU model for iDEAS and RRLO algorithms
+"""
+
 import numpy as np
 import math
 import copy

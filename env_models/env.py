@@ -1,3 +1,7 @@
+"""
+Environment models used in iDEAS and RRLO algorithms
+"""
+
 from typing import Dict, List
 import numpy as np
 import math

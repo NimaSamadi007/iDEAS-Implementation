@@ -1,3 +1,7 @@
+"""
+Edge server (remote) model
+"""
+
 from env_models.task import Task
 
 

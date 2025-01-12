@@ -1,3 +1,7 @@
+"""
+Task models used in the iDEAS and RRLO environments
+"""
+
 import copy
 import numpy as np
 import math

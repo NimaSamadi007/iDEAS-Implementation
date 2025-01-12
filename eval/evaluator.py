@@ -1,3 +1,7 @@
+"""
+Evaluator module to evaluate trained algorithms on different scenarios
+"""
+
 import abc
 import copy
 import numpy as np

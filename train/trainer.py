@@ -1,3 +1,7 @@
+"""
+Trainer module to train algorithms
+"""
+
 import abc
 import numpy as np
 from tqdm import tqdm

@@ -1,3 +1,7 @@
+"""
+RRLO DVFS algorithm implementation
+"""
+
 import numpy as np
 import os
 
