@@ -5,4 +5,4 @@ w: [1, 90]
 b: [100, 500]
 step_p: 40
 step_b: 10
-base_freq: 1820
+base_freq: 2800

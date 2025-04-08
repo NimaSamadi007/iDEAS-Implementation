@@ -135,7 +135,8 @@ class DQN_DVFS:
         self.losses = []
 
         # Training device
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = "cpu"
 
         # Network initialization
         self.net = Network(state_dim, self.act_dim).to(self.device)

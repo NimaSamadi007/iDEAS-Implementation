@@ -74,7 +74,7 @@ def iDEAS_Main(configs):
         if os.path.exists(f"{results_dir}/reward.npy")
         else None
     )
-    if loss and rewards:
+    if loss is not None and rewards is not None:
         plot_loss_and_reward(
             loss,
             rewards,
@@ -86,7 +86,7 @@ def iDEAS_Main(configs):
         )
 
     linspace_values = np.linspace(
-        1, params["max_task_load_eval"], 6
+        1, params["max_task_load_eval"], 7
     )  # Create the desired array with the first value as min_task_load_eval
     cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
     tasksizes = np.round(
@@ -244,7 +244,7 @@ def iDEAS_RRLO(configs):
         if os.path.exists(f"{results_dir}/reward.npy")
         else None
     )
-    if loss and rewards:
+    if loss is not None and rewards is not None:
         plot_loss_and_reward(
             loss,
             rewards,
@@ -256,7 +256,7 @@ def iDEAS_RRLO(configs):
         )
 
     linspace_values = np.linspace(
-        1, params["max_task_load_eval"], 6
+        1, params["max_task_load_eval"], 7
     )  # Create the desired array with the first value as min_task_load_eval
     cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
     tasksizes = np.round(
@@ -450,7 +450,7 @@ def iDEAS_Baseline(configs):
         np.save(f"{results_dir}/reward.npy", rewards)
 
     linspace_values = np.linspace(
-        1, params["max_task_load_eval"], 6
+        1, params["max_task_load_eval"], 7
     )  # Create the desired array with the first value as min_task_load_eval
     cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
     tasksizes = np.round(
