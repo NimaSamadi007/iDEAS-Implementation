@@ -2,7 +2,7 @@
 params:
   train_itr: 1.5e+6 # Number of training iterations
   eval_itr: 10000 # Number of evaluation iterations
-  eval_cycle: 1 # Evaluation cycle at each the algorithm is evaluated eval_itr times
+  eval_cycle: 10 # Evaluation cycle at each the algorithm is evaluated eval_itr times
   do_train: false # Train or not
   do_taskset_eval: true # Taskset evaluation
   do_cpu_load_eval: true # CPU load evaluation
@@ -20,7 +20,7 @@ params:
   min_eps: 0.02 # Minimum epsilon value
   reward_coeff: 0.05 # Reward coefficient to convert penalty to
   deadline_missed_penalty: 2.0e+5 # Penalty for deadline misses
-  latency_energy_coeff: 5.0e-3 # Coefficient to balance latency and energy values
+  latency_energy_coeff: 3.0e-2 # Coefficient to balance latency and energy values
 
   # Eval taskset parameters
   num_tasks: 4 # Number of tasks in the taskset
