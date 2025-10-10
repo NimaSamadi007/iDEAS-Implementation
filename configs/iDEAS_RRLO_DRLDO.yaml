@@ -13,6 +13,7 @@ params:
   # DVFS algorithms parameters
   dqn_state_dim: 5
   rrlo_state_dim: 3
+  drldo_state_dim: 3
   batch_size: 32
   gamma: 0.95
   lr: 5.0e-6

@@ -279,6 +279,124 @@ class HomogenEnv:
         return rewards, penalties, None
 
 
+class DRLDOEnv:
+    def __init__(
+        self,
+        confs: Dict[str, str],
+        cpu_load_bound,
+        wcet_bound,
+        cn_bound,
+    ):
+        """
+        Homogeneous environment with a single CPU and edge server for offloading tasks.
+
+        Args:
+            confs (Dict[str, str]): Environment configurations containing CPU and wireless interface configs
+            cpu_load_bound (List[int]): CPU load bounds (min and max)
+            wcet_bound (List[int]): WCET bounds (min and max)
+            task_size_bound (List[int]): Task size bounds (min and max)
+            cn_bound (List[int]): CN power bounds (min and max)
+
+        Note:
+            Bounds are used for state normalization
+        """
+        self.cpu = CPU(confs["cpus"]["local"])
+        self.w_inter = WirelessInterface(confs["w_inter"])
+        self.w_inter.set_cn_power_bounds(*cn_bound)
+
+        self.state_dim = confs["params"]["drldo_state_dim"]
+
+        # Initialize environment state
+        self._init_state_bounds(cpu_load_bound, wcet_bound)
+        self.curr_tasks = None
+        self.curr_state = None
+
+    def step(self, actions: Dict[str, List[int]]):
+        if len(actions["local"]):
+            self.cpu.step(self.curr_tasks, actions["local"])
+        if len(actions["offload"]):
+            self.w_inter.offload(self.curr_tasks, actions["offload"])
+
+        return self._cal_reward()
+
+    def observe(self, tasks):
+        self.curr_tasks = tasks
+        self.curr_state = self._get_system_state()
+        is_final = len(self.curr_tasks) * [False]
+
+        return self.curr_state, is_final
+
+    def get_action_space(self):
+        action_space = {"offload": self.w_inter.powers, "local": self.cpu.freqs}
+        return action_space
+
+    def _init_state_bounds(
+        self, cpu_load_bound, wcet_bound
+    ):
+        # (SU, U_local, WCET)
+        self.min_state_vals = np.array(
+            [
+                cpu_load_bound[0],
+                cpu_load_bound[0],
+                wcet_bound[0],
+            ],
+            dtype=float,
+        )
+        self.max_state_vals = np.array(
+            [
+                cpu_load_bound[1],
+                cpu_load_bound[1],
+                wcet_bound[1],
+            ],
+            dtype=float,
+        )
+
+    def _get_system_state(self):
+        # Update channel status when we are observing environment
+        self.w_inter.update_channel_state()
+
+        # States: (SU, U_local, WCET)
+        states = np.zeros((len(self.curr_tasks), self.state_dim), dtype=np.float32)
+        su = 0.0
+        for i, task in enumerate(self.curr_tasks.values()):
+            su += task[0].wcet / task[0].p
+            states[i, 2] = task[0].wcet
+        states[:, 0] = su
+        states[:, 1] = self.cpu.util
+
+        # Clip the state values
+        for i in range(states.shape[1]):
+            states[:, i] = np.clip(
+                states[:, i],
+                np.full(states[:, i].shape, self.min_state_vals[i]),
+                np.full(states[:, i].shape, self.max_state_vals[i]),
+            )
+
+        states = (states - self.min_state_vals) / (
+            self.max_state_vals - self.min_state_vals
+        )
+        return states
+
+    def _cal_reward(self):
+        penalties = []
+        for task in self.curr_tasks.values():
+            penalty = 0
+            for job in task:
+                # Calculate last execution penalty
+                if job.deadline_missed:
+                    penalty += self.deadline_missed_penalty
+                else:
+                    penalty += job.cons_energy
+
+            if penalty / len(task) > self.deadline_missed_penalty:
+                raise ValueError(f"Penalty {penalty / len(task)} excceds {self.deadline_missed_penalty}")
+            penalties.append(penalty / len(task))
+
+        # Calculate reward
+        penalties = np.asarray(penalties, dtype=float)
+        rewards = -self.penalties
+        return rewards, penalties, None
+
 class RRLOEnv:
     def __init__(self, confs: Dict[str, str]):
         """

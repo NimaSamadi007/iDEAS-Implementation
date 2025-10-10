@@ -17,7 +17,7 @@ from utils.utils import (
     load_yaml,
 )
 
-from train.trainer import iDEAS_MainTrainer, iDEAS_RRLOTrainer
+from train.trainer import iDEAS_MainTrainer, iDEAS_RRLO_DRLDOTrainer
 from eval.evaluator import (
     iDEAS_MainEvaluator,
     iDEAS_RRLOEvaluator,
@@ -191,7 +191,7 @@ def iDEAS_Main(configs):
         stack_bar_res(alg_set, mean_result, *plot_infos[scenario])
 
 
-def iDEAS_RRLO(configs):
+def iDEAS_RRLO_DRLDO(configs):
     """
     iDEAS comparison with RRLO scenario which evaluates iDEAS performance
     compared to RLLO
@@ -204,10 +204,10 @@ def iDEAS_RRLO(configs):
     """
     params = configs["params"]
     num_eval_cycles = params["eval_cycle"]
-    results_dir = "results/ideas_rrlo"
+    results_dir = "results/ideas_rrlo_drldo"
 
     if params["do_train"]:
-        trainer = iDEAS_RRLOTrainer(configs)
+        trainer = iDEAS_RRLO_DRLDOTrainer(configs)
         dqn_loss, rewards = trainer.run()
         dqn_loss = np.array(dqn_loss)
         rewards = np.array([reward["ideas"] for reward in rewards])
@@ -579,8 +579,8 @@ if __name__ == "__main__":
     configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
     iDEAS_Main(configs_ideas_main)
 
-    configs_ideas_rrlo = load_yaml("./configs/iDEAS_RRLO.yaml")
-    iDEAS_RRLO(configs_ideas_rrlo)
+    configs_ideas_rrlo = load_yaml("./configs/iDEAS_RRLO_DRLDO.yaml")
+    iDEAS_RRLO_DRLDO(configs_ideas_rrlo)
 
     configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
     iDEAS_Baseline(configs_ideas_baseline)

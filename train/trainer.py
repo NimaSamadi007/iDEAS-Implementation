@@ -8,7 +8,7 @@ from tqdm import tqdm
 import copy
 import os
 
-from env_models.env import HetrogenEnv, HomogenEnv, RRLOEnv
+from env_models.env import HetrogenEnv, HomogenEnv, DRLDOEnv, RRLOEnv
 from env_models.task import RandomTaskGen
 from dvfs.dqn_dvfs import DQN_DVFS
 from dvfs.rrlo_dvfs import RRLO_DVFS
@@ -188,7 +188,7 @@ class iDEAS_MainTrainer(Trainer):
         self.alg.save_model("models/iDEAS_Main")
 
 
-class iDEAS_RRLOTrainer(Trainer):
+class iDEAS_RRLO_DRLDOTrainer(Trainer):
     def _init_envs(self):
         self.ideas_env = HomogenEnv(
             self.configs,
@@ -197,12 +197,29 @@ class iDEAS_RRLOTrainer(Trainer):
             self.task_gen.get_task_size_bound(),
             [self.cn_values[0], self.cn_values[-1]],
         )
+        self.drldo_env = DRLDOEnv(
+            self.configs,
+            [self.min_task_load, self.max_task_load],
+            self.task_gen.get_wcet_bound(),
+            [self.cn_values[0], self.cn_values[-1]],
+        )
         self.rrlo_env = RRLOEnv(self.configs)
 
     def _init_algs(self):
         self.ideas_dvfs = DQN_DVFS(
             state_dim=self.params["dqn_state_dim"],
             act_space=self.ideas_env.get_action_space(),
+            batch_size=self.params["batch_size"],
+            gamma=self.params["gamma"],
+            mem_size=self.params["mem_size"],
+            update_target_net=self.params["update_target_net"],
+            eps_decay=self.params["eps_decay"],
+            min_eps=self.params["min_eps"],
+            lr=self.params["lr"],
+        )
+        self.drldo_dvfs = DQN_DVFS(
+            state_dim=self.params["drldo_state_dim"],
+            act_space=self.drldo_env.get_action_space(),
             batch_size=self.params["batch_size"],
             gamma=self.params["gamma"],
             mem_size=self.params["mem_size"],
@@ -226,12 +243,17 @@ class iDEAS_RRLOTrainer(Trainer):
         target_cpu_load = np.random.choice(self.cpu_load_values)
         cn = np.random.choice(self.cn_values)
         self.ideas_env.w_inter.set_cn(cn)
+        self.drldo_env.w_inter.set_cn(cn)
         self.rrlo_env.w_inter.set_cn(cn)
         self.tasks = self.task_gen.step(target_cpu_load, self.max_task_load)
 
         states_tmp, is_final_tmp = self.ideas_env.observe(copy.deepcopy(self.tasks))
         states["ideas"] = states_tmp
         is_final["ideas"] = is_final_tmp
+
+        states_tmp, _ = self.drldo_env.observe(copy.deepcopy(self.tasks))
+        states["drldo"] = states_tmp
+        is_final["drldo"] = is_final_tmp
 
         states_tmp, _ = self.rrlo_env.observe(copy.deepcopy(self.tasks))
         states["rrlo"] = states_tmp
@@ -248,17 +270,24 @@ class iDEAS_RRLOTrainer(Trainer):
         actions_ideas_raw = self.ideas_dvfs.execute(states["ideas"])
         actions_ideas_str = self.ideas_dvfs.conv_acts(actions_ideas_raw)
 
+        actions_drldo_raw = self.drldo_dvfs.execute(states["drldo"])
+        actions_drldo_str = self.drldo_dvfs.conv_acts(actions_drldo_raw)
+
         actions_rrlo_str, actions_rrlo_raw = self.rrlo_dvfs.execute(states["rrlo"])
 
         actions = {
             "ideas": {"raw": actions_ideas_raw, "str": actions_ideas_str},
+            "drldo": {"raw": actions_drldo_raw, "str": actions_drldo_str},
             "rrlo": {"raw": actions_rrlo_raw, "str": actions_rrlo_str},
         }
         return actions
 
     def _step_envs(self, actions):
-        rewards_ideas, penalites, _ = self.ideas_env.step(
+        rewards_ideas, ideas_penalites, _ = self.ideas_env.step(
             actions["ideas"]["str"]
+        )
+        rewards_drldo, drldo_penalties, _ = self.drldo_env.step(
+            actions["drldo"]["str"]
         )
         penalty_rrlo = self.rrlo_env.step(actions["rrlo"]["str"])
 
@@ -266,8 +295,10 @@ class iDEAS_RRLOTrainer(Trainer):
         # it in 'rewrads' variable may be misleading
         rewards = {
             "ideas": rewards_ideas,
+            "drldo": rewards_drldo,
             "rrlo": penalty_rrlo,
-            "ideas_penalty": penalites,
+            "ideas_penalty": ideas_penalites,
+            "drldo_penalty": drldo_penalties,
         }
         return rewards
 
@@ -278,6 +309,13 @@ class iDEAS_RRLOTrainer(Trainer):
             rewards["ideas"],
             next_states["ideas"],
             is_final["ideas"],
+        )
+        loss_drldo = self.drldo_dvfs.train(
+            states["drldo"],
+            actions["drldo"]["raw"],
+            rewards["drldo"],
+            next_states["drldo"],
+            is_final["drldo"],
         )
         # This is misleading but we are actually passing penalty, not reward
         # for RRLO
@@ -291,8 +329,11 @@ class iDEAS_RRLOTrainer(Trainer):
         return loss_ideas
 
     def _save_algs(self):
-        os.makedirs("models/iDEAS_RRLO", exist_ok=True)
-        self.ideas_dvfs.save_model("models/iDEAS_RRLO")
+        os.makedirs("models/iDEAS_RRLO_DRLDO", exist_ok=True)
+        self.ideas_dvfs.save_model("models/iDEAS_RRLO_DRLDO")
 
-        os.makedirs("models/iDEAS_RRLO", exist_ok=True)
-        self.rrlo_dvfs.save_model("models/iDEAS_RRLO")
+        os.makedirs("models/iDEAS_RRLO_DRLDO", exist_ok=True)
+        self.drldo_dvfs.save_model("models/iDEAS_RRLO_DRLDO")
+
+        os.makedirs("models/iDEAS_RRLO_DRLDO", exist_ok=True)
+        self.rrlo_dvfs.save_model("models/iDEAS_RRLO_DRLDO")
