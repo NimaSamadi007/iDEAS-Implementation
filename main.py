@@ -89,6 +89,7 @@ def iDEAS_Main(configs):
         1, params["max_task_load_eval"], 7
     )  # Create the desired array with the first value as min_task_load_eval
     cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
+    cpuloads= np.ceil(cpuloads * 2) / 2
     tasksizes = np.round(
         np.linspace(params["min_task_size"], params["max_task_size"], 10)
     )
@@ -133,7 +134,7 @@ def iDEAS_Main(configs):
             "iDEAS_Main_fixed_taskset_drop",
         ],
         "varied_cpuload_energy": [
-            cpuloads,
+            cpuloads/4.0,
             "Utilization",
             "Energy Consumption (mJ) ",
             "Energy Consumption Levels for Different Utilization",
@@ -141,7 +142,7 @@ def iDEAS_Main(configs):
             True,
         ],
         "varied_cpuload_drop": [
-            cpuloads,
+            cpuloads/4.0,
             "Utilization",
             "Dropped Tasks (\%) ",
             "Dropped Tasks levels for Different Task Loads",
@@ -259,6 +260,7 @@ def iDEAS_RRLO_DRLDO(configs):
         1, params["max_task_load_eval"], 7
     )  # Create the desired array with the first value as min_task_load_eval
     cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
+    cpuloads= np.ceil(cpuloads * 2) / 2
     tasksizes = np.round(
         np.linspace(params["min_task_size"], params["max_task_size"], 10)
     )
@@ -298,7 +300,7 @@ def iDEAS_RRLO_DRLDO(configs):
             "iDEAS_RRLO_fixed_taskset_drop",
         ],
         "varied_cpuload_energy": [
-            cpuloads,
+            cpuloads/4.0,
             "Utilization",
             "Energy Consumption (mJ)",
             "Energy Consumption of Different Single Core Schemes With Respect to Various Utilization",
@@ -308,7 +310,7 @@ def iDEAS_RRLO_DRLDO(configs):
             False,
         ],
         "varied_cpuload_drop": [
-            cpuloads,
+            cpuloads/4.0,
             "Utilization",
             "Dropped Tasks (\%) ",
             "Dropped Tasks of Different Baseline Single Core Scheme With Respect to Various Utilization",
@@ -453,6 +455,7 @@ def iDEAS_Baseline(configs):
         1, params["max_task_load_eval"], 7
     )  # Create the desired array with the first value as min_task_load_eval
     cpuloads = np.insert(linspace_values, 0, params["min_task_load_eval"])
+    cpuloads= np.ceil(cpuloads * 2) / 2
     tasksizes = np.round(
         np.linspace(params["min_task_size"], params["max_task_size"], 10)
     )
@@ -494,7 +497,7 @@ def iDEAS_Baseline(configs):
             "iDEAS_Baseline_fixed_taskset_drop",
         ],
         "varied_cpuload_energy": [
-            cpuloads,
+            cpuloads/4.0,
             "Utilization",
             "Energy Consumption (mJ)",
             "Energy Consumption of Different big.LITTLE Schemes With Respect to Various Utilization",
@@ -503,7 +506,7 @@ def iDEAS_Baseline(configs):
             True,
         ],
         "varied_cpuload_drop": [
-            cpuloads,
+            cpuloads/4.0,
             "Utilization",
             "Dropped Tasks (\%) ",
             "Dropped Tasks of Different Baseline big.LITTLE Scheme With Respect to Various Utilization",
