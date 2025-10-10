@@ -6,7 +6,7 @@ params:
   do_train: false   # Train or not
   do_taskset_eval: true   # Taskset evaluation
   do_cpu_load_eval: true
-  do_task_size_eval: true 
+  do_task_size_eval: true
   do_channel_eval: false
 
   # DVFS algorithms parameters

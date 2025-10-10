@@ -410,12 +410,7 @@ def stack_bar_res(
     fig.savefig(file_path2, format="eps")
 
 
-def print_improvement(alg_set, improvements_task1, improvements_task2, num1, num2):
-    if len(improvements_task1) != num1 or len(improvements_task2) != num2:
-        raise ValueError(
-            f" input 1 array should contain exactly {num1} elements and input 2 array should contain exactly {num2} elements."
-        )
-
+def print_improvement(alg_set, improvements_task1, improvements_task2):
     # Prepare data for the table
     table_data = [
         [alg, f"{imp1:.2f}%", f"{imp2:.2f}%"]

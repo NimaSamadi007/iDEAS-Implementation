@@ -63,6 +63,9 @@ class Trainer(abc.ABC):
                 )
                 tqdm.write(f"iDEAS Reward:{str(rewards['ideas'])}")
                 tqdm.write(f"Actions iDEAS: {str(actions['ideas']['str'])}")
+                if 'drldo' in rewards:
+                    tqdm.write(f"DRLDO Reward:{str(rewards['drldo'])}")
+                    tqdm.write(f"Actions DRLDO: {str(actions['drldo']['str'])}")
                 if 'rrlo' in rewards:
                     tqdm.write(f"RRLO Penalty:{str(rewards['rrlo'])}")
 
@@ -144,6 +147,7 @@ class iDEAS_MainTrainer(Trainer):
 
     def _init_algs(self):
         self.alg = DQN_DVFS(
+            model_name="ideas_dqn",
             state_dim=self.params["dqn_state_dim"],
             act_space=self.env.get_action_space(),
             batch_size=self.params["batch_size"],
@@ -207,6 +211,7 @@ class iDEAS_RRLO_DRLDOTrainer(Trainer):
 
     def _init_algs(self):
         self.ideas_dvfs = DQN_DVFS(
+            model_name="ideas_dqn",
             state_dim=self.params["dqn_state_dim"],
             act_space=self.ideas_env.get_action_space(),
             batch_size=self.params["batch_size"],
@@ -218,6 +223,7 @@ class iDEAS_RRLO_DRLDOTrainer(Trainer):
             lr=self.params["lr"],
         )
         self.drldo_dvfs = DQN_DVFS(
+            model_name="drldo_dqn",
             state_dim=self.params["drldo_state_dim"],
             act_space=self.drldo_env.get_action_space(),
             batch_size=self.params["batch_size"],

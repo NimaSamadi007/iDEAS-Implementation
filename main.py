@@ -20,7 +20,7 @@ from utils.utils import (
 from train.trainer import iDEAS_MainTrainer, iDEAS_RRLO_DRLDOTrainer
 from eval.evaluator import (
     iDEAS_MainEvaluator,
-    iDEAS_RRLOEvaluator,
+    iDEAS_RRLO_DRLDOEvaluator,
     iDEAS_BaselineEvaluator,
 )
 
@@ -276,7 +276,7 @@ def iDEAS_RRLO_DRLDO(configs):
     np.save(f"{results_dir}/cns.npy", cns)
     all_results = {}
     for i in range(num_eval_cycles):
-        evaluator = iDEAS_RRLOEvaluator(configs, cpuloads, tasksizes, cns)
+        evaluator = iDEAS_RRLO_DRLDOEvaluator(configs, cpuloads, tasksizes, cns)
         result = evaluator.run()
 
         for scenario in result:
@@ -291,20 +291,20 @@ def iDEAS_RRLO_DRLDO(configs):
         "fixed_taskset_energy": [
             "Energy Consumption (mJ)",
             "Energy Consumption of Different Baseline Single Core Schemes",
-            "iDEAS_RRLO_fixed_taskset_energy",
+            "iDEAS_RRLO_DRLDO_fixed_taskset_energy",
             True,
         ],
         "fixed_taskset_drop": [
             "Dropped Tasks (\%) ",
             "Dropped Tasks of Different Baseline Single Core Schemes  ",
-            "iDEAS_RRLO_fixed_taskset_drop",
+            "iDEAS_RRLO_DRLDO_fixed_taskset_drop",
         ],
         "varied_cpuload_energy": [
             cpuloads/4.0,
             "Utilization",
             "Energy Consumption (mJ)",
             "Energy Consumption of Different Single Core Schemes With Respect to Various Utilization",
-            "iDEAS_RRLO_varied_cpuload_energy",
+            "iDEAS_RRLO_DRLDO_varied_cpuload_energy",
             None,
             True,
             False,
@@ -314,7 +314,7 @@ def iDEAS_RRLO_DRLDO(configs):
             "Utilization",
             "Dropped Tasks (\%) ",
             "Dropped Tasks of Different Baseline Single Core Scheme With Respect to Various Utilization",
-            "iDEAS_RRLO_varied_cpuload_drop",
+            "iDEAS_RRLO_DRLDO_varied_cpuload_drop",
             None,
             False,
             False,
@@ -324,7 +324,7 @@ def iDEAS_RRLO_DRLDO(configs):
             "Task Size(KB)",
             "Energy Consumption (mJ)",
             "Energy Consumption of Different Single Core Schemes With Respect to Various Task Sizes",
-            "iDEAS_RRLO_varied_tasksize_energy",
+            "iDEAS_RRLO_DRLDO_varied_tasksize_energy",
             None,
             True,
             False,
@@ -334,7 +334,7 @@ def iDEAS_RRLO_DRLDO(configs):
             "Task Size (KB)",
             "Dropped Tasks (\%) ",
             "Dropped Tasks of Different Baseline Single Core Scheme With Respect to Various Task Sizes",
-            "iDEAS_RRLO_varied_tasksize_drop",
+            "iDEAS_RRLO_DRLDO_varied_tasksize_drop",
             None,
             False,
             False,
@@ -344,7 +344,7 @@ def iDEAS_RRLO_DRLDO(configs):
             "Channel Noise",
             "Energy Consumption (mJ)",
             "Energy Consumption of Different Single Core Schemes With Respect to Various Channel Noises",
-            "iDEAS_RRLO_varied_channel_energy",
+            "iDEAS_RRLO_DRLDO_varied_channel_energy",
             None,
             True,
             True,
@@ -354,15 +354,15 @@ def iDEAS_RRLO_DRLDO(configs):
             "Channel Noise",
             "Dropped Tasks (\%) ",
             "Dropped Tasks of Different Baseline Single Core Scheme With Respect to Various Channel Noises",
-            "iDEAS_RRLO_varied_channel_drop",
+            "iDEAS_RRLO_DRLDO_varied_channel_drop",
             None,
             False,
             True,
         ],
     }
 
-    alg_set = ["RRLO", "iDEAS"]
-    alg_set2 = ["RRLO"]
+    alg_set = ["RRLO", "iDEAS", "DRLDO"]
+    alg_set2 = ["RRLO", "DRLDO"]
     for scenario in plot_infos:
         if scenario in all_results:
             mean_values = np.mean(all_results[scenario], axis=0)
@@ -387,25 +387,27 @@ def iDEAS_RRLO_DRLDO(configs):
     energy_vals = all_results["fixed_taskset_energy"]
     rrlo_energy = energy_vals[:, 0, :]
     ideas_energy = energy_vals[:, 1, :]
+    drldo_energy = energy_vals[:, 2, :]
 
     rrlo_improvement = (ideas_energy - rrlo_energy) / rrlo_energy * 100
+    drldo_improvement = (ideas_energy - drldo_energy) / drldo_energy * 100
 
     taskset_improvement = np.stack(
-        [rrlo_improvement],
+        [rrlo_improvement, drldo_improvement],
         axis=1,
     )
     improvement_eval = np.mean(taskset_improvement, axis=0)
 
-    with open("results/RRLO.text", "w") as file:
+    with open("results/RRLO_DRLDO.txt", "w") as file:
         file.write(
             print_improvement(
-                alg_set2, improvement_eval[:, 0], improvement_eval[:, 1], 1, 1
+                alg_set2, improvement_eval[:, 0], improvement_eval[:, 1]
             )
         )
     print("iDEAS energy consumption improvements:")
     print(
         print_improvement(
-            alg_set2, improvement_eval[:, 0], improvement_eval[:, 1], 1, 1
+            alg_set2, improvement_eval[:, 0], improvement_eval[:, 1]
         )
     )
 
@@ -579,11 +581,11 @@ def iDEAS_Baseline(configs):
 
 
 if __name__ == "__main__":
-    configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
-    iDEAS_Main(configs_ideas_main)
+    # configs_ideas_main = load_yaml("./configs/iDEAS_Main.yaml")
+    # iDEAS_Main(configs_ideas_main)
 
     configs_ideas_rrlo = load_yaml("./configs/iDEAS_RRLO_DRLDO.yaml")
     iDEAS_RRLO_DRLDO(configs_ideas_rrlo)
 
-    configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
-    iDEAS_Baseline(configs_ideas_baseline)
+    # configs_ideas_baseline = load_yaml("./configs/iDEAS_Baseline.yaml")
+    # iDEAS_Baseline(configs_ideas_baseline)

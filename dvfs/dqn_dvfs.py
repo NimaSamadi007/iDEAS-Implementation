@@ -96,6 +96,7 @@ class ReplayBuffer:
 class DQN_DVFS:
     def __init__(
         self,
+        model_name,
         state_dim: int,
         act_space: Dict[str, List],
         mem_size: int = 1000,
@@ -111,6 +112,7 @@ class DQN_DVFS:
     ):
         # Parameters
         self.state_dim = state_dim
+        self.model_name = model_name
 
         self.act_space = act_space
         self.act_type_boundry = []
@@ -213,16 +215,16 @@ class DQN_DVFS:
         Save trained model to the provided path
         """
         os.makedirs(path, exist_ok=True)
-        torch.save(self.net.state_dict(), f"{path}/dqn_model.pt")
+        torch.save(self.net.state_dict(), f"{path}/{self.model_name}.pt")
 
     def load_model(self, path: str):
         """
         Load pretrained model from the provided path
         """
-        if os.path.exists(f"{path}/dqn_model.pt"):
-            self.net.load_state_dict(torch.load(f"{path}/dqn_model.pt", weights_only=True))
+        if os.path.exists(f"{path}/{self.model_name}.pt"):
+            self.net.load_state_dict(torch.load(f"{path}/{self.model_name}.pt", weights_only=True))
         else:
-            print(f"Model {path}/dqn_model.pt does not exist!")
+            print(f"Model {path}/{self.model_name}.pt does not exist!")
 
     def _compute_net_loss(self, samples: Dict[str, np.ndarray]) -> torch.Tensor:
         state = torch.FloatTensor(samples["state"]).to(self.device)

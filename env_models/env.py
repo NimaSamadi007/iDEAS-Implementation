@@ -305,6 +305,7 @@ class DRLDOEnv:
         self.w_inter.set_cn_power_bounds(*cn_bound)
 
         self.state_dim = confs["params"]["drldo_state_dim"]
+        self.deadline_missed_penalty = confs["params"]["deadline_missed_penalty"]
 
         # Initialize environment state
         self._init_state_bounds(cpu_load_bound, wcet_bound)
@@ -394,7 +395,7 @@ class DRLDOEnv:
 
         # Calculate reward
         penalties = np.asarray(penalties, dtype=float)
-        rewards = -self.penalties
+        rewards = -penalties
         return rewards, penalties, None
 
 class RRLOEnv:

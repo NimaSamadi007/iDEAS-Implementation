@@ -7,7 +7,7 @@ import copy
 import numpy as np
 from tqdm import tqdm
 
-from env_models.env import HetrogenEnv, HomogenEnv, RRLOEnv
+from env_models.env import HetrogenEnv, HomogenEnv, DRLDOEnv, RRLOEnv
 from env_models.task import TaskGen, NormalTaskGen, RandomTaskGen
 from dvfs.dqn_dvfs import DQN_DVFS
 from dvfs.rrlo_dvfs import RRLO_DVFS
@@ -354,6 +354,7 @@ class iDEAS_MainEvaluator(Evaluator):
 
     def _init_algs(self):
         dqn_dvfs = DQN_DVFS(
+            model_name="ideas_dqn",
             state_dim=self.params["dqn_state_dim"],
             act_space=self.envs["ideas"].get_action_space(),
         )
@@ -370,7 +371,7 @@ class iDEAS_MainEvaluator(Evaluator):
         return {"ideas": actions_str}
 
 
-class iDEAS_RRLOEvaluator(Evaluator):
+class iDEAS_RRLO_DRLDOEvaluator(Evaluator):
     def _init_envs(self):
         envs = {}
         env_temp = HomogenEnv(
@@ -380,17 +381,32 @@ class iDEAS_RRLOEvaluator(Evaluator):
             self.task_gen.get_task_size_bound(),
             [self.cn_values[0], self.cn_values[-1]],
         )
+        env_temp_2 = DRLDOEnv(
+            self.configs,
+            [self.min_task_load, self.max_task_load],
+            self.task_gen.get_wcet_bound(),
+            [self.cn_values[0], self.cn_values[-1]],
+        )
         envs["rrlo"] = RRLOEnv(self.configs)
         envs["ideas"] = copy.deepcopy(env_temp)
+        envs["drldo"] = copy.deepcopy(env_temp_2)
 
         return envs
 
     def _init_algs(self):
         dqn_dvfs = DQN_DVFS(
+            model_name="ideas_dqn",
             state_dim=self.params["dqn_state_dim"],
             act_space=self.envs["ideas"].get_action_space(),
         )
-        dqn_dvfs.load_model("models/iDEAS_RRLO")
+        dqn_dvfs.load_model("models/iDEAS_RRLO_DRLDO")
+
+        drldo_dvfs = DQN_DVFS(
+            model_name="drldo_dqn",
+            state_dim=self.params["drldo_state_dim"],
+            act_space=self.envs["drldo"].get_action_space(),
+        )
+        drldo_dvfs.load_model("models/iDEAS_RRLO_DRLDO")
 
         rrlo_dvfs = RRLO_DVFS(
             state_bounds=self.envs["rrlo"].get_state_bounds(),
@@ -399,11 +415,12 @@ class iDEAS_RRLOEvaluator(Evaluator):
             dvfs_algs=["cc", "la"],
             num_tasks=self.num_tasks,
         )
-        rrlo_dvfs.load_model("models/iDEAS_RRLO")
+        rrlo_dvfs.load_model("models/iDEAS_RRLO_DRLDO")
 
         return {
             "rrlo": rrlo_dvfs,
             "ideas": dqn_dvfs,
+            "drldo": drldo_dvfs,
         }
 
     def _init_results_container(self, scenario):
@@ -421,10 +438,12 @@ class iDEAS_RRLOEvaluator(Evaluator):
         # 0: energy, 1: num_tasks, 2: missed deadline
         ideas_stat = np.zeros((3, self.num_tasks, self.num_results_item))
         rrlo_stat = np.zeros((3, self.num_tasks, self.num_results_item))
+        drldo_stat = np.zeros((3, self.num_tasks, self.num_results_item))
 
         self.raw_results = {
             "rrlo": rrlo_stat,
-            "ideas": ideas_stat
+            "ideas": ideas_stat,
+            "drldo": drldo_stat,
         }
 
     def _process_results(self, idx):
@@ -461,23 +480,27 @@ class iDEAS_RRLOEvaluator(Evaluator):
     def _observe(self, tasks):
         ideas_state, _ = self.envs["ideas"].observe(copy.deepcopy(tasks))
         rrlo_state, _ = self.envs["rrlo"].observe(copy.deepcopy(tasks))
+        drldo_state, _ = self.envs["drldo"].observe(copy.deepcopy(tasks))
 
-        return {"ideas": ideas_state, "rrlo": rrlo_state}
+        return {"ideas": ideas_state, "rrlo": rrlo_state, "drldo": drldo_state}
 
     def _run_algs(self, states):
-        actions_raw = self.algs["ideas"].execute(states["ideas"], eval_mode=True)
-        actions_str = self.algs["ideas"].conv_acts(actions_raw)
+        actions_ideas_raw = self.algs["ideas"].execute(states["ideas"], eval_mode=True)
+        actions_ideas_str = self.algs["ideas"].conv_acts(actions_ideas_raw)
+        actions_drldo_raw = self.algs["drldo"].execute(states["drldo"], eval_mode=True)
+        actions_drldo_str = self.algs["drldo"].conv_acts(actions_drldo_raw)
         actions_rrlo, _ = self.algs["rrlo"].execute(states["rrlo"], eval_mode=True)
 
         actions = {
             "rrlo": actions_rrlo,
-            "ideas": actions_str
+            "drldo": actions_drldo_str,
+            "ideas": actions_ideas_str,
         }
 
         return actions
 
 
-class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
+class iDEAS_BaselineEvaluator(iDEAS_RRLO_DRLDOEvaluator):
     def _init_envs(self):
         envs = {}
         env_temp = HetrogenEnv(
@@ -496,6 +519,7 @@ class iDEAS_BaselineEvaluator(iDEAS_RRLOEvaluator):
 
     def _init_algs(self):
         dqn_dvfs = DQN_DVFS(
+            model_name="ideas_dqn",
             state_dim=self.params["dqn_state_dim"],
             act_space=self.envs["ideas"].get_action_space(),
         )
