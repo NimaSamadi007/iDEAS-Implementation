@@ -232,7 +232,7 @@ class iDEAS_RRLO_DRLDOTrainer(Trainer):
             update_target_net=self.params["update_target_net"],
             eps_decay=self.params["eps_decay"],
             min_eps=self.params["min_eps"],
-            lr=self.params["lr"],
+            lr=self.params["lr_drldo"],
         )
         self.rrlo_dvfs = RRLO_DVFS(
             state_bounds=self.rrlo_env.get_state_bounds(),
