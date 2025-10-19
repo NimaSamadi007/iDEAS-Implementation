@@ -32,7 +32,7 @@ def moving_avg(arr, n):
 def plot_loss_function(losses, alg, xlabel, ylabel, fig_name):
     plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = False
+    plt.rcParams["text.usetex"] = True
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
     file_path1 = f"results/{fig_name}.pdf"
@@ -69,7 +69,7 @@ def plot_loss_function(losses, alg, xlabel, ylabel, fig_name):
 def plot_all_rewards(all_rewards, alg, xlabel, ylabel, fig_name):
     plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = False
+    plt.rcParams["text.usetex"] = True
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
     file_path1 = f"results/{fig_name}.pdf"
@@ -113,7 +113,7 @@ def plot_all_rewards(all_rewards, alg, xlabel, ylabel, fig_name):
 def plot_loss_and_reward(losses, rewards, alg, xlabel, ylabel1, ylabel2, fig_name):
     plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = False
+    plt.rcParams["text.usetex"] = True
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
     file_path1 = f"results/{fig_name}.pdf"
@@ -173,7 +173,7 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel, title, fig_name, ylog=
     # Positioning of bars on x-axis
     plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = False
+    plt.rcParams["text.usetex"] = True
     ind = range(len(alg_set))
     # Plotting both tasksets
     os.makedirs("results", exist_ok=True)
@@ -227,7 +227,7 @@ def line_plot_res(
     # Positioning of bars on x-axis
     plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = False
+    plt.rcParams["text.usetex"] = True
     _ = range(len(alg_set))
     colors = ListedColormap(
         [
@@ -309,7 +309,7 @@ def stack_bar_res(
     # Positioning of bars on x-axis
     plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = False
+    plt.rcParams["text.usetex"] = True
 
     colors = ListedColormap(
         [
