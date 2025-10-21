@@ -16,6 +16,7 @@ params:
   drldo_state_dim: 3
   batch_size: 32
   gamma: 0.95
+  drldo_gamma: 0.85
   lr: 5.0e-6
   lr_drldo: 7.5e-4
   mem_size: 10000
