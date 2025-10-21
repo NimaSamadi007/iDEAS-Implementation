@@ -39,7 +39,7 @@ class Task:
 
     def gen_aet(self, curr_freq=None):
         if self.aet == -1:  # AET has not generated before
-            self.aet = np.random.uniform(self.wcet / 2, self.wcet)
+            self.aet = np.random.uniform(self.wcet / 2, self.wcet) #self.wcet / 2
         # Scale AET and executed time based on the current CPU freq
         # No scaling is required if curr_freq is not provided as task is represented
         # in base_freq

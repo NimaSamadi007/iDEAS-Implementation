@@ -30,12 +30,13 @@ def moving_avg(arr, n):
 
 
 def plot_loss_function(losses, alg, xlabel, ylabel, fig_name):
-    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = True
+    plt.rcParams["text.usetex"] = False
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
     file_path1 = f"results/{fig_name}.pdf"
+    file_path2 = f"results/{fig_name}.eps"
 
     colors = ListedColormap(
         [
@@ -62,15 +63,17 @@ def plot_loss_function(losses, alg, xlabel, ylabel, fig_name):
     plt.grid(True)
     fig.savefig(file_path)
     fig.savefig(file_path1, format="pdf")
+    fig.savefig(file_path2, format="eps")
 
 
 def plot_all_rewards(all_rewards, alg, xlabel, ylabel, fig_name):
-    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = True
+    plt.rcParams["text.usetex"] = False
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
     file_path1 = f"results/{fig_name}.pdf"
+    file_path2 = f"results/{fig_name}.eps"
 
     colors = ListedColormap(
         [
@@ -105,15 +108,16 @@ def plot_all_rewards(all_rewards, alg, xlabel, ylabel, fig_name):
     plt.grid(True)
     fig.savefig(file_path)
     fig.savefig(file_path1, format="pdf")
-
+    fig.savefig(file_path2, format="eps")
 
 def plot_loss_and_reward(losses, rewards, alg, xlabel, ylabel1, ylabel2, fig_name):
-    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = True
+    plt.rcParams["text.usetex"] = False
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
     file_path1 = f"results/{fig_name}.pdf"
+    file_path2 = f"results/{fig_name}.eps"
 
     mean_all_rewards = np.mean(rewards[:, :4], axis=1)
     colors = ListedColormap(
@@ -160,20 +164,22 @@ def plot_loss_and_reward(losses, rewards, alg, xlabel, ylabel1, ylabel2, fig_nam
     plt.grid(True)
     fig.savefig(file_path)
     fig.savefig(file_path1, format="pdf")
+    fig.savefig(file_path2, format="eps")
 
 
 def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel, title, fig_name, ylog=False):
     # Data for plotting
 
     # Positioning of bars on x-axis
-    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = True
+    plt.rcParams["text.usetex"] = False
     ind = range(len(alg_set))
     # Plotting both tasksets
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
     file_path1 = f"results/{fig_name}.pdf"
+    file_path2 = f"results/{fig_name}.eps"
     fig = plt.figure(figsize=(20, 12))
     plt.bar(ind, taskset1, width=0.5 * 0.4, label=r"Task set I", color="#17becf")
     plt.bar(
@@ -201,6 +207,7 @@ def plot_res(alg_set, taskset1, taskset2, xlabel, ylabel, title, fig_name, ylog=
     plt.grid(True)
     fig.savefig(file_path)
     fig.savefig(file_path1, format="pdf")
+    fig.savefig(file_path2, format="eps")
 
 
 def line_plot_res(
@@ -218,9 +225,9 @@ def line_plot_res(
     # Data for plotting
 
     # Positioning of bars on x-axis
-    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = True
+    plt.rcParams["text.usetex"] = False
     _ = range(len(alg_set))
     colors = ListedColormap(
         [
@@ -245,6 +252,7 @@ def line_plot_res(
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
     file_path1 = f"results/{fig_name}.pdf"
+    file_path2 = f"results/{fig_name}.eps"
     fig = plt.figure(figsize=(20, 12))
     if ylog:
         plt.yscale("log")
@@ -281,6 +289,7 @@ def line_plot_res(
     plt.grid(True)
     fig.savefig(file_path)
     fig.savefig(file_path1, format="pdf")
+    fig.savefig(file_path2, format="eps")
 
 
 def stack_bar_res(
@@ -298,9 +307,9 @@ def stack_bar_res(
     # Data for plotting
 
     # Positioning of bars on x-axis
-    plt.rcParams["font.size"] = 30
+    plt.rcParams["font.size"] = 36
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["text.usetex"] = True
+    plt.rcParams["text.usetex"] = False
 
     colors = ListedColormap(
         [
@@ -334,6 +343,7 @@ def stack_bar_res(
     os.makedirs("results", exist_ok=True)
     file_path = f"results/{fig_name}.png"
     file_path1 = f"results/{fig_name}.pdf"
+    file_path2 = f"results/{fig_name}.eps"
     fig, ax = plt.subplots(figsize=(20, 12))
 
     max_hight = np.max(data1[-1])
@@ -384,6 +394,12 @@ def stack_bar_res(
     ax.set_xlabel(rf"{xlabel}")
     ax.set_ylabel(rf"{ylabel}")
 
+#    print(len(x_val))
+#    index = np.arange(len(x_val))
+#    print(index)
+
+    ax.set_xticks(x_val)  # Ensure ticks are at the bar positions
+    ax.set_xticklabels(x_val,ha='center')
     _ = ax.legend()
 
     ax.set_ylim(0, max_hight * 1.1)
@@ -391,14 +407,10 @@ def stack_bar_res(
     ax.grid(True)
     fig.savefig(file_path)
     fig.savefig(file_path1, format="pdf")
+    fig.savefig(file_path2, format="eps")
 
 
-def print_improvement(alg_set, improvements_task1, improvements_task2, num1, num2):
-    if len(improvements_task1) != num1 or len(improvements_task2) != num2:
-        raise ValueError(
-            f" input 1 array should contain exactly {num1} elements and input 2 array should contain exactly {num2} elements."
-        )
-
+def print_improvement(alg_set, improvements_task1, improvements_task2):
     # Prepare data for the table
     table_data = [
         [alg, f"{imp1:.2f}%", f"{imp2:.2f}%"]
